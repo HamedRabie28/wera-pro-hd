@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ProductEditorPage.xaml — PAGE-10 محرر منتج متعدد الأقسام بمراجعة قبل الحفظ (LF-C) · DEV DATA
+     قسم «الوزن والوحدات» يعرض إعدادات D-07 المحسومة من مصدر الإعدادات لا من ثوابت كود. -->
+<Page
+    x:Class="WeraPrototype.Views.ProductEditorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{StaticResource WeraSurfaceBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Padding="28,20,28,12" Spacing="4">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="تعديل منتج — جبنة رومي بلدي طازجة" FontFamily="{StaticResource WeraFontDisplay}"
+                           FontSize="26" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                <Border Background="{StaticResource WeraStatusSuccessSoftBrush}" CornerRadius="999" Padding="10,3" VerticalAlignment="Center">
+                    <TextBlock Text="مسودة قابلة للحفظ" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource WeraStatusSuccessBrush}"/>
+                </Border>
+            </StackPanel>
+            <TextBlock Text="نموذج متعدد الأقسام بمراجعة قبل الحفظ (§4.4) — لا حفظ جزئي" FontSize="13" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="28,0,28,24" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="230"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="340"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- أقسام النموذج -->
+            <StackPanel Grid.Column="0" Spacing="8">
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="12" Padding="6">
+                    <StackPanel>
+                        <Border Background="{StaticResource WeraActionPrimarySoftBrush}" CornerRadius="9" Padding="12,9">
+                            <TextBlock Text="1. الهوية  ✓" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource WeraActionPrimaryInkBrush}"/>
+                        </Border>
+                        <Border Background="{StaticResource WeraActionPrimarySoftBrush}" CornerRadius="9" Padding="12,9">
+                            <TextBlock Text="2. صيغ البيع  ✓" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource WeraActionPrimaryInkBrush}"/>
+                        </Border>
+                        <Border Background="{StaticResource WeraBrandNavyBrush}" CornerRadius="9" Padding="12,9">
+                            <TextBlock Text="3. الوزن والوحدات  ●" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13.5" FontWeight="SemiBold" Foreground="White"/>
+                        </Border>
+                        <Border CornerRadius="9" Padding="12,9">
+                            <TextBlock Text="4. الباركود وPLU" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        </Border>
+                        <Border CornerRadius="9" Padding="12,9">
+                            <TextBlock Text="5. الأسعار والضرائب" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        </Border>
+                        <Border CornerRadius="9" Padding="12,9">
+                            <TextBlock Text="6. الصور" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- جسم القسم -->
+            <Border Grid.Column="1" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="14" Padding="20">
+                <StackPanel Spacing="14">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="3) الوزن والوحدات — ملف الوزن المتغير" FontFamily="{StaticResource WeraFontDisplay}" FontSize="15.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <Border Background="{StaticResource WeraStatusInfoSoftBrush}" CornerRadius="999" Padding="10,2">
+                            <TextBlock Text="الإعدادات من نشاط D-07 (محسوم)" FontSize="11" Foreground="{StaticResource WeraStatusInfoBrush}"/>
+                        </Border>
+                    </StackPanel>
+
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="6">
+                            <TextBlock Text="الوحدة الأساسية" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                            <TextBox Text="كيلوجرام (كجم)" IsReadOnly="True" Height="42"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="دقة الوزن وخطوته — من الإعدادات المحسومة" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                            <TextBox Text="1 g (دقة) · 5 g (خطوة)" IsReadOnly="True" Height="42"
+                                     Background="{StaticResource WeraActionPrimarySoftBrush}" BorderBrush="{StaticResource WeraActionPrimarySoftBorderBrush}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="6">
+                            <TextBlock Text="السعر المرجعي (شامل الضريبة 14% — D-01)" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                            <TextBox Text="189.00 ج.م / كجم" IsReadOnly="True" Height="42"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- الحساب الحي الملزم (مثال مرجعي D-07) -->
+                    <Border Background="{StaticResource WeraActionPrimarySoftBrush}" BorderBrush="{StaticResource WeraActionPrimarySoftBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="معايرة الحساب الحية (ملزمة بترحيل V011)" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource WeraActionPrimaryInkBrush}"/>
+                            <TextBlock TextWrapping="Wrap" FontSize="13.5" LineHeight="26">
+                                <Run Text="مبلغ مستهدف "/><Run Text="70.00 ج.م" FontWeight="Bold"/>
+                                <Run Text=" ÷ سعر "/><Run Text="200.00 ج.م/كجم" FontWeight="Bold"/>
+                                <Run Text=" (مثال مرجعي) ← وزن "/><Run Text="350 g" FontWeight="Bold"/>
+                                <Run Text=" — على خطوة 5g بلا تعديل · تقريب المبلغ Banker's لأقرب قرش · تُخزن القيمة الدقيقة والمعروضة معاً."/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="6">
+                            <TextBlock Text="باركود الوزن المتغير (PLU)" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                            <TextBox Text="PLU-3021 · Prefix 20 · 5-digit weight" Height="42" FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <TextBlock Text="أزرار الوزن السريع المعرفة (على الخطوة)" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button Content="100g" Style="{StaticResource PageNumStyle}"/><Button Content="250g" Style="{StaticResource PageNumStyle}"/>
+                                <Button Content="350g" Style="{StaticResource PageNumStyle}"/><Button Content="500g" Style="{StaticResource PageNumStyle}"/>
+                                <Button Content="1kg" Style="{StaticResource PageNumStyle}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="تحويلات الوحدة (ضمن نفس البُعد — كتلة): كجم → جرام ×1000 مسموح · كجم → لتر مرفوض (أبعاد غير متوافقة)"
+                               FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <!-- مراجعة قبل الحفظ -->
+            <StackPanel Grid.Column="2" Spacing="12">
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="14" Padding="18">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="مراجعة قبل الحفظ (§4.4)" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <TextBlock Text="✓ تغيّر السعر: 185.00 ← 189.00 ج.م (شامل الضريبة)" FontSize="12.5" TextWrapping="Wrap"/>
+                        <TextBlock Text="✓ إضافة PLU-3021 لملف الوزن المتغير" FontSize="12.5" TextWrapping="Wrap"/>
+                        <TextBlock Text="⚠ تحويل مرفوض واحد (كجم ← لتر) حُجب بالتحقق" FontSize="12.5" Foreground="{StaticResource WeraStatusWarningBrush}" TextWrapping="Wrap"/>
+                        <Button Content="اعتماد وحفظ المنتج" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Margin="0,6,0,0"/>
+                        <TextBlock Text="الحفظ يختم بصلاحيتك — يُسجل في التدقيق" FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource WeraStatusInfoSoftBrush}" CornerRadius="12" Padding="14">
+                    <TextBlock Text="DEV DATA — G2 PROTOTYPE: بيانات عرض موسومة لغير الإنتاج." FontSize="11" Foreground="{StaticResource WeraStatusInfoBrush}" TextWrapping="Wrap"/>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

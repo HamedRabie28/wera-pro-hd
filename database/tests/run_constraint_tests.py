@@ -708,13 +708,19 @@ def t_env_01(conn):
     return f"{tables} جدولاً في 9 مخططات + منظر المطابقة"
 
 
-@test("T-ENV-02", "Env", "إعدادات D-01..D-16 موجودة وموسومة بحالة الحسم الصادقة")
+@test("T-ENV-02", "Env", "إعدادات D-01..D-18 موجودة وموسومة بحالة الحسم الصادقة (بعد حسم D-01/D-07/D-16 بأمر المالك 2026-11-01)")
 def t_env_02(conn):
     n = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE decision_ref LIKE 'D-%'")[0]
     pending = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE confirmation_status='PENDING_OWNER_CONFIRMATION'")[0]
+    settled = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE confirmation_status='OWNER_CONFIRMED'")[0]
+    d01 = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE decision_ref='D-01' AND confirmation_status='OWNER_CONFIRMED'")[0]
+    d07 = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE decision_ref='D-07' AND confirmation_status='OWNER_CONFIRMED'")[0]
     assert n >= 20, f"عدد إعدادات القرارات {n} — أقل من المتوقع"
-    assert pending >= 15, f"الإعدادات المعلنة بانتظار الحسم {pending}"
-    return f"{n} إعداداً مرتبطاً بقرارات، منها {pending} بانتظار حسم المالك"
+    assert d01 == 2, f"إعدادات D-01 المحسومة {d01} — متوقع 2 (policy_mode + standard_rate)"
+    assert d07 == 4, f"إعدادات D-07 المحسومة {d07} — متوقع 4 (الدقة/الخطوة/تقريب المبلغ/تقريب الوزن)"
+    assert settled == 6, f"الإعدادات المحسومة OWNER_CONFIRMED {settled} — متوقع 6 (V011)"
+    assert pending >= 12, f"الإعدادات المعلنة بانتظار الحسم {pending}"
+    return f"{n} إعداداً مرتبطاً بقرارات · محسوم OWNER_CONFIRMED={settled} (D-01/D-07) · بانتظار المالك={pending} (بقية D-xx)"
 
 
 # ───────────────────────────── التشغيل ─────────────────────────────

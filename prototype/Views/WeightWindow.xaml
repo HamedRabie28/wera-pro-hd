@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WeightWindow.xaml — نافذة الوزن: الطرق الست بإعدادات D-07 المحسومة (1g/5g/Banker's/أقرب خطوة) -->
+<Window
+    x:Class="WeraPrototype.Views.WeightWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{StaticResource WeraSurfaceBackgroundBrush}" MinWidth="880" MinHeight="640">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- الرأس -->
+        <Grid Grid.Row="0" Background="{StaticResource WeraBrandNavyDeepBrush}" Padding="22,14">
+            <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <TextBlock Text="⚖️ وزن — جبنة رومي بلدي طازجة" FontFamily="{StaticResource WeraFontDisplay}" FontSize="17" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="SKU-100294 · PLU-3021" FontFamily="{StaticResource WeraFontMono}" FontSize="11.5" Foreground="{StaticResource WeraShellTextMutedBrush}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <TextBlock Text="الإعدادات من النشاط (D-07 محسوم): دقة 1g · خطوة 5g" FontSize="12" Foreground="{StaticResource WeraShellTealGlowBrush}"/>
+                <Button Content="✕ إلغاء" Background="Transparent" Foreground="{StaticResource WeraShellTextSecondaryBrush}" BorderBrush="{StaticResource WeraShellBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,6" Click="Close_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- تبويبات الطرق الست -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Background="{StaticResource WeraSurfaceBaseBrush}" Padding="14,0"
+                    BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,0,0,1">
+            <Button Content="⚖ من الميزان" Style="{StaticResource TabInactiveStyle}"/>
+            <Button Content="⌨ إدخال يدوي" Style="{StaticResource TabInactiveStyle}"/>
+            <Button Content="💰 مبلغ مستهدف" Style="{StaticResource TabActiveStyle}"/>
+            <Button Content="⚡ وزن سريع" Style="{StaticResource TabInactiveStyle}"/>
+            <Button Content="▣ باركود ملصق" Style="{StaticResource TabInactiveStyle}"/>
+            <Button Content="📦 عبوة موزونة" Style="{StaticResource TabInactiveStyle}"/>
+        </StackPanel>
+
+        <!-- الجسم: مدخل المبلغ + الحساب الحي | الطرق الست -->
+        <Grid Grid.Row="2" ColumnSpacing="0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="1.15*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Padding="24,22" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,0,1,0" Spacing="16">
+                <TextBlock Text="المبلغ الذي يريده العميل (شامل الضريبة)" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+
+                <Grid ColumnSpacing="10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Height="58" Background="{StaticResource WeraActionPrimarySoftBrush}" BorderBrush="{StaticResource WeraActionPrimaryBrush}" BorderThickness="1.5" CornerRadius="10">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Padding="18,0">
+                            <TextBox x:Name="AmountBox" Text="70.00" FontFamily="{StaticResource WeraFontDisplay}" FontSize="28" FontWeight="Bold"
+                                     Background="Transparent" BorderThickness="0" Foreground="{StaticResource WeraActionPrimaryInkBrush}" Width="130" TextChanged="AmountBox_TextChanged"/>
+                            <TextBlock Text="ج.م" FontSize="14" Foreground="{StaticResource WeraActionPrimaryInkBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Grid Grid.Column="1" ColumnSpacing="6">
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                        <Button Grid.Row="0" Grid.Column="0" Content="7" Style="{StaticResource KeypadStyle}"/><Button Grid.Row="0" Grid.Column="1" Content="8" Style="{StaticResource KeypadStyle}"/><Button Grid.Row="0" Grid.Column="2" Content="9" Style="{StaticResource KeypadStyle}"/>
+                        <Button Grid.Row="1" Grid.Column="0" Content="4" Style="{StaticResource KeypadStyle}"/><Button Grid.Row="1" Grid.Column="1" Content="5" Style="{StaticResource KeypadStyle}"/><Button Grid.Row="1" Grid.Column="2" Content="6" Style="{StaticResource KeypadStyle}"/>
+                        <Button Grid.Row="2" Grid.Column="0" Content="1" Style="{StaticResource KeypadStyle}"/><Button Grid.Row="2" Grid.Column="1" Content="2" Style="{StaticResource KeypadStyle}"/><Button Grid.Row="2" Grid.Column="2" Content="3" Style="{StaticResource KeypadStyle}"/>
+                    </Grid>
+                </Grid>
+
+                <!-- الحساب الحي -->
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="الحساب الحي" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <TextBlock x:Name="LiveCalc" FontSize="14" LineHeight="30" TextWrapping="Wrap"/>
+                        <TextBlock Text="تقريب المبلغ: Banker's Rounding لأقرب قرش · تقريب الوزن: أقرب خطوة معتمدة" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- النتيجة: المعروض + الدقيق معاً (قاعدة D-07) -->
+                <Border Background="{StaticResource WeraAccentGoldSoftBrush}" BorderBrush="{StaticResource WeraAccentGoldBrush}" BorderThickness="1" CornerRadius="12" Padding="16">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="الوزن المحسوب (المعروض)" FontSize="12" Foreground="{StaticResource WeraAccentGoldInkBrush}" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="DisplayedWeight" Text="350 g" FontFamily="{StaticResource WeraFontDisplay}" FontSize="30" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Left">
+                            <TextBlock Text="القيمة الدقيقة (تُخزن معاً)" FontSize="12" Foreground="{StaticResource WeraAccentGoldInkBrush}" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="ExactWeight" Text="350.000 g" FontFamily="{StaticResource WeraFontDisplay}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Button Content="✓ إضافة للسلة (70.00 ج.م / 350g)" Style="{StaticResource PosTouchButtonStyle}"
+                        Background="{StaticResource WeraActionPrimaryBrush}" Foreground="White" BorderThickness="0"
+                        HorizontalAlignment="Stretch" Click="AddToCart_Click"/>
+            </StackPanel>
+
+            <!-- قائمة الطرق الست -->
+            <StackPanel Grid.Column="1" Padding="24,22" Background="{StaticResource WeraSurfaceSubtleBrush}" Spacing="9">
+                <TextBlock Text="الطرق الست المتاحة لهذا الصنف" FontFamily="{StaticResource WeraFontDisplay}" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="⚖ قراءة الميزان" FontSize="12.5" HorizontalAlignment="Right"/><TextBlock Text="آخر قراءة 0.512 كجم" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}" HorizontalAlignment="Left"/></StackPanel>
+                </Border>
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                    <TextBlock Text="⌨ إدخال يدوي بدقة 1g — تحقق خطوة 5g" FontSize="12.5"/>
+                </Border>
+                <Border Background="{StaticResource WeraActionPrimarySoftBrush}" BorderBrush="{StaticResource WeraActionPrimaryBrush}" BorderThickness="1.5" CornerRadius="10" Padding="12">
+                    <TextBlock Text="💰 مبلغ مستهدف ← وزن (نشط الآن)" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource WeraActionPrimaryInkBrush}"/>
+                </Border>
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="⚡ أزرار الوزن السريع (على الخطوة 5g)" FontSize="12.5"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button Content="100g" Style="{StaticResource PageNumStyle}"/><Button Content="250g" Style="{StaticResource PageNumStyle}"/>
+                            <Button Content="350g" Style="{StaticResource PageCurrentStyle}"/><Button Content="500g" Style="{StaticResource PageNumStyle}"/><Button Content="1kg" Style="{StaticResource PageNumStyle}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="▣ باركود ملصق الوزن" FontSize="12.5" HorizontalAlignment="Right"/><TextBlock Text="20 03021 00350" FontFamily="{StaticResource WeraFontMono}" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}" HorizontalAlignment="Left"/></StackPanel>
+                </Border>
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                    <TextBlock Text="📦 عبوة موزونة (وزن العبوة الثابت من تعريف الصنف)" FontSize="12.5" TextWrapping="Wrap"/>
+                </Border>
+                <TextBlock Text="أزرار الوزن السريع تخفى نفسها إن خالفت خطوتها دقة الصنف (قاعدة D-07) — القيمة الدقيقة والمعروضة تُخزنان معاً دائماً."
+                           FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

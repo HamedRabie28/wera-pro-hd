@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HomePage.xaml — HOME-01 مركز التشغيل التنفيذي (LF-A) · DEV DATA ONLY -->
+<Page
+    x:Class="WeraPrototype.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer Background="{StaticResource WeraSurfaceBackgroundBrush}" Padding="28,20,28,24">
+        <StackPanel Spacing="16">
+
+            <!-- PageHeader: عنوان 26/700 + وصف + إجراء أساسي واحد -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="الصفحة الرئيسية — مركز التشغيل التنفيذي"
+                               FontFamily="{StaticResource WeraFontDisplay}"
+                               FontSize="26" FontWeight="Bold"
+                               Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                    <TextBlock Text="نظرة دورية على أداء اليوم — الأحد 2026-11-01 · وردية صباحية #47 مفتوحة"
+                               FontSize="13" Foreground="{StaticResource WeraTextSecondaryBrush}" Margin="0,4,0,0"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="فتح نقطة البيع (POS)" Style="{StaticResource AccentButtonStyle}"
+                        Click="OpenPos_Click" Margin="0,0,12,0"/>
+                <Button Grid.Column="2" Content="＋ فاتورة مشتريات" Click="NewPurchaseInvoice_Click"/>
+            </Grid>
+
+            <!-- KPI cards: القيمة المالية بشارة ذهبية · كل مؤشر يعلن مصدره وتوقيته -->
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                        CornerRadius="12" Padding="16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Width="3" Height="26" CornerRadius="2" Background="{StaticResource WeraAccentGoldBrush}"/>
+                            <TextBlock Text="مبيعات اليوم (شامل الضريبة)" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        </StackPanel>
+                        <TextBlock Text="48,215.60 ج.م" FontFamily="{StaticResource WeraFontDisplay}"
+                                   FontSize="27" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}" Margin="0,5,0,0"/>
+                        <TextBlock Text="▲ +6.4% عن أمس · المصدر: 214 فاتورة مرحّلة حتى 12:38"
+                                   FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}" Margin="0,7,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Background="{StaticResource WeraSurfaceBaseBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                        CornerRadius="12" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="متوسط سلة الشراء" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        <TextBlock Text="225.31 ج.م" FontFamily="{StaticResource WeraFontDisplay}"
+                                   FontSize="27" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}" Margin="0,5,0,0"/>
+                        <TextBlock Text="▲ +2.1% · المصدر: 214 فاتورة / 3 كاشير"
+                                   FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}" Margin="0,7,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Background="{StaticResource WeraSurfaceBaseBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                        CornerRadius="12" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="فارق درج الوردية الحالية" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        <TextBlock Text="-3.50 ج.م" FontFamily="{StaticResource WeraFontDisplay}"
+                                   FontSize="27" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}" Margin="0,5,0,0"/>
+                        <TextBlock Text="داخل الحد المسموح ±10 · المصدر: الوردية 47 متوقع/فعلي"
+                                   FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}" Margin="0,7,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="3" Background="{StaticResource WeraSurfaceBaseBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                        CornerRadius="12" Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="أصناف تحت حد إعادة الطلب" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        <TextBlock Text="37 صنفاً" FontFamily="{StaticResource WeraFontDisplay}"
+                                   FontSize="27" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}" Margin="0,5,0,0"/>
+                        <TextBlock Text="▼ 5 نافد كلياً · المصدر: أرصدة المخزون · آخر جرد 10-28"
+                                   FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}" Margin="0,7,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- يتطلب الانتباه + إجراءات سريعة -->
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.35*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="14">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10" Padding="16,12" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,0,0,1">
+                            <TextBlock Text="يتطلب الانتباه" FontFamily="{StaticResource WeraFontDisplay}" FontSize="15.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                            <Border Background="{StaticResource WeraStatusWarningSoftBrush}" CornerRadius="999" Padding="10,2">
+                                <TextBlock Text="4 بنود" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource WeraStatusWarningBrush}"/>
+                            </Border>
+                        </StackPanel>
+                        <ListView ItemsSource="{x:Bind Alerts}" SelectionMode="None" Padding="4">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:AlertItem" xmlns:local="using:WeraPrototype.ViewModels">
+                                    <Grid Padding="12,10" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{x:Bind Source}" FontSize="11" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="1" Background="{x:Bind SeverityBrush}" CornerRadius="999" Padding="10,3" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind Severity}" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                        </Border>
+                                        <Button Grid.Column="2" Content="فتح" Style="{StaticResource SubtleButtonStyle}" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Background="{StaticResource WeraSurfaceBaseBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="14" Padding="16">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="إجراءات سريعة (حسب دورك)" FontFamily="{StaticResource WeraFontDisplay}" FontSize="15.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <Button Content="📦 استلام مورد جديد" HorizontalAlignment="Stretch"/>
+                        <Button Content="🧾 سند صرف مصروف" HorizontalAlignment="Stretch"/>
+                        <Button Content="📊 تقرير مبيعات اليوم" HorizontalAlignment="Stretch"/>
+                        <Button Content="🔄 تحويل بين مخزنين" HorizontalAlignment="Stretch"/>
+                        <Button Content="🧮 جرد جزئي (رف 3)" HorizontalAlignment="Stretch"/>
+                        <!-- DEV وسم واضح — بيانات النموذج فقط -->
+                        <Border Background="{StaticResource WeraStatusInfoSoftBrush}" CornerRadius="8" Padding="10,8" Margin="0,6,0,0">
+                            <TextBlock Text="DEV DATA — G2 PROTOTYPE: كل الأرقام أعلاه بيانات عرض موسومة، وليست بيانات تشغيل حقيقية."
+                                       FontSize="11" Foreground="{StaticResource WeraStatusInfoBrush}" TextWrapping="Wrap"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

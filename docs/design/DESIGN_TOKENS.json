@@ -1,0 +1,410 @@
+{
+  "$schema": "https://wera-pro-hd.local/schemas/design-tokens-v1.json",
+  "meta": {
+    "product": "WERA PRO HD",
+    "version": "1.0.0",
+    "gate": "G2 — Premium Design System & Interactive UI Prototype",
+    "baseline": "GFM-CSharp 2.4.1 §6/§7 (approved 2026-11-01)",
+    "owner_settlements_applied": {
+      "D-01": "VAT_INCLUSIVE 14% reference — prices displayed tax-inclusive",
+      "D-07": "precision 1g · step 5g · ROUND_HALF_EVEN 0.01 EGP · NEAREST_STEP",
+      "D-16": "purchase internal invoice AUTO_AFTER_POST · admin copy ELECTRONIC_ONLY · REPRINT always"
+    },
+    "rule": "No page may hardcode a value that exists here. Exceptions require a documented reason.",
+    "rtl_first": true,
+    "currency": "EGP",
+    "language": "ar-EG primary, en secondary"
+  },
+  "color": {
+    "light": {
+      "brand": {
+        "navy": "#172B45",
+        "navyDeep": "#102238",
+        "blueSecondary": "#29445F",
+        "tableHead": "#33465E"
+      },
+      "action": {
+        "primary": "#0D8379",
+        "primaryHover": "#0A6E66",
+        "primaryPressed": "#085A53",
+        "primarySoft": "#E5F2EF",
+        "primarySoftBorder": "#C4E0DA",
+        "primaryInk": "#0A5F58",
+        "focusRing": "#16A894"
+      },
+      "accent": {
+        "gold": "#B9955C",
+        "goldSoft": "#FBF6EE",
+        "goldInk": "#7A5C28",
+        "goldBorder": "#E8D9BF"
+      },
+      "surface": {
+        "background": "#F1F4F7",
+        "base": "#FFFFFF",
+        "subtle": "#F7F9FB",
+        "rowAlt": "#F7FAFC",
+        "tableHeadBg": "#EDF1F5"
+      },
+      "text": {
+        "primary": "#172536",
+        "secondary": "#596A7D",
+        "muted": "#8290A0",
+        "onDark": "#F1F5F8",
+        "onDarkSecondary": "#C0CBD6"
+      },
+      "border": {
+        "default": "#DFE6EC",
+        "strong": "#C7D2DC",
+        "onDark": "#34475A"
+      },
+      "status": {
+        "success": "#16845D",
+        "successSoft": "#E6F4EE",
+        "warning": "#B77A25",
+        "warningSoft": "#FBF3E6",
+        "danger": "#C44850",
+        "dangerSoft": "#FBEDEE",
+        "info": "#3478B8",
+        "infoSoft": "#EAF2FA"
+      },
+      "shell": {
+        "textOnDark": "#F1F5F8",
+        "textOnDarkSecondary": "#C0CBD6",
+        "textOnDarkMuted": "#93A3B4",
+        "borderOnDark": "#34475A",
+        "tealGlowOnDark": "#8FE3D4",
+        "borderRowLight": "#EBF0F4",
+        "_note": "Shell top-nav surfaces rendered over brand.navy in the light theme"
+      }
+    },
+    "dark": {
+      "_note": "Tokens ready; theme shipped only after every page/component tested (G11). Not selectable in G2 UI.",
+      "surface": {
+        "background": "#101925",
+        "base": "#172536",
+        "elevated": "#1D2D40",
+        "subtle": "#24374C"
+      },
+      "brand": {
+        "navyOnDark": "#294865"
+      },
+      "action": {
+        "primary": "#16A894",
+        "primarySoft": "rgba(22,168,148,0.14)"
+      },
+      "accent": {
+        "gold": "#C6A66C"
+      },
+      "text": {
+        "primary": "#F1F5F8",
+        "secondary": "#C0CBD6",
+        "muted": "#93A3B4"
+      },
+      "border": {
+        "default": "#34475A"
+      },
+      "status": {
+        "success": "#45B985",
+        "warning": "#E0AD59",
+        "danger": "#E16B73"
+      }
+    }
+  },
+  "typography": {
+    "app": {
+      "familyPrimary": "Segoe UI Variable Text",
+      "familyDisplay": "Segoe UI Variable Display",
+      "fallbackArabic": "Segoe UI",
+      "mono": "Cascadia Mono",
+      "monoFallback": "Consolas"
+    },
+    "scale": {
+      "pageTitle": {
+        "size": 26,
+        "weight": 700,
+        "lineHeight": 34
+      },
+      "sectionTitle": {
+        "size": 18,
+        "weight": 600,
+        "lineHeight": 26
+      },
+      "body": {
+        "size": 14,
+        "weight": 400,
+        "lineHeight": 22
+      },
+      "bodyLarge": {
+        "size": 15,
+        "weight": 400,
+        "lineHeight": 24
+      },
+      "secondary": {
+        "size": 13,
+        "weight": 400,
+        "lineHeight": 19
+      },
+      "caption": {
+        "size": 12,
+        "weight": 400,
+        "lineHeight": 17
+      },
+      "posMoney": {
+        "size": 32,
+        "weight": 700,
+        "lineHeight": 40
+      },
+      "posMoneyUnit": {
+        "size": 16,
+        "weight": 600,
+        "lineHeight": 20
+      },
+      "gridHeader": {
+        "size": 13,
+        "weight": 600,
+        "lineHeight": 18
+      },
+      "gridCell": {
+        "size": 13.5,
+        "weight": 400,
+        "lineHeight": 19
+      },
+      "badge": {
+        "size": 12,
+        "weight": 600,
+        "lineHeight": 16
+      }
+    },
+    "numeric": {
+      "tabularFigures": true,
+      "align": "end",
+      "keepUnitSeparate": true
+    }
+  },
+  "spacing": {
+    "scale": {
+      "s1": 4,
+      "s2": 8,
+      "s3": 12,
+      "s4": 16,
+      "s5": 24,
+      "s6": 32,
+      "s7": 40
+    },
+    "page": {
+      "marginX": 24,
+      "marginXLarge": 32,
+      "marginY": 24
+    },
+    "card": {
+      "padding": 16,
+      "paddingLarge": 24,
+      "gap": 16
+    },
+    "stack": {
+      "tight": 8,
+      "normal": 12,
+      "loose": 24
+    }
+  },
+  "radius": {
+    "control": 8,
+    "controlLarge": 10,
+    "card": 12,
+    "cardLarge": 16,
+    "pill": 999
+  },
+  "elevation": {
+    "level0": "none",
+    "level1": "0 1px 2px rgba(23,43,69,0.08)",
+    "level2": "0 4px 12px rgba(23,43,69,0.14)",
+    "rule": "Only floating surfaces (flyouts, dialogs, command palette) get level2; cards stay flat with 1px border."
+  },
+  "sizing": {
+    "control": {
+      "adminHeight": 42,
+      "adminHeightMin": 40,
+      "adminHeightMax": 44
+    },
+    "button": {
+      "primaryTouchHeight": 50,
+      "primaryTouchHeightMin": 48,
+      "primaryTouchHeightMax": 52,
+      "rowActionHeight": 34,
+      "rowActionHeightRange": [
+        32,
+        36
+      ]
+    },
+    "grid": {
+      "rowHeight": 49,
+      "rowHeightRange": [
+        46,
+        52
+      ],
+      "compactRowHeight": 40,
+      "compactRowHeightRange": [
+        38,
+        42
+      ],
+      "headerHeight": 40
+    },
+    "hitTarget": {
+      "min": 40,
+      "minWidth": 40
+    },
+    "thumbnail": {
+      "grid": 36,
+      "gridRange": [
+        32,
+        40
+      ]
+    },
+    "icon": {
+      "inline": 16,
+      "control": 20,
+      "nav": 24
+    }
+  },
+  "motion": {
+    "durations": {
+      "fast": 100,
+      "standard": 160,
+      "emphasis": 220
+    },
+    "easing": {
+      "standard": "cubic-bezier(0.16, 1, 0.3, 1)",
+      "decel": "cubic-bezier(0.33, 0, 0.15, 1)"
+    },
+    "respectReduceMotion": true,
+    "posRule": "No motion may delay barcode entry or cashier actions; POS transitions are near-instant (fast only)."
+  },
+  "stateMatrix": {
+    "componentStates": [
+      "default",
+      "hover",
+      "focused",
+      "pressed",
+      "selected",
+      "disabled",
+      "loading",
+      "empty",
+      "success",
+      "warning",
+      "error"
+    ],
+    "pageStates": [
+      "loading",
+      "empty",
+      "error",
+      "disabled",
+      "success"
+    ],
+    "colorAloneNeverCarriesState": true,
+    "stateEncoding": "color + label text + icon/shape"
+  },
+  "direction": {
+    "primary": "rtl",
+    "ltrScopes": [
+      "barcodes",
+      "skuCodes",
+      "invoiceNumbers",
+      "isoDates",
+      "numbers",
+      "monoCode"
+    ],
+    "mirrorInLtr": [
+      "navigationChevrons",
+      "paddingInline",
+      "borderInlineStart"
+    ]
+  },
+  "currency": {
+    "code": "EGP",
+    "displaySymbol": "ج.م",
+    "localeFormat": "ar-EG",
+    "decimals": 2,
+    "rounding": "ROUND_HALF_EVEN (Banker's) to 0.01",
+    "taxDisplay": "VAT_INCLUSIVE — displayed prices include tax; system separates tax on posting (D-01 أ)"
+  },
+  "weight": {
+    "precision_g": 1,
+    "step_g": 5,
+    "amountRounding": "ROUND_HALF_EVEN_0.01",
+    "weightFromAmountRounding": "NEAREST_STEP",
+    "referenceExample": "200 EGP/kg × target 70 EGP → 350 g",
+    "storeExactAndDisplayedTogether": true
+  },
+  "grid": {
+    "toolbarOrder": [
+      "title+count",
+      "search",
+      "activeFilters",
+      "advancedFilters",
+      "sort",
+      "refresh",
+      "columnChooser",
+      "pagination",
+      "export",
+      "primaryAction"
+    ],
+    "cellTypes": [
+      "text",
+      "secondary",
+      "numeric",
+      "currency",
+      "quantityWeight",
+      "dateTime",
+      "statusBadge",
+      "thumbnail",
+      "skuBarcode",
+      "rowActions"
+    ],
+    "behaviors": [
+      "serverSidePaging",
+      "serverSideSorting",
+      "serverSideFiltering",
+      "virtualization",
+      "debouncedSearch300ms",
+      "preserveSelectionOnRefresh",
+      "rowActionOverflowInMore"
+    ],
+    "requiredStates": [
+      "loadingSkeleton",
+      "emptyWithClearFilters",
+      "errorWithRetry",
+      "disabled"
+    ]
+  },
+  "topNav": {
+    "background": "brand.navy",
+    "height": 56,
+    "groups": [
+      "التشغيل",
+      "المبيعات",
+      "الكتالوج",
+      "المخزون",
+      "المشتريات",
+      "الأطراف",
+      "المالية",
+      "التقارير",
+      "الأجهزة",
+      "الإدارة والأمان"
+    ],
+    "globalSearch": "Ctrl+K Command Palette",
+    "rightToLeftOrder": true,
+    "overflow": "«المزيد» menu instead of clipping",
+    "noSidebar": true
+  },
+  "screenSizes": {
+    "targetMatrix": [
+      "1280x720",
+      "1366x768",
+      "1600x900",
+      "1920x1080",
+      "2560x1440"
+    ],
+    "posMin": "1280x720",
+    "adaptivity": "fluid above 1280; below POS hides quick-pick rail, admin collapses groups into «المزيد»"
+  }
+}

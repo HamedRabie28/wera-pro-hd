@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CatalogPage.xaml — PAGE-09 كتالوج المنتجات بجدول متقدم (LF-B) · DEV DATA ONLY
+     ملاحظة G2: مكتبة DataGrid النهائية تُقرر في G3 بفحص التوافق/الترخيص/الأداء (§7.2.1) —
+     النموذج يستخدم ItemsRepeater داخل ScrollViewer + VirtualizingStackPanel كإسقاط مرجعي. -->
+<Page
+    x:Class="WeraPrototype.Views.CatalogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{StaticResource WeraSurfaceBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Padding="28,20,28,12" Spacing="4">
+            <TextBlock Text="كتالوج المنتجات" FontFamily="{StaticResource WeraFontDisplay}"
+                       FontSize="26" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+            <TextBlock Text="بحث وفلاتر متقدمة — ترقيم صفحات من الخادم دائماً (server-side) · 1–50 من 4,812,306 (DEV)"
+                       FontSize="13" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="{StaticResource WeraSurfaceBaseBrush}"
+                BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                CornerRadius="14" Margin="28,0,28,24">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Toolbar بالترتيب الإلزامي (§7.2.1) -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Padding="14,11">
+                    <TextBlock Text="المنتجات" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="1–50 من 4,812,306" FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" VerticalAlignment="Center"/>
+                    <TextBox PlaceholderText="🔍 ابحث بالاسم أو الباركود أو SKU…" Width="240" Height="38"/>
+                    <Border Background="{StaticResource WeraActionPrimarySoftBrush}" BorderBrush="{StaticResource WeraActionPrimarySoftBorderBrush}" BorderThickness="1" CornerRadius="999" Padding="11,4">
+                        <TextBlock Text="الفئة: ألبان وأجبان  ✕" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource WeraActionPrimaryInkBrush}"/>
+                    </Border>
+                    <Border Background="{StaticResource WeraActionPrimarySoftBrush}" BorderBrush="{StaticResource WeraActionPrimarySoftBorderBrush}" BorderThickness="1" CornerRadius="999" Padding="11,4">
+                        <TextBlock Text="صيغة البيع: وزني  ✕" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource WeraActionPrimaryInkBrush}"/>
+                    </Border>
+                    <Button Content="⚗ فلاتر متقدمة" Style="{StaticResource SubtleButtonStyle}"/>
+                    <Border Width="34" Height="34" CornerRadius="8" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE72C;" FontSize="13"/>
+                    </Border>
+                    <Border Width="34" Height="34" CornerRadius="8" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE8FD;" FontSize="13"/>
+                    </Border>
+                    <Button Content="＋ منتج جديد" Style="{StaticResource AccentButtonStyle}"/>
+                </StackPanel>
+
+                <!-- الجدول: ترويسة ثابتة · صف 49px · حدود أفقية فقط -->
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Grid.Row="0" Background="{StaticResource WeraSurfaceSubtleBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,0,0,1">
+                        <Grid Padding="14,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="44"/><ColumnDefinition Width="2.1*"/><ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="*"/><ColumnDefinition Width="0.8*"/><ColumnDefinition Width="0.8*"/>
+                                <ColumnDefinition Width="1.1*"/><ColumnDefinition Width="1.1*"/><ColumnDefinition Width="0.9*"/><ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="1" Text="المنتج ▼" Style="{StaticResource GridHeaderStyle}"/>
+                            <TextBlock Grid.Column="2" Text="SKU / الباركود" Style="{StaticResource GridHeaderStyle}"/>
+                            <TextBlock Grid.Column="3" Text="الفئة" Style="{StaticResource GridHeaderStyle}"/>
+                            <TextBlock Grid.Column="4" Text="صيغة البيع" Style="{StaticResource GridHeaderStyle}"/>
+                            <TextBlock Grid.Column="5" Text="الوحدة" Style="{StaticResource GridHeaderStyle}"/>
+                            <TextBlock Grid.Column="6" Text="السعر (شامل الضريبة) ▲" Style="{StaticResource GridHeaderEndStyle}"/>
+                            <TextBlock Grid.Column="7" Text="المتاح" Style="{StaticResource GridHeaderEndStyle}"/>
+                            <TextBlock Grid.Column="8" Text="الحالة" Style="{StaticResource GridHeaderStyle}"/>
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsControl ItemsSource="{x:Bind Rows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:ProductRow" xmlns:local="using:WeraPrototype.ViewModels">
+                                    <Grid Height="49" Padding="14,0" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1" Background="{StaticResource WeraSurfaceBaseBrush}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="44"/><ColumnDefinition Width="2.1*"/><ColumnDefinition Width="1.5*"/>
+                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="0.8*"/><ColumnDefinition Width="0.8*"/>
+                                            <ColumnDefinition Width="1.1*"/><ColumnDefinition Width="1.1*"/><ColumnDefinition Width="0.9*"/><ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="8" Background="{StaticResource WeraSurfaceSubtleBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind Name}" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind Sku}" FontFamily="{StaticResource WeraFontMono}" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="{x:Bind Category}" FontSize="12.5" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Text="{x:Bind SellForm}" FontSize="12.5" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="5" Text="{x:Bind Unit}" FontSize="12.5" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="6" Text="{x:Bind PriceInclVat}" Style="{StaticResource MoneyCellStyle}"/>
+                                        <TextBlock Grid.Column="7" Text="{x:Bind Stock}" Style="{StaticResource MoneyCellStyle}"/>
+                                        <TextBlock Grid.Column="8" Text="{x:Bind Status}" FontSize="12" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="9" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Button Content="✏" Style="{StaticResource RowActionStyle}" Tag="{x:Bind Sku}" Click="EditProduct_Click"/>
+                                            <Button Content="⋯" Style="{StaticResource RowActionStyle}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- Pagination -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Padding="14,10" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,1,0,0">
+                    <TextBlock Text="الصفحة 1 من 96,247 · حجم الصفحة 50 (بيانات DEV)" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                        <Button Content="1" Style="{StaticResource PageCurrentStyle}"/>
+                        <Button Content="2" Style="{StaticResource PageNumStyle}"/>
+                        <Button Content="3" Style="{StaticResource PageNumStyle}"/>
+                        <Button Content="…" Style="{StaticResource PageNumStyle}"/>
+                        <Button Content="›" Style="{StaticResource PageNumStyle}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>
