@@ -1,0 +1,106 @@
+﻿Requirement_ID,Domain,Requirement_AR,Spec_Section,Page_s,Service_UseCase,DB_Tables,Test_ID,Gate,Status,Owner
+G0-001,G0 Governance,BASELINE_PRODUCT_SCOPE.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-002,G0 Governance,PRODUCT_DECISIONS.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-003,G0 Governance,DECISIONS_REQUIRED.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-004,G0 Governance,ASSUMPTIONS_REGISTER.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-005,G0 Governance,BLOCKERS.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-006,G0 Governance,PAGE_CATALOG.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-007,G0 Governance,WORKFLOW_MAP.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-008,G0 Governance,REQUIREMENTS_TRACEABILITY.csv — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-009,G0 Governance,ARCHITECTURE_BRIEF.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+G0-010,G0 Governance,TEST_STRATEGY.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
+CAT-001,Catalog,فصل كيانات Product / SKU / UnitOfMeasure / UnitConversion / PackageDefinition / Barcode,§4.1,PAGE-09..12,Catalog UseCases,products; skus; units; unit_conversions; packages; barcodes,T-CAT-001,G1/G4,NOT_STARTED,Domain Lead
+CAT-002,Catalog,sale_mode صريح لكل SKU: COUNT/WEIGHT/PACK/SERIALIZED,§4.2,PAGE-10/11,Catalog UseCases,skus,T-CAT-002,G4,NOT_STARTED,Lead Team
+CAT-003,Catalog,سيناريو إلزامي: كيس مفرد وعلبة 12 كيسًا بسعرين مستقلين وأثر مخزون واحد,§4.3,PAGE-10/11 + POS,Pricing + Inventory,skus; packages; stock_movements,T-CAT-003 (مرجع مستقل),G4/G7,NOT_STARTED,Lead Team
+CAT-004,Catalog,نموذج منتج متعدد الأقسام (تعريف/نوع/عبوات/أسعار/وزن/باركود/مخزون/صور/مراجعة),§4.4,PAGE-10,Catalog UseCases,products + مرتبطة,T-CAT-004 (UI),G4,NOT_STARTED,Lead Team
+CAT-005,Catalog,حفظ ذري: لا التزام جزئي، لا نجاح بصلي قبل commit، الاحتفاظ بمدخلات صحيحة عند الفشل,§4.5,PAGE-10,Catalog UseCases,معاملة واحدة,T-CAT-005,G4,NOT_STARTED,Lead Team
+CAT-006,Catalog,منع التحويل بين وحدات ذات أبعاد غير متوافعة ولا دوائر تحويل,§4.1,PAGE-13,UnitConversion Rules,unit_conversions,T-CAT-006,G1/G4,NOT_STARTED,Lead Team
+CAT-007,Catalog,تفرد الباركود وفق النطاق + رسالة تعارض بالكود المتضارب,§3.1,PAGE-12,Barcode Resolution,barcodes (unique idx),T-CAT-007,G4,NOT_STARTED,Lead Team
+CAT-008,Catalog,قوائم أسعار بفعالية زمنية وضرائب وقيود,§4.1,PAGE-14,Pricing UseCases,price_lists; product_prices,T-CAT-008,G4,NOT_STARTED,Lead Team
+CAT-009,Catalog,تعطيل المنتج بدل حذفه؛ منع حذف المستخدم في مستندات مرحلة,§4.5,PAGE-09/10,Catalog UseCases,products.status,T-CAT-009,G4,NOT_STARTED,Lead Team
+CAT-010,Catalog,PLU وملفات VariableWeightBarcodeProfile قابلة للتهيئة,§5.3,PAGE-12/46,Barcode Profile Service,vw_barcode_profiles; plus,T-CAT-010,G4/G10,NOT_STARTED,Lead Team
+WGT-001,Weighting,الطرق الست لإدخال الوزن إلى السلة بمصدر موسوم,§9.3,POS + PAGE-46,WeightSale UseCases,invoice_lines(weight fields),T-WGT-001,G7,NOT_STARTED,POS Domain Lead
+WGT-002,Weighting,مثال مرجعي: 200 EGP/kg ومبلغ 70 EGP = 350g قبل التقريب,§9.3,POS,AmountDerived Calculator,-,T-WGT-002 (مرجع مستقل),G7,NOT_STARTED,Lead Team
+WGT-003,Weighting,حساب وزن 1.275kg بدقة دون تقريب مبكر قبل السعر,§9.3,POS,Pricing Engine,-,T-WGT-003,G7,NOT_STARTED,Lead Team
+WGT-004,Weighting,وسم مصدر الوزن: SCALE_READING / WEIGHT_LABEL / MANUAL_WEIGHT / AMOUNT_DERIVED,§5.1,POS + التقارير,Weight Source Taxonomy,invoice_lines.weight_source,T-WGT-004,G7/G9,NOT_STARTED,Lead Team
+WGT-005,Weighting,رفض وزن صفري/سالب/قديم/غير مستقر/خارج حدود المنتج أو الجهاز,§5.1/§10.4,POS + PAGE-46,Scale Adapter + Validation,-,T-WGT-005,G7/G10,NOT_STARTED,Lead Team
+WGT-006,Weighting,decimal/NUMERIC ووحدة مخزون أساسية موحدة (مثل gram) وعامل تحويل صريح,§9.3,الكل,Domain Money/Weight Rules,NUMERIC columns,T-WGT-006,G1,NOT_STARTED,Lead Team
+IMG-001,Media,مكتبة صور: أصل + مصغرات متعددة + metadata + كشف تكرار بhash,§6.1,PAGE-16,Media Services,media_assets; product_image_links,T-IMG-001,G5,NOT_STARTED,Infra Lead
+IMG-002,Media,استيراد دفعات: تقدم وإلغاء واستئناف قائم على معرفات مهام وحالة لكل ملف,§6.1/§6.2,PAGE-17,Import BackgroundService,media_import_jobs,T-IMG-002,G5,NOT_STARTED,Lead Team
+IMG-003,Media,صورة سياقية صغيرة في POS بthumbnail مخزن؛ فشل الصورة لا يعطل البيع,§6.3,POS,Media Cache,product_image_links,T-IMG-003,G5/G7,NOT_STARTED,Lead Team
+IMG-004,Media,لا حذف أصل مستخدم في مكان آخر دون مراجعة,§6.1,PAGE-16,Media Services,product_image_links,T-IMG-004,G5,NOT_STARTED,Lead Team
+INV-001,Inventory,دفتر حركات موثق: الرصيد نتيجة حركات ولا تحرير حر للرصيد,§12.1,PAGE-18/19,Inventory Ledger,stock_movements; stock_balances,T-INV-001,G6,NOT_STARTED,Inventory Lead
+INV-002,Inventory,جرد وتسوية بمستند واعتماد وفروق ظاهرة تاريخيًا,§12.2,PAGE-20,Stocktake UseCases,stocktakes; adjustments,T-INV-002,G6,NOT_STARTED,Lead Team
+INV-003,Inventory,تحويلات بين مخازن بحالات إرسال/استلام,§12.2,PAGE-21,Transfer UseCases,stock_transfers,T-INV-003,G6,NOT_STARTED,Lead Team
+INV-004,Inventory,نواقص وإعادة طلب وتقارير راكد,§12.2/§16.10,PAGE-22/61,Reorder + Analytics,reorder_levels,T-INV-004,G6/G9,NOT_STARTED,Lead Team
+INV-005,Inventory,دفعات/صلاحية/سيريال عند التفعيل,§12.2,PAGE-23,Lot/Serial Tracking,lots; serials,T-INV-005,G6,NOT_STARTED,Lead Team
+INV-006,Inventory,Quick Stock Adjustment من POS تفتح مستند تسوية مستقلًا بصلاحية وسبب,§9.2,POS + PAGE-20,Adjustment UseCase,adjustments,T-INV-006,G7,NOT_STARTED,Lead Team
+PUR-001,Purchasing,الاستلام المعتمد هو من يرحب المخزون بتحويل عبوة صحيح (علبة = 12 وحدة),§12.3,PAGE-25,Receiving UseCases,receipts; stock_movements,T-PUR-001,G6,NOT_STARTED,Purchasing Lead
+PUR-002,Purchasing,فواتير موردين وسداد جزئي دون تكرار سداد/مصروف,§12.2/§13,PAGE-26,Supplier Invoice + Payments,supplier_invoices; payments,T-PUR-002,G6,NOT_STARTED,Lead Team
+PUR-003,Purchasing,مرتجع مورد مرتبط بالمستند الأصل,§12.2,PAGE-27,Supplier Returns,supplier_returns,T-PUR-003,G6,NOT_STARTED,Lead Team
+PRT-001,Parties,عملاء: كشف حساب بفلترة ورصيد افتتاحي/ختامي وحد ائتمان (D-05),§13,PAGE-29/30,Customer Services,customers; ledger_entries,T-PRT-001,G6/G7,NOT_STARTED,Lead Team
+PRT-002,Parties,منع حذف طرف له مستندات — تعطيل فقط,§13,PAGE-29/31,Parties Services,parties.status,T-PRT-002,G6,NOT_STARTED,Lead Team
+PRT-003,Parties,سندات قبض/صرف بتوزيع على فواتير ≤ المتبقي,§13,PAGE-37,Receipt/Voucher UseCases,vouchers; allocations,T-PRT-003,G8,NOT_STARTED,Lead Team
+POS-001,POS,نافذة POS مستقلة: لا تنقل إداري ولا Sidebar ولا شبكة منتجات؛ السلة مركزية,§9.0/§9.1,POS,POS Shell,-,T-POS-001 (UI),G2/G7,NOT_STARTED,POS Lead
+POS-002,POS,سلة بأعمدة كاملة وتمييز 1 قطعة/1 كيس/علبة 12/350g/1.275kg بلا دمج مضلل,§9.1C,POS,Cart Model,invoice_lines,T-POS-002,G7,NOT_STARTED,Lead Team
+POS-003,POS,تعديل السعر/الخصم بصلاحية وسبب وتسجيل السابق والجديد والموافق,§9.4,POS,PriceOverride UseCase,price_overrides,T-POS-003,G7,NOT_STARTED,Lead Team
+POS-004,POS,تعليق واستعادة دون إنشاء حركة وبمنع مسودتين مكررتين,§9.5,PAGE-06,Draft Services,sales_drafts,T-POS-004,G7,NOT_STARTED,Lead Team
+POS-005,POS,اختصارات F1–F12 قابلة للتخصيص مع كشف تعارض الماسح,§9.10,POS,Shortcut Map,-,T-POS-005,G7/G11,NOT_STARTED,Lead Team
+POS-006,POS,نوافذ POS الثمانية والعشرون المطلوبة (Lookup حتى Error Details),§9.11,POS,Dialog Services,-,T-POS-006 (UI),G7/G11,NOT_STARTED,Lead Team
+POS-007,POS,سجل نشاط الكاشير داخل POS بصلاحيات ولا تسريب خارجها,§9.2,POS,Activity Log,audit_log,T-POS-007,G7,NOT_STARTED,Lead Team
+POS-008,POS,جداول POS: 1/100/1000 سطر ومسح متتابع بلا تجميد ولا فقد سطر محدد,§9.12,POS,Virtualized Grid,-,T-POS-008,G7/G13,NOT_STARTED,Lead Team
+PAY-001,Payments,نقدي/بطاقة/Split/آجل بحالات موثقة ومراجع مستقلة لكل وسيلة,§9.6,POS + PAGE-08,Payment UseCases,payments,T-PAY-001,G7,NOT_STARTED,Payments Lead
+PAY-002,Payments,Idempotency: عند timeout استعلام بالمرجع قبل إعادة الإرسال — لا تكرار بيع/دفع/خصم,§9.5/§11.3,POS + API,Idempotency Middleware,idempotency_keys,T-PAY-002,G7,NOT_STARTED,Lead Team
+PAY-003,Payments,لا تخزين PIN/CVV/PAN كامل؛ PIN على جهاز الدفع فقط,§9.6,الكل,PCI Policy,-,T-PAY-003 (مراجعة أمنية),G7/G12,NOT_STARTED,Lead Team
+PAY-004,Payments,تكامل طرف دفع حقيقي معتمد (Sandbox للتطوير موسومة),§9.6,PAGE-43..46,IPaymentTerminal Adapter,-,T-PAY-004 (جهاز فعلي),G7/G10,BLOCKED_EXTERNAL_DEPENDENCY,Owner + Payments Lead
+RET-001,Returns,مرتجع ≤ المتبقي غير المرتجع ومرتبط بالفاتورة الأصل,§9.8,PAGE-05,Returns UseCases,returns; return_lines,T-RET-001,G7,NOT_STARTED,Lead Team
+RET-002,Returns,رد المال بوسيلة الأصل؛ النقد استثناء بقرار موثق (D-04),§9.8,PAGE-05,Refund UseCases,refunds,T-RET-002,G7,BLOCKED_PRODUCT_DECISION,Owner
+RET-003,Returns,استبدال بفارق محسوب وأثر مخزني ومالي,§9.8,PAGE-05,Exchange UseCases,-,T-RET-003,G7,NOT_STARTED,Lead Team
+SFT-001,Shifts,دورة وردية بحالات مستقلة: OPEN→…→CLOSED مع DISCREPANCY قائمة,§9.9/§14.1/§16.8,PAGE-33/34,Shift UseCases,shifts,T-SFT-001,G8,NOT_STARTED,Retail Ops Lead
+SFT-002,Shifts,نقد متوقع/فعلي/فارق بسبب — يظل ظاهرًا حتى المعالجة,§14.1,PAGE-34,Shift Reconciliation,shift_cash_counts,T-SFT-002 (مرجع مستقل),G8,NOT_STARTED,Lead Team
+SFT-003,Shifts,فتح درج بصلاحية وسبب وأوقات طلب/استجابة وUNKNOWN صادقة,§9.9,POS,CashDrawer Adapter + Audit,drawer_events,T-SFT-003,G8/G10,NOT_STARTED,Lead Team
+TRS-001,Treasury,خزائن وسندات وتحويل داخلي لا يولد إيرادًا/مصروفًا,§14.2,PAGE-35/37,Treasury UseCases,cash_accounts; treasury_vouchers,T-TRS-001,G8,NOT_STARTED,Accounting Lead
+TRS-002,Treasury,فصل درج الكاشير/البنك/مزود الدفع — ليست رصيدًا واحدًا,§14.2/§16.5,PAGE-35/40,Treasury Model,cash_accounts,T-TRS-002,G8,NOT_STARTED,Lead Team
+TRS-003,Treasury,رأس المال والأرصدة الافتتاحية بمستندات معتمدة فقط,§14.3,PAGE-38,Capital UseCases,capital_documents,T-TRS-003,G8,BLOCKED_PRODUCT_DECISION,Owner (D-14)
+EXP-001,Expenses,مصروف بفئة ومستند واعتماد وأثر مالي واحد، وإلغاؤه بعكس موثق,§14.4,PAGE-36,Expenses UseCases,expenses,T-EXP-001,G8,NOT_STARTED,Lead Team
+ACC-001,Accounting,قيد مزدوج ودليل حسابات وفترات مالية ومنع ترحيل لفترة مغلقة,§15.2,PAGE-39/42,Accounting UseCases,journal_entries; accounts; periods,T-ACC-001,G9,BLOCKED_PRODUCT_DECISION,Owner (D-12)
+ACC-002,Accounting,FINANCIAL_DEFINITIONS.md لكل مؤشر: طريقة الحساب والمصدر والتوقيت,§15.1,التقارير,Definitions Doc + Tests,-,T-ACC-002,G9,NOT_STARTED,Lead Team
+ACC-003,Accounting,منع عرض ربح بلا تكلفة موثوقة — عرض غير متاح مع السبب,§15.1/§16.5,HOME-01 + التقارير,Analytics Guards,-,T-ACC-003,G9,NOT_STARTED,Lead Team
+ACC-004,Accounting,طريقة تكلفة تعمل على كل صيغ البيع مع snapshot وقت الترحيل,§15.3,الكل,Costing Engine,cost_snapshots,T-ACC-004,G9,BLOCKED_PRODUCT_DECISION,Owner (D-02)
+ANL-001,Analytics,قاموس مؤشرات موحد ANALYTICS_METRIC_DICTIONARY بملكية واختبارات مرجعية,§16.5,الكل,Metric Dictionary + Tests,-,T-ANL-001,G9,NOT_STARTED,Analytics Lead
+ANL-002,Analytics,لوحة Sales Intelligence بمرشحات متزامنة وdrill-down يحفظ الفلاتر والصلاحيات,§16.6,PAGE-55,Analytics API,rollups,T-ANL-002,G9,NOT_STARTED,Lead Team
+ANL-003,Analytics,أداء الكاشير: خام + لكل ساعة نشطة، بلا حكم بعينة صغيرة,§16.7,PAGE-57..59,Cashier Analytics,-,T-ANL-003,G9,NOT_STARTED,Lead Team
+ANL-004,Analytics,ربط الورديات بالخزينة بمفتاح موحد وحالات تسليم مستقلة,§16.8,PAGE-34/59,Shift Analytics,-,T-ANL-004,G9,NOT_STARTED,Lead Team
+ANL-005,Analytics,ربحية المنتجات بمستويي المنتج وSKU مع توحيد الوحدة الأساسية,§16.9,PAGE-60,Product Analytics,-,T-ANL-005,G9,NOT_STARTED,Lead Team
+ANL-006,Analytics,تمييز راكد/نافد/بطيء/متقادم مع استبعاد أثر النفاد,§16.10,PAGE-61,Slow Mover Rules,-,T-ANL-006,G9,NOT_STARTED,Lead Team
+ANL-007,Analytics,اتجاهات يومي/أسبوعي/شهري/سنوي + heatmap يوم×ساعة بقيم رقمية,§16.11,PAGE-56,Trends Analytics,-,T-ANL-007,G9,NOT_STARTED,Lead Team
+ANL-008,Analytics,توصيات حتمية موثقة بقاعدة وفترة وثقة — لا تنفيذ مالي تلقائي,§16.13,PAGE-64,Insights Engine,insights,T-ANL-008,G9,NOT_STARTED,Lead Team
+ANL-009,Analytics,جودة بيانات التحليلات ووسم المؤشرات المتأثرة وحداثة rollups,§16.14,PAGE-65,Data Quality Checks,dq_checks,T-ANL-009,G9,NOT_STARTED,Lead Team
+ANL-010,Analytics,HOME-01 بعقد §7.5: مؤشرات من API فقط، تطابق التقارير، صلاحيات خادمية,§7.5,HOME-01,Home Aggregation API,-,T-ANL-010 (مجموعة مرجعية),G9,NOT_STARTED,Lead Team
+HRD-001,Hardware,عقود typed: IBarcodeScanner/IScaleDevice/IReceiptPrinter/ILabelPrinter/ICashDrawer/IPaymentTerminal,§10.5,PAGE-43..46,Hardware.Abstractions,-,T-HRD-001,G10,NOT_STARTED,Hardware Lead
+HRD-002,Hardware,قارئ USB-HID بلا إدخال مزدوج وإدارة تركيز موثوقة,§10.1,PAGE-43,Scanner Adapter,-,T-HRD-002 (فعلي),G7/G10,NOT_STARTED,Lead Team
+HRD-003,Hardware,طابعة إيصال 58/80mm بتشكيل عربي صحيح وفشل طباعة لا يلغي البيع,§10.2,PAGE-44,Receipt Printer Adapter,print_jobs,T-HRD-003 (فعلي),G10,NOT_STARTED,Lead Team
+HRD-004,Hardware,طابعة ملصقات ZPL/TSPL بمعاينة واقعية وقراءة باركود فعلية للاختبار,§10.3,PAGE-45,Label Printer Adapter,-,T-HRD-004 (فعلي),G10,NOT_STARTED,Lead Team
+HRD-005,Hardware,ميزان: قراءة حديثة/مستقرة + tare/net وحد صلاحية عمر القراءة,§10.4,PAGE-46,Scale Adapter,-,T-HRD-005 (فعلي),G7/G10,NOT_STARTED,Lead Team
+HRD-006,Hardware,درج نقد بأوقات طلب/استجابة موثقة وUNKNOWN صادقة عند غياب المستشعر,§9.9/§10.2,POS,CashDrawer Adapter,drawer_events,T-HRD-006,G8/G10,NOT_STARTED,Lead Team
+HRD-014,Hardware,سياسة أجهزة صادقة: لا محاكاة في الإنتاج؛ BLOCKED/NOT_CONFIGURED معلنة,§10.6,الكل,Device Status Registry,device_registry,T-HRD-014,G10,NOT_STARTED,Lead Team
+SEC-001,Security,صلاحيات server-side لكل endpoint ومبدأ أقل صلاحية,§11.2/§18,API,Authorization Policies,-,T-SEC-001 (لكل دور),G3,NOT_STARTED,Security Lead
+SEC-002,Security,سجل تدقيق: مستخدم/دور/محطة/فرع/وقت/correlation/كيان/قيم قبل-بعد/سبب/نتيجة,§18,PAGE-48,Audit Service,audit_log,T-SEC-002,G3,NOT_STARTED,Lead Team
+SEC-003,Security,فصل واجبات: لا موافقة ذاتية عند طلب اعتماد ثان,§18,الكل,Approval Policies,-,T-SEC-003,G3,NOT_STARTED,Lead Team
+SEC-004,Security,لا أسرار/كلمات مرور/بيانات بطاقات في logs أو إعدادات صريحة؛ TLS,§11.2/§18,الكل,Secrets Policy,-,T-SEC-004 (مراجعة),G3/G12,NOT_STARTED,Lead Team
+BKP-001,Backup,نسخ احتياطي آلي بمراقبة نتيجة فعلية وretention معتمد,§19,PAGE-51,Backup Service,backup_records,T-BKP-001,G12,NOT_STARTED,Ops Lead
+BKP-002,Backup,اختبار استعادة كاملة في بيئة منفصلة مع بيع اختباري بعد الاستعادة,§19,PAGE-51,Restore Drill,-,T-BKP-002,G12,NOT_STARTED,Lead Team
+BKP-003,Backup,اعتماد RPO/RTO قبل الإطلاق,§19,-,Policy,-,T-BKP-003,G12,BLOCKED_PRODUCT_DECISION,Owner (D-09)
+CAP-001,Capacity,فهارس مرجعية: product_id/sku/barcode_normalized(unique)/status/category_id/brand_id/updated_at,§3.1,الكتالوج,Index Plan,DDL فهارس,T-CAP-001,G1/G13,NOT_STARTED,DB Lead
+CAP-002,Capacity,قياس فعلي على 5M منتج/10M باركود: p95 بحث باركود ≤200ms @10 محطات، نصي ≤350ms، أول 100 منتج ≤500ms,§3.2,-,Perf Harness,SYNTHETIC db,T-CAP-002,G13,NOT_STARTED,Lead Team
+CAP-003,Capacity,10 محطات متزامنة: لا فقد ولا تكرار حركات عند السباقات والانقطاع,§11.5,-,Concurrency Tests,-,T-CAP-003,G13,NOT_STARTED,Lead Team
+CAP-004,Capacity,استيراد دفعات ضخم بخلفية قابل للإلغاء والاستئناف بتقرير فشل,§3.1,PAGE-17,Import Service,import_jobs,T-CAP-004,G4/G13,NOT_STARTED,Lead Team
+UIX-001,UX,نظام Design Tokens مركزي (ألوان/مسافات/خطوط/ارتفاعات/حالات) مطلوب اختبار تطابق,§7.2,الكل,Tokens + XAML Resources,-,T-UIX-001,G2,NOT_STARTED,Design Lead
+UIX-002,UX,مقاسات 1280×720→2560×1440 وDPI 100–175% وRTL/LTR بلوحة مفاتيح وفأرة ولمس,§8.1,الكل,QA Matrix,-,T-UIX-002,G2/G11,NOT_STARTED,Lead Team
+UIX-003,UX,جدول Premium Data Grid موحد: بحث موصول Debounce وفلاتر وفرز وServer-side Pagination وافتراض,§7.2.1,كل الجداول,DataGrid System,-,T-UIX-003 (100/10k سجل),G2/G11,NOT_STARTED,Lead Team
+UIX-004,UX,تنقل علوي مصنف بلا Sidebar؛ POS لا يرثه,§7.3,Shell,Navigation Service,-,T-UIX-004,G2/G3,NOT_STARTED,Lead Team
+UIX-005,UX,تنفيذ الصفحات الـ66 كلها بوظيفة حقيقية وحالات كاملة — لا صفحة فارغة,§17,PAGE-01..66,All,-,T-UIX-005,G11,NOT_STARTED,Lead Team
+INT-001,Integration,API versioned + Idempotency + correlation_id من العميل حتى القاعدة,§11.1/§11.3,API,Middleware,-,T-INT-001,G3,NOT_STARTED,API Lead
+INT-002,Integration,Online-first مع حالة اتصال حقيقية معروضة,§11.4,الكل,Connectivity Monitor,-,T-INT-002,G3,NOT_STARTED,Lead Team
+INT-003,Integration,تخزين UTC وعرض بتوقيت الفرع المعتمد,§11.1,الكل,Time Policy,timestamptz,T-INT-003,G3/G9,NOT_STARTED,Lead Team
+TAX-001,Tax,محرك ضريبة قابل للتهيئة وفق الاختصاص المعتمد + فوترة رسمية,§0.2,PAGE-53,Tax Engine,tax_rules,T-TAX-001,G4/G12,BLOCKED_PRODUCT_DECISION,Owner (D-01)
