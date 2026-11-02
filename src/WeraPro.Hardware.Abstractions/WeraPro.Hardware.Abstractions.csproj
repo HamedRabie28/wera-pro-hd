@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WeraPro.Hardware.Abstractions — عقود الأجهزة typed (ADR-005): عزل P/Invoke
+    وCOM خلف interfaces قابلة للاختبار؛ كل نتيجة حقيقية أو UNKNOWN صادقة.
+    التنفيذ الفعلي (WeraPro.Hardware.Windows) في G10 بعد جرد الأجهزة (B-01/B-07).
+  -->
+  <PropertyGroup>
+    <RootNamespace>WeraPro.Hardware.Abstractions</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

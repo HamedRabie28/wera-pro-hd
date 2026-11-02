@@ -1,0 +1,16 @@
+{
+  "solution": {
+    "path": "WeraPro.sln",
+    "projects": [
+      "src\\WeraPro.Domain\\WeraPro.Domain.csproj",
+      "src\\WeraPro.Contracts\\WeraPro.Contracts.csproj",
+      "src\\WeraPro.Application\\WeraPro.Application.csproj",
+      "src\\WeraPro.Infrastructure\\WeraPro.Infrastructure.csproj",
+      "src\\WeraPro.Api\\WeraPro.Api.csproj",
+      "src\\WeraPro.Hardware.Abstractions\\WeraPro.Hardware.Abstractions.csproj",
+      "tests\\WeraPro.Domain.Tests\\WeraPro.Domain.Tests.csproj",
+      "tests\\WeraPro.Infrastructure.Tests\\WeraPro.Infrastructure.Tests.csproj",
+      "tests\\WeraPro.Api.Tests\\WeraPro.Api.Tests.csproj"
+    ]
+  }
+}

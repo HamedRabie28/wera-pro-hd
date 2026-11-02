@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WeraPro.Infrastructure — EF Core/Npgsql وPostgreSQL والمشغلات الخلفية
+    (ARCHITECTURE_BRIEF §1). ترحيلات SQL الخطية (database/migrations) هي المصدر
+    القانوني للمخطط (ADR-009) — EF يقرأ المخطط المطبق ولا يولّده.
+  -->
+  <PropertyGroup>
+    <RootNamespace>WeraPro.Infrastructure</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WeraPro.Domain\WeraPro.Domain.csproj" />
+    <ProjectReference Include="..\WeraPro.Application\WeraPro.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+  </ItemGroup>
+
+  <!--
+    ملفات الترحيل SQL مضمّنة كمورد واحد — المصدر الواحد للحقيقة:
+    database/migrations/*.sql كما طبّقها run_migrations.py يقرؤها عدّاء .NET
+    من نفس الملفات حرفياً (بصمات sha256 متطابقة بين المسارين).
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\database\migrations\V*__*.sql"
+                      LogicalName="WeraPro.Infrastructure.Migrations.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

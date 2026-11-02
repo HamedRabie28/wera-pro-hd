@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WeraPro.Contracts — عقود API المشتركة versioned (§11.1: عقود versioned؛
+    لا تغيير استجابة مستخدمة دون توافق أو خطة ترحيل للعقد).
+    تشاركها Api والعميل Desktop — ضمان تطابق الأطراف على عقد واحد.
+  -->
+  <PropertyGroup>
+    <RootNamespace>WeraPro.Contracts</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

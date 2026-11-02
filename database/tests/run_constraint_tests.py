@@ -708,19 +708,23 @@ def t_env_01(conn):
     return f"{tables} جدولاً في 9 مخططات + منظر المطابقة"
 
 
-@test("T-ENV-02", "Env", "إعدادات D-01..D-18 موجودة وموسومة بحالة الحسم الصادقة (بعد حسم D-01/D-07/D-16 بأمر المالك 2026-11-01)")
+@test("T-ENV-02", "Env", "إعدادات D-01..D-18 موجودة وموسومة بحالة الحسم الصادقة (بعد حسم D-01/D-07/D-16 بأمر 2026-11-01 وD-02/D-03 بأمر 2026-11-02)")
 def t_env_02(conn):
     n = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE decision_ref LIKE 'D-%'")[0]
     pending = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE confirmation_status='PENDING_OWNER_CONFIRMATION'")[0]
     settled = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE confirmation_status='OWNER_CONFIRMED'")[0]
     d01 = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE decision_ref='D-01' AND confirmation_status='OWNER_CONFIRMED'")[0]
     d07 = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE decision_ref='D-07' AND confirmation_status='OWNER_CONFIRMED'")[0]
+    d02 = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE decision_ref='D-02' AND confirmation_status='OWNER_CONFIRMED'")[0]
+    d03 = one(conn, "SELECT COUNT(*) FROM core.business_settings WHERE decision_ref='D-03' AND confirmation_status='OWNER_CONFIRMED'")[0]
     assert n >= 20, f"عدد إعدادات القرارات {n} — أقل من المتوقع"
     assert d01 == 2, f"إعدادات D-01 المحسومة {d01} — متوقع 2 (policy_mode + standard_rate)"
     assert d07 == 4, f"إعدادات D-07 المحسومة {d07} — متوقع 4 (الدقة/الخطوة/تقريب المبلغ/تقريب الوزن)"
-    assert settled == 6, f"الإعدادات المحسومة OWNER_CONFIRMED {settled} — متوقع 6 (V011)"
-    assert pending >= 12, f"الإعدادات المعلنة بانتظار الحسم {pending}"
-    return f"{n} إعداداً مرتبطاً بقرارات · محسوم OWNER_CONFIRMED={settled} (D-01/D-07) · بانتظار المالك={pending} (بقية D-xx)"
+    assert d02 == 1, f"إعدادات D-02 المحسومة {d02} — متوقع 1 (costing_method=WEIGHTED_AVERAGE بترحيل V012)"
+    assert d03 == 1, f"إعدادات D-03 المحسومة {d03} — متوقع 1 (negative_stock_policy=SUPERVISOR_APPROVAL بترحيل V012)"
+    assert settled == 8, f"الإعدادات المحسومة OWNER_CONFIRMED {settled} — متوقع 8 (V011: D-01×2+D-07×4 · V012: D-02+D-03)"
+    assert pending >= 10, f"الإعدادات المعلنة بانتظار الحسم {pending}"
+    return f"{n} إعداداً مرتبطاً بقرارات · محسوم OWNER_CONFIRMED={settled} (D-01/D-07 بـV011 وD-02/D-03 بـV012) · بانتظار المالك={pending} (بقية D-xx)"
 
 
 # ───────────────────────────── التشغيل ─────────────────────────────

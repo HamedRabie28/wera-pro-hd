@@ -1,0 +1,28 @@
+<Project>
+
+  <!--
+    WERA PRO HD — قواعد البناء المركزية (ARCHITECTURE_BRIEF §2: global.json +
+    Directory.Packages.props — ممنوع latest غير المقيد)
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsNotAsErrors>NU1902;NU1903</WarningsNotAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>10.0-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- CS1591: وثائق XML تُولَّد للمكتبات؛ فرضها على كل عضو DTO مبالغة —
+         التوثيق موجود على مستوى الأنواع والقرارات المعمارية لا كل خاصية نقل -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <!-- العربية RTL أولاً: لا InvariantGlobalization — نحتاج ICU كاملة -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+</Project>

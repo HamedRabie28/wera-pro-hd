@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WeraPro.Desktop — WinUI 3 / XAML / MVVM (ADR-001) · G3: الإقلاع وتسجيل الدخول
+    والتنقل العلوي وفتح POS المستقلة، متصلاً بالـAPI عبر IHttpClientFactory.
+    ممنوع منعًا باتًا (ADR-002): أي مرجع Npgsql/EF/اتصال مباشر بقاعدة البيانات —
+    مفروض بفحص معماري آلي في tests/WeraPro.Api.Tests (ArchitectureTests).
+    البناء: Windows فقط (B-05) — راجع README.md داخل المشروع.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>WeraPro.Desktop</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <!-- عقود API من مشروع العقود المشترك — لا نسخ DTO يدوية -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Sinks.File" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WeraPro.Contracts\WeraPro.Contracts.csproj" />
+    <!-- لاحظ: لا ProjectReference إلى Infrastructure/Domain — العميل يرى العقود فقط -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

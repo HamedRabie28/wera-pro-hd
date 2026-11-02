@@ -1,0 +1,42 @@
+root = true
+
+# WERA PRO HD — قواعد نمط الكود (EnforceCodeStyleInBuild مفعّل في Directory.Build.props)
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,csproj,props,targets}]
+indent_style = space
+indent_size = 4
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.{xml,xaml}]
+indent_style = space
+indent_size = 2
+
+[*.cs]
+# التسمية: طرق Async بلاحقة Async · حقول خاصة _camelCase · ثوابت PascalCase
+dotnet_naming_rule.async_methods_end_with_async.severity = warning
+dotnet_naming_rule.async_methods_end_with_async.symbols = async_methods
+dotnet_naming_rule.async_methods_end_with_async.suffix = Async
+dotnet_naming_symbols.async_methods.applicable_kinds = method
+dotnet_naming_symbols.async_methods.applicable_accessibility = *
+dotnet_naming_symbols.async_methods.required_modifiers = async
+
+dotnet_naming_rule.private_fields_underscore.severity = suggestion
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.prefix = _
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+# العربية أولاً: النصوص مرئية للمستخدم — لا ترميز افتراضي غير UTF-8
+file_header_template = WERA PRO HD — GFM-CSharp 2.4.1

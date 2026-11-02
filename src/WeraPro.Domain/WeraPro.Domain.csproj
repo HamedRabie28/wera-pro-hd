@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WeraPro.Domain — قواعد العمل الصرفة (ARCHITECTURE_BRIEF §1: لا يعتمد على
+    WinUI أو HTTP أو EF Core إطلاقاً). G3: النواة المشتركة + الأمان + الإعدادات
+    وقواعد الوزن المرجعية (D-07) — بقية المجالات تُضاف في بواباتها G4+.
+  -->
+  <PropertyGroup>
+    <RootNamespace>WeraPro.Domain</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

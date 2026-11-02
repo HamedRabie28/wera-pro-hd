@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    اختبارات API/Contract (§21.1 G3→G14): WebApplicationFactory على PostgreSQL حقيقي —
+    مصادقة/تفويض لكل دور · correlation · rate limiting · validation · health · OpenAPI ·
+    عقد الاستجابات · عميلان متزامنان · وفحص معماري: لا اتصال مباشر من Desktop للقاعدة.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>WeraPro.Api.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WeraPro.Api\WeraPro.Api.csproj" />
+    <ProjectReference Include="..\..\src\WeraPro.Contracts\WeraPro.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="BCrypt.Net-Next" />
+  </ItemGroup>
+
+</Project>

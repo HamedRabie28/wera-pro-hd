@@ -1,0 +1,16 @@
+<Project>
+
+  <!--
+    قواعد إضافية لمشاريع الاختبارات فقط:
+    CA1707 (شرطات سفلية في أسماء اختبارات) — عرف xUnit الراسخ Method_Scenario_Expected.
+    ملاحظة: Directory.Build.props لا تتسلسل تلقائياً — الاستيراد الصريح للأب إلزامي.
+  -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <!-- CA1707: عرف xUnit الراسخ Method_Scenario_Expected.
+         CA1305: قيم عددية مضبوطة من قاعدة الاختبار — الثقافة غير ذات موضوع في الاختبارات. -->
+    <NoWarn>$(NoWarn);CA1707;CA1305</NoWarn>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    اختبارات البنية التحتية (Migration/Database §21.1 G1→G14): عدّاء الترحيلات
+    على PostgreSQL 16 حقيقي — إنشاء نظيف + Idempotent + رفض بصمة معدلة (Forward Fix)
+    + تطابق بصمات الملفات المضمّنة مع database/migrations حرفياً.
+    الاتصال: متغير البيئة WERA_TEST_DB_HOST (افتراضي localhost:55432).
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>WeraPro.Infrastructure.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WeraPro.Infrastructure\WeraPro.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+</Project>

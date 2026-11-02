@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WeraPro.Application — حالات الاستخدام والخدمات وDTO والتحقق (ARCHITECTURE_BRIEF §1:
+    بوابة إلزامية — ممنوع تجاوز الواجهة هذه الطبقة إلى قاعدة البيانات).
+  -->
+  <PropertyGroup>
+    <RootNamespace>WeraPro.Application</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WeraPro.Domain\WeraPro.Domain.csproj" />
+    <ProjectReference Include="..\WeraPro.Contracts\WeraPro.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>

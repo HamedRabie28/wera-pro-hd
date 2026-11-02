@@ -1,0 +1,15 @@
+# WERA PRO HD — مخرجات البناء والسجلات والقواعد المحلية
+bin/
+obj/
+logs/
+*.user
+*.suo
+TestResults/
+test-results/
+*.trx
+coverage/
+*.lock.json
+!nuget.lock.json
+.vs/
+.idea/
+*.swp

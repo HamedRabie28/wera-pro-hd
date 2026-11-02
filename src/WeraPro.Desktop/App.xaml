@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  App.xaml — WERA PRO HD Desktop (G3)
+  قاعدة §7.2: كل الألوان/الأبعاد من DesignTokens.xaml (G2 المعتمدة) — لا قيم عشوائية.
+-->
+<Application
+    x:Class="WeraPro.Desktop.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary Source="Design/DesignTokens.xaml" />
+                <ResourceDictionary Source="Design/Wera.Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
