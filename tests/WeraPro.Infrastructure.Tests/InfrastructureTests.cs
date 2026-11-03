@@ -42,14 +42,14 @@ public sealed class SqlMigrationRunnerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task FreshDatabase_AppliesAllMigrations_HeadIsV14()
+    public async Task FreshDatabase_AppliesAllMigrations_HeadIsV15()
     {
         var outcome = await Runner.ApplyPendingAsync(ScratchUri);
 
-        Assert.Equal(14, outcome.Head);
-        Assert.Equal(14, outcome.Applied);
+        Assert.Equal(15, outcome.Head);
+        Assert.Equal(15, outcome.Applied);
         Assert.Equal(0, outcome.SkippedAlready);
-        await AssertMigrationCountAsync(14);
+        await AssertMigrationCountAsync(15);
     }
 
     [Fact]
@@ -59,8 +59,8 @@ public sealed class SqlMigrationRunnerTests : IAsyncLifetime
         var second = await Runner.ApplyPendingAsync(ScratchUri);
 
         Assert.Equal(0, second.Applied);
-        Assert.Equal(14, second.SkippedAlready);
-        Assert.Equal(14, second.Head);
+        Assert.Equal(15, second.SkippedAlready);
+        Assert.Equal(15, second.Head);
     }
 
     [Fact]

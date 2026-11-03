@@ -121,6 +121,64 @@ public sealed class WeraApiClient(
         return result.Map(v => v ?? []);
     }
 
+    // ── الكتالوج (G4) ─────────────────────────────────────────────────────
+
+    /// <summary>بحث نصي محدود بترقيم خادمي (جدول الكتالوج المتقدم §7.2.1).</summary>
+    public async Task<ApiCallResult<CatalogSearchResponse>> SearchProductsAsync(
+        string? query, string? saleMode, string? status, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string>
+        {
+            "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        };
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            qs.Insert(0, "query=" + Uri.EscapeDataString(query.Trim()));
+        }
+        if (!string.IsNullOrWhiteSpace(saleMode))
+        {
+            qs.Add("saleMode=" + Uri.EscapeDataString(saleMode));
+        }
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            qs.Add("status=" + Uri.EscapeDataString(status));
+        }
+        return await GetAsync<CatalogSearchResponse>(ApiRoutes.CatalogProducts + "?" + string.Join("&", qs), ct);
+    }
+
+    /// <summary>مطابقة دقيقة بالباركود/SKU/PLU (ماسح POS — §3.1).</summary>
+    public async Task<ApiCallResult<CatalogLookupResponse>> LookupByCodeAsync(string code, CancellationToken ct = default)
+    {
+        var url = ApiRoutes.CatalogLookup + "?code=" + Uri.EscapeDataString(code.Trim());
+        var result = await GetAsync<CatalogLookupResponse>(url, ct);
+        return result;
+    }
+
+    public async Task<ApiCallResult<ProductDto>> GetProductAsync(long productId, CancellationToken ct = default)
+    {
+        var url = ApiRoutes.CatalogProductById.Replace(
+            "{productId:long}", productId.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal);
+        return await GetAsync<ProductDto>(url, ct);
+    }
+
+    /// <summary>إنشاء منتج متعدد الأقسام — معاملة واحدة ذرية (لا حفظ جزئي §4.4).</summary>
+    public async Task<ApiCallResult<ProductDto>> CreateProductAsync(CreateProductRequest request, CancellationToken ct = default)
+    {
+        return await PostAsync<CreateProductRequest, ProductDto>(ApiRoutes.CatalogProducts, request, allowAnonymous: false, ct);
+    }
+
+    public async Task<ApiCallResult<UnitsResponse>> GetUnitsAsync(CancellationToken ct = default)
+    {
+        return await GetAsync<UnitsResponse>(ApiRoutes.CatalogUnits, ct);
+    }
+
+    /// <summary>مرجع المحرر: الفئات والعلامات والقوائم السعرية النشطة.</summary>
+    public async Task<ApiCallResult<CatalogReferenceResponse>> GetCatalogReferenceAsync(CancellationToken ct = default)
+    {
+        return await GetAsync<CatalogReferenceResponse>(ApiRoutes.CatalogReference, ct);
+    }
+
     private async Task<ApiCallResult<T>> GetAsync<T>(string url, CancellationToken ct)
     {
         try

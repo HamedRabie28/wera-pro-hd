@@ -72,6 +72,8 @@ public sealed partial class App : Application
                 services.AddSingleton<LoginViewModel>();
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<PosViewModel>();
+                services.AddSingleton<ViewModels.CatalogViewModel>();
+                services.AddTransient<ViewModels.ProductEditorViewModel>();
             })
             .Build();
 

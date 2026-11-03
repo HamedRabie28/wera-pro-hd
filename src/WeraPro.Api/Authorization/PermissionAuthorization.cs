@@ -65,6 +65,22 @@ public static class PermissionPolicy
                 p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(PermissionCodes.BranchesRead)));
             options.AddPolicy(PermissionCodes.AuditView,
                 p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(PermissionCodes.AuditView)));
+
+            // ── صلاحيات الكتالوج G4 (V009 + V015) ──
+            foreach (var code in new[]
+            {
+                PermissionCodes.CatalogProductRead,
+                PermissionCodes.CatalogProductCreate,
+                PermissionCodes.CatalogProductEdit,
+                PermissionCodes.CatalogProductDeactivate,
+                PermissionCodes.CatalogBarcodeManage,
+                PermissionCodes.CatalogPriceEdit,
+                PermissionCodes.InventoryMovementPost,
+            })
+            {
+                options.AddPolicy(code,
+                    p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
+            }
         });
     }
 }

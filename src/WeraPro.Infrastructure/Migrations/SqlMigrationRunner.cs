@@ -73,13 +73,40 @@ public sealed partial class SqlMigrationRunner
     /// <summary>
     /// يطبق الترحيلات المعلقة على قاعدة معطاة — يُستدعى عند إقلاع API وقبل الاختبارات.
     /// لا يستخدم سلاسل اتصال من العميل مطلقاً — إعداد خادم فقط.
+    /// قفل استشاري على مستوى الجلسة (pg_advisory_lock) يسلسل أي إقلاعين متوازيين
+    /// على نفس القاعدة (اختبارات متوازية أو نسخ خادم متعددة) — الثّاني ينتظر ثم
+    /// يجد الرأس مطبقاً فيتخطاه بسلام.
     /// </summary>
+    /// <summary>مفتاح القفل الاستشاري — 0x57455241 = "WERA".</summary>
+    private const long AdvisoryLockKey = 0x57455241L;
+
     public async Task<MigrationOutcome> ApplyPendingAsync(string connectionString, CancellationToken ct = default)
     {
         var migrations = LoadEmbeddedMigrations();
         await using var conn = new NpgsqlConnection(connectionString);
         await conn.OpenAsync(ct);
 
+        // تسلسل الإقلاعات المتوازية على نفس القاعدة — يُحرر في finally أو بإغلاق الجلسة
+        await using (var lockCmd = new NpgsqlCommand("SELECT pg_advisory_lock(@k)", conn))
+        {
+            lockCmd.Parameters.AddWithValue("k", AdvisoryLockKey);
+            await lockCmd.ExecuteNonQueryAsync(ct);
+        }
+        try
+        {
+            return await ApplyUnderLockAsync(conn, migrations, ct);
+        }
+        finally
+        {
+            await using var unlock = new NpgsqlCommand("SELECT pg_advisory_unlock(@k)", conn);
+            unlock.Parameters.AddWithValue("k", AdvisoryLockKey);
+            await unlock.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+    }
+
+    private async Task<MigrationOutcome> ApplyUnderLockAsync(
+        NpgsqlConnection conn, IReadOnlyList<EmbeddedMigration> migrations, CancellationToken ct)
+    {
         var applied = new Dictionary<int, string>();
         // V001 هو من ينشئ core.schema_migrations — على قاعدة نظيفة تماماً الجدول غير موجود بعد.
         await using (var exists = new NpgsqlCommand(

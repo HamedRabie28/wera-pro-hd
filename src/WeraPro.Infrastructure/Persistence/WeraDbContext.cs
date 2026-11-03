@@ -24,6 +24,23 @@ public sealed class WeraDbContext : DbContext
     public DbSet<RefreshTokenRow> RefreshTokens => Set<RefreshTokenRow>();
     public DbSet<AuditLogRow> AuditLogs => Set<AuditLogRow>();
 
+    // ── الكتالوج (G4 — V002/V015) ──
+    public DbSet<CategoryRow> Categories => Set<CategoryRow>();
+    public DbSet<BrandRow> Brands => Set<BrandRow>();
+    public DbSet<UnitRow> Units => Set<UnitRow>();
+    public DbSet<UnitConversionRow> UnitConversions => Set<UnitConversionRow>();
+    public DbSet<ProductRow> Products => Set<ProductRow>();
+    public DbSet<SkuRow> Skus => Set<SkuRow>();
+    public DbSet<PackageRow> Packages => Set<PackageRow>();
+    public DbSet<BarcodeRow> Barcodes => Set<BarcodeRow>();
+    public DbSet<PluRow> Plus => Set<PluRow>();
+    public DbSet<PriceListRow> PriceLists => Set<PriceListRow>();
+    public DbSet<ProductPriceRow> ProductPrices => Set<ProductPriceRow>();
+
+    // ── المخزون: الدفتر والمخازن (G4 — V003) ──
+    public DbSet<WarehouseRow> Warehouses => Set<WarehouseRow>();
+    public DbSet<StockMovementRow> StockMovements => Set<StockMovementRow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("core");

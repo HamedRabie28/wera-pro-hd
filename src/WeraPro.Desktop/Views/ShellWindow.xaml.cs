@@ -59,7 +59,12 @@ public sealed partial class ShellWindow : Window
 
     private void NavTop_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        // G3: «التشغيل» فقط مفعّل — البقية معطلة في XAML بأسبابها (قاعدة الصدق)
+        // G4: «الكتالوج» مفعّل — يفتح صفحة الكتالوج؛ «التشغيل» يعيد للرئيسية
+        if (args.SelectedItem is NavigationViewItem { Tag: string tag })
+        {
+            HomeContent.Visibility = tag == "catalog" ? Visibility.Collapsed : Visibility.Visible;
+            CatalogContent.Visibility = tag == "catalog" ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 
     private void OpenPos_Click(object sender, RoutedEventArgs e)

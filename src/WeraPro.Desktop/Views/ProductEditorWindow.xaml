@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Views/ProductEditorWindow.xaml — PAGE-10 محرر منتج متعدد الأقسام بمراجعة قبل
+  الحفظ (LF-C) · G4. الأقسام: 1 الهوية · 2 صيغ البيع (عددي/وزني/عبوة/سيريال)
+  · 3 الباركود وPLU (ضمن كل صيغة) · 4 الأسعار والضرائب (سعر مستقل لكل صيغة)
+  · 5 العبوات · 6 المراجعة والحفظ.
+  لا حفظ جزئي: الطلب ذرّي على الخادم، وزر الحفظ معطّل حتى اعتماد المراجعة (§4.4).
+  قسم الوزن يعرض قيم D-07 الافتراضية (1g/5g) والحدود اختيارية — القيم الحاكمة
+  تُقرأ من إعدادات الخادم عند البيع الفعلي (G7).
+-->
+<Window
+    x:Class="WeraPro.Desktop.Views.ProductEditorWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Padding="24,16,24,10" Spacing="4">
+            <TextBlock Text="منتج جديد — محرر متعدد الأقسام" FontFamily="{StaticResource WeraFontDisplay}"
+                       FontSize="22" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+            <TextBlock Text="صيغة البيع صريحة لا تُستنتج · سعر مستقل لكل صيغة · الحفظ ذرّي بعد مراجعة إلزامية (لا حفظ جزئي)"
+                       FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" Padding="24,0,24,8">
+            <StackPanel Spacing="12" MaxWidth="1060" HorizontalAlignment="Stretch">
+
+                <!-- ═══ 1) الهوية ═══ -->
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                        BorderThickness="1" CornerRadius="12" Padding="18,14">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="1) الهوية" FontFamily="{StaticResource WeraFontDisplay}" FontSize="15"
+                                   FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="4">
+                                <TextBlock Text="كود المنتج (إنجليزي فريد)" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <TextBox x:Name="CodeField" Height="38" PlaceholderText="MILK-500"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <TextBlock Text="الاسم بالعربية" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <TextBox x:Name="NameArField" Height="38" PlaceholderText="لبن كامل الدسم 500 مل"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="4">
+                                <TextBlock Text="الاسم بالإنجليزية (اختياري)" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <TextBox x:Name="NameEnField" Height="38"/>
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="4">
+                                <TextBlock Text="الفئة (من الخادم)" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <ComboBox x:Name="CategoryField" Height="38" HorizontalAlignment="Stretch"
+                                          ItemsSource="{x:Bind Vm.CategoryLabels}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Bottom">
+                                <CheckBox x:Name="TrackLotsCheck" Content="تتبع الدفعات/الصلاحية"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Bottom">
+                                <CheckBox x:Name="TrackSerialsCheck" Content="تتبع السيريال (يلزم لصيغة السيريال)"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 2..4) صيغ البيع (الوحدة/الوزن/الباركود/السعر لكل صيغة) ═══ -->
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                        BorderThickness="1" CornerRadius="12" Padding="18,14">
+                    <StackPanel Spacing="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="2) صيغ البيع — الوحدة والوزن والباركود/PLU والسعر" FontFamily="{StaticResource WeraFontDisplay}"
+                                           FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                <TextBlock Text="لكل صيغة سعر وباركود مستقلان — للمنتج الواحد كيس مفرد وعلبة 12 كيساً بصيغتين منفصلتين (§4.3)"
+                                           FontSize="11.5" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="＋ صيغة بيع" Click="AddSku_Click" VerticalAlignment="Center"
+                                    Background="{StaticResource WeraActionPrimarySoftBrush}" Foreground="{StaticResource WeraActionPrimaryInkBrush}"
+                                    BorderBrush="{StaticResource WeraActionPrimarySoftBorderBrush}" BorderThickness="1" CornerRadius="10"/>
+                        </Grid>
+
+                        <ItemsControl x:Name="SkusControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SkuDraft" xmlns:vm="using:WeraPro.Desktop.ViewModels">
+                                    <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="10"
+                                            BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                                            Padding="14,10" Margin="0,0,0,10">
+                                        <StackPanel Spacing="8">
+                                            <Grid ColumnSpacing="10">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="3">
+                                                    <TextBlock Text="كود الصيغة (فريد)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <TextBox Text="{x:Bind SkuCode, Mode=TwoWay}" Height="36" PlaceholderText="MILK-500-BAG"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Spacing="3">
+                                                    <TextBlock Text="اسم الصيغة (كيس/علبة…)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <TextBox Text="{x:Bind NameAr, Mode=TwoWay}" Height="36" PlaceholderText="كيس مفرد"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Spacing="3">
+                                                    <TextBlock Text="صيغة البيع (صريحة — لا تُستنتج)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <ComboBox SelectedIndex="{x:Bind ModeIndex, Mode=TwoWay}" Height="36" HorizontalAlignment="Stretch">
+                                                        <ComboBoxItem Content="عددي"/>
+                                                        <ComboBoxItem Content="وزني"/>
+                                                        <ComboBoxItem Content="عبوة"/>
+                                                        <ComboBoxItem Content="سيريال"/>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                                <Button Grid.Column="3" Content="🗑" Click="RemoveSku_Click" Tag="{x:Bind Ordinal}"
+                                                        VerticalAlignment="Bottom" Background="#00000000" BorderThickness="0"/>
+                                            </Grid>
+
+                                            <Grid ColumnSpacing="10">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="0.7*"/><ColumnDefinition Width="0.7*"/></Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="3">
+                                                    <TextBlock Text="الوحدة الأساسية (المخزون)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <ComboBox SelectedIndex="{x:Bind BaseUnitIndex, Mode=TwoWay}" Height="36" HorizontalAlignment="Stretch"
+                                                              ItemsSource="{Binding UnitLabels}"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Spacing="3">
+                                                    <TextBlock Text="وحدة البيع الافتراضية" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <ComboBox SelectedIndex="{x:Bind SaleUnitIndex, Mode=TwoWay}" Height="36" HorizontalAlignment="Stretch"
+                                                              ItemsSource="{Binding UnitLabels}"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Spacing="3">
+                                                    <TextBlock Text="السعر (ج.م — مستقل)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <TextBox Text="{x:Bind UnitPrice, Mode=TwoWay}" Height="36" PlaceholderText="5.00"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="3" Spacing="3">
+                                                    <TextBlock Text="الضريبة (D-01)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <ComboBox SelectedIndex="{x:Bind TaxIndex, Mode=TwoWay}" Height="36" HorizontalAlignment="Stretch">
+                                                        <ComboBoxItem Content="شاملة 14%"/>
+                                                        <ComboBoxItem Content="سعر صفر"/>
+                                                        <ComboBoxItem Content="معفاة"/>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- إعدادات الوزن — للصيغة الوزنية حصراً (D-07) -->
+                                            <Grid ColumnSpacing="10" Visibility="{x:Bind IsWeight, Mode=OneWay}">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="3">
+                                                    <TextBlock Text="دقة الوزن g (افتراضي D-07: 1)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <TextBox Text="{x:Bind WeightPrecision, Mode=TwoWay}" Height="36"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Spacing="3">
+                                                    <TextBlock Text="خطوة الوزن g (افتراضي D-07: 5)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <TextBox Text="{x:Bind WeightStep, Mode=TwoWay}" Height="36"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Spacing="3">
+                                                    <TextBlock Text="حدود الوزن كجم (الأدنى/الأقصى — اختياري)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <Grid ColumnSpacing="8">
+                                                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                                        <TextBox Grid.Column="0" Text="{x:Bind MinWeightKg, Mode=TwoWay}" Height="36" PlaceholderText="الأدنى"/>
+                                                        <TextBox Grid.Column="1" Text="{x:Bind MaxWeightKg, Mode=TwoWay}" Height="36" PlaceholderText="الأقصى"/>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <Grid ColumnSpacing="10">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="0.8*"/><ColumnDefinition Width="0.8*"/></Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" Spacing="3">
+                                                    <TextBlock Text="الباركود (رقم تحقق EAN يُفحص خادمياً)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <TextBox Text="{x:Bind BarcodeValue, Mode=TwoWay}" Height="36" FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Spacing="3">
+                                                    <TextBlock Text="النوع" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <ComboBox SelectedIndex="{x:Bind BarcodeTypeIndex, Mode=TwoWay}" Height="36" HorizontalAlignment="Stretch">
+                                                        <ComboBoxItem Content="EAN-13"/>
+                                                        <ComboBoxItem Content="CODE128"/>
+                                                        <ComboBoxItem Content="داخلي"/>
+                                                    </ComboBox>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" Spacing="3">
+                                                    <TextBlock Text="PLU (4–5 أرقام — للوزني)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                    <TextBox Text="{x:Bind PluCode, Mode=TwoWay}" Height="36" FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 5) العبوات ═══ -->
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                        BorderThickness="1" CornerRadius="12" Padding="18,14">
+                    <StackPanel Spacing="10">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="5) العبوات — بيع العلبة يخصم من رصيد المحتوى (أثر واحد)" FontFamily="{StaticResource WeraFontDisplay}"
+                                           FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                <TextBlock Text="مثال §4.3: علبة 12 كيساً = صيغة «عبوة» تحوي 12 × صيغة «كيس مفرد» — سعراهما مستقلان"
+                                           FontSize="11.5" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="＋ تعريف عبوة" Click="AddPackage_Click" VerticalAlignment="Center"
+                                    Background="{StaticResource WeraActionPrimarySoftBrush}" Foreground="{StaticResource WeraActionPrimaryInkBrush}"
+                                    BorderBrush="{StaticResource WeraActionPrimarySoftBorderBrush}" BorderThickness="1" CornerRadius="10"/>
+                        </Grid>
+
+                        <ItemsControl x:Name="PackagesControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:PackageDraft" xmlns:vm="using:WeraPro.Desktop.ViewModels">
+                                    <Grid ColumnSpacing="10" Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="10"
+                                          BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                                          Padding="14,10" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="1.4*"/><ColumnDefinition Width="0.8*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="3">
+                                            <TextBlock Text="صيغة العبوة (PACK)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                            <TextBox Text="{x:Bind PackageSkuOrdinal, Mode=TwoWay}" Height="36" FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="3">
+                                            <TextBlock Text="صيغة المحتوى (المفردة)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                            <TextBox Text="{x:Bind ContentSkuOrdinal, Mode=TwoWay}" Height="36" FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Spacing="3">
+                                            <TextBlock Text="عدد الوحدات بالعبوة" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                            <TextBox Text="{x:Bind UnitsPerPackage, Mode=TwoWay}" Height="36" FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="3" Content="🗑" Click="RemovePackage_Click" VerticalAlignment="Bottom"
+                                                Background="#00000000" BorderThickness="0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 6) المراجعة قبل الحفظ (إلزامية §4.4) ═══ -->
+                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderStrongBrush}"
+                        BorderThickness="1" CornerRadius="12" Padding="18,14">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="6) المراجعة قبل الحفظ — إلزامية" FontFamily="{StaticResource WeraFontDisplay}"
+                                   FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <Button Content="ابنُد مراجعة كاملة من الأقسام" Click="BuildReview_Click"
+                                Background="{StaticResource WeraActionPrimarySoftBrush}" Foreground="{StaticResource WeraActionPrimaryInkBrush}"
+                                BorderBrush="{StaticResource WeraActionPrimarySoftBorderBrush}" BorderThickness="1" CornerRadius="10"
+                                HorizontalAlignment="Start"/>
+                        <ScrollViewer MaxHeight="220" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="8">
+                            <ItemsControl x:Name="ReviewList" Padding="10">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <TextBlock Text="{x:Bind}" FontSize="12.5" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource WeraTextPrimaryBrush}" Margin="0,2"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <CheckBox x:Name="ReviewApproveCheck" Content="اعتمدت المراجعة — احفظ المنتج كاملاً في معاملة واحدة"
+                                  Checked="ReviewApprove_Changed" Unchecked="ReviewApprove_Changed"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- الشريط السفلي: حفظ/إلغاء + حالة صدق -->
+        <Border Grid.Row="2" Background="{StaticResource WeraSurfaceSubtleBrush}"
+                BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,1,0,0" Padding="24,10">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <ProgressRing x:Name="SavingRing" Width="22" Height="22" IsActive="False"/>
+                    <TextBlock x:Name="StatusText" Text="" FontSize="12.5" VerticalAlignment="Center"
+                               Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap" MaxWidth="560"/>
+                </StackPanel>
+                <Button Grid.Column="1" x:Name="CancelBtn" Content="إلغاء" Click="Cancel_Click" Margin="0,0,10,0"
+                        Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                        BorderThickness="1" CornerRadius="10" MinWidth="110"/>
+                <Button Grid.Column="2" x:Name="SaveBtn" Content="اعتماد وحفظ المنتج" Click="Save_Click" IsEnabled="False"
+                        Background="{StaticResource WeraActionPrimaryBrush}" Foreground="White"
+                        BorderThickness="0" CornerRadius="10" MinWidth="170"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

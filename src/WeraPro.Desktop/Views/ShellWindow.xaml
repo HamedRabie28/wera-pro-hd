@@ -8,7 +8,8 @@
     x:Class="WeraPro.Desktop.Views.ShellWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:views="using:WeraPro.Desktop.Views">
 
     <Grid FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
         <Grid.RowDefinitions>
@@ -46,7 +47,7 @@
                 <muxc:NavigationView.MenuItems>
                     <muxc:NavigationViewItem Content="التشغيل" Tag="home" IsSelected="True"/>
                     <muxc:NavigationViewItem Content="المبيعات (G7)" Tag="sales" IsEnabled="False" ToolTipService.ToolTip="يبني في بوابة G7 — غير متاح بعد"/>
-                    <muxc:NavigationViewItem Content="الكتالوج (G4)" Tag="catalog" IsEnabled="False" ToolTipService.ToolTip="يبني في بوابة G4 — غير متاح بعد"/>
+                    <muxc:NavigationViewItem Content="الكتالوج" Tag="catalog" ToolTipService.ToolTip="G4: المنتجات وصيغ البيع والعبوات والباركود — بحث Exact Match"/>
                     <muxc:NavigationViewItem Content="المخزون (G6)" Tag="inventory" IsEnabled="False" ToolTipService.ToolTip="يبني في بوابة G6 — غير متاح بعد"/>
                     <muxc:NavigationViewItem Content="المشتريات (G6)" Tag="purchasing" IsEnabled="False" ToolTipService.ToolTip="يبني في بوابة G6 — غير متاح بعد"/>
                 </muxc:NavigationView.MenuItems>
@@ -75,36 +76,41 @@
             </StackPanel>
         </Grid>
 
-        <!-- ═══ المحتوى: صفحة التشغيل التأسيسية ═══ -->
-        <ScrollViewer Grid.Row="1" Padding="24,18">
-            <StackPanel Spacing="14" MaxWidth="900" HorizontalAlignment="Stretch">
-                <TextBlock Text="التشغيل" FontFamily="{StaticResource WeraFontDisplay}" FontSize="20"
-                           FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
-                <TextBlock x:Name="ScopeText" Text="—" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+        <!-- ═══ المحتوى: التشغيل التأسيسية أو صفحة الكتالوج (G4) ═══ -->
+        <Grid Grid.Row="1">
+            <ScrollViewer x:Name="HomeContent" Padding="24,18">
+                <StackPanel Spacing="14" MaxWidth="900" HorizontalAlignment="Stretch">
+                    <TextBlock Text="التشغيل" FontFamily="{StaticResource WeraFontDisplay}" FontSize="20"
+                               FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                    <TextBlock x:Name="ScopeText" Text="—" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
 
-                <!-- بطاقة الحالة التأسيسية — بيانات حقيقية من الخادم -->
-                <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
-                        BorderThickness="1" CornerRadius="14" Padding="18,14">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="أساس G3 قائم ويعمل" FontSize="14.5" FontWeight="SemiBold"
-                                   Foreground="{StaticResource WeraBrandNavyBrush}"/>
-                        <TextBlock Text="الخادم: API موثق + مصادقة JWT + صلاحيات خادمية + ترحيلات SQL خطية · العميل: متصل عبر IHttpClientFactory ولا يملك أي وصول مباشر لقاعدة البيانات."
-                                   FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
-                        <TextBlock x:Name="WeighingText" Text="إعدادات الوزن (D-07): تُجلب من الخادم…"
-                                   FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                </Border>
+                    <!-- بطاقة الحالة التأسيسية — بيانات حقيقية من الخادم -->
+                    <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                            BorderThickness="1" CornerRadius="14" Padding="18,14">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="أساس G3 قائم ويعمل" FontSize="14.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                            <TextBlock Text="الخادم: API موثق + مصادقة JWT + صلاحيات خادمية + ترحيلات SQL خطية · العميل: متصل عبر IHttpClientFactory ولا يملك أي وصول مباشر لقاعدة البيانات."
+                                       FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="WeighingText" Text="إعدادات الوزن (D-07): تُجلب من الخادم…"
+                                       FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
 
-                <!-- الوحدات القادمة — أسباب معلنة لا صفحات وهمية -->
-                <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="14" Padding="18,14">
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="الوحدات القادمة (بعد اعتماد كل بوابة)" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{StaticResource WeraTextSecondaryBrush}"/>
-                        <TextBlock FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"
-                                   Text="G4 الكتالوج والمحرر · G5 مكتبة الصور · G6 المخزون والمشتريات · G7 POS الكاملة (الوزن/الدفع/المرتجع) · G8 الورديات والخزينة · G9 المحاسبة والتقارير · G10 الأجهزة · G11 DPI · G13 الحمل · G14 التغليف"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+                    <!-- الوحدات القادمة — أسباب معلنة لا صفحات وهمية -->
+                    <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="14" Padding="18,14">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="الوحدات القادمة (بعد اعتماد كل بوابة)" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                            <TextBlock FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"
+                                       Text="G5 مكتبة الصور · G6 المخزون والمشتريات · G7 POS الكاملة (الوزن/الدفع/المرتجع) · G8 الورديات والخزينة · G9 المحاسبة والتقارير · G10 الأجهزة · G11 DPI · G13 الحمل · G14 التغليف"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- صفحة الكتالوج (G4) — تُعرض عند اختيار «الكتالوج» -->
+            <views:CatalogPage x:Name="CatalogContent" Visibility="Collapsed"/>
+        </Grid>
     </Grid>
 </Window>

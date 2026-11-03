@@ -87,6 +87,17 @@ try
     builder.Services.AddScoped<WeraPro.Application.Audit.IAuditReadRepository, AuditReadRepository>();
     builder.Services.AddScoped<WeraPro.Application.Audit.GetLoginEventsUseCase>();
 
+    // ── الكتالوج (G4) ──
+    builder.Services.AddScoped<WeraPro.Application.Catalog.IUnitCatalog, WeraPro.Infrastructure.Persistence.Repositories.UnitCatalog>();
+    builder.Services.AddScoped<WeraPro.Application.Catalog.ICatalogRepository, WeraPro.Infrastructure.Persistence.Repositories.CatalogRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Catalog.CreateProductUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Catalog.SearchCatalogUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Catalog.GetProductUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Catalog.ListUnitsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Catalog.GetCatalogReferenceUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Catalog.PostStockMovementUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Catalog.SetProductStatusUseCase>();
+
     // ── التحقق الموحد (ADR-007) ──
     builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -245,7 +256,8 @@ try
 
     app.MapAuthEndpoints()
        .MapReferenceEndpoints()
-       .MapAuditEndpoints();
+       .MapAuditEndpoints()
+       .MapCatalogEndpoints();
 
     app.Run();
     return 0;
