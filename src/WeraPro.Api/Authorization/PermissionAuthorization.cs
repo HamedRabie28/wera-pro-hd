@@ -93,6 +93,31 @@ public static class PermissionPolicy
                 options.AddPolicy(code,
                     p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
             }
+
+            // ── صلاحيات المخزون والمشتريات والأطراف G6 (V017) ──
+            foreach (var code in new[]
+            {
+                PermissionCodes.InventoryRead,
+                PermissionCodes.InventoryWarehouseManage,
+                PermissionCodes.InventoryStocktakeRun,
+                PermissionCodes.InventoryStocktakeApprove,
+                PermissionCodes.InventoryReservationManage,
+                PermissionCodes.PurchasingRead,
+                PermissionCodes.PurchasingManage,
+                PermissionCodes.PurchasingReceive,
+                PermissionCodes.PurchasingInvoiceManage,
+                PermissionCodes.PurchasingPaymentPost,
+                PermissionCodes.PurchasingReturnPost,
+                PermissionCodes.SuppliersManage,
+                PermissionCodes.CustomersManage,
+                PermissionCodes.PartiesRead,
+                PermissionCodes.SecurityApprovalDecide,
+                PermissionCodes.FinanceTreasuryRead,
+            })
+            {
+                options.AddPolicy(code,
+                    p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
+            }
         });
     }
 }

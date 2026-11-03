@@ -1,0 +1,64 @@
+<!-- Views/TransfersPage.xaml — WERA PRO HD Desktop (G6)
+     التحويلات بين المخازن (PAGE-21): مرحلتان مستقلتان — إرسال يخرج من دفتر
+     المصدر واستلام يدخل دفتر الوجهة؛ النقص المؤقت يتطلب اعتماد مشرف (D-03). -->
+<Page
+    x:Class="WeraPro.Desktop.Views.TransfersPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" FlowDirection="RTL"
+    xmlns:vm="using:WeraPro.Desktop.ViewModels">
+
+    <Grid RowSpacing="10" Padding="18,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button x:Name="CreateButton" Content="تحويل جديد…" Style="{StaticResource AccentButtonStyle}" Click="Create_Click"/>
+            <Button x:Name="SendButton" Content="إرسال" Click="Send_Click"/>
+            <Button x:Name="ReceiveButton" Content="استلام في الوجهة" Click="Receive_Click"/>
+            <ProgressRing x:Name="LoadingRing" Width="22" Height="22" Visibility="Collapsed"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" x:Name="InfoText" FontSize="13" Foreground="{StaticResource WeraTextSecondaryBrush}"
+                   Text="اختر تحويلاً: الإرسال يرحّل خروجاً من دفتر المصدر، والاستلام يرحّل دخولاً في دفتر الوجهة — حركتان مستقلتان."/>
+        <TextBlock Grid.Row="2" x:Name="ErrorText" FontSize="13" Foreground="{StaticResource WeraStatusDangerBrush}" Visibility="Collapsed" TextWrapping="Wrap"/>
+
+        <ListView Grid.Row="3" x:Name="TransfersList" ItemsSource="{x:Bind Vm.Transfers}" SelectionMode="Single">
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Grid Padding="10,6" Background="{StaticResource WeraSurfaceSubtleBrush}" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="90"/><ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="110"/><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="المعرف" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="1" Text="المسار" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="2" Text="الحالة" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="3" Text="الأسطر" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="4" Text="أُنشئ" FontWeight="SemiBold" FontSize="12"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.HeaderTemplate>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="vm:TransferRow">
+                    <Grid Padding="10,7" ColumnSpacing="10" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="90"/><ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="110"/><ColumnDefinition Width="110"/><ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Bind TransferId}" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1" Text="{x:Bind RouteAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="2" Text="{x:Bind StatusAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="3" Text="{x:Bind LinesAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="4" Text="{x:Bind CreatedAr}" FontSize="12"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>

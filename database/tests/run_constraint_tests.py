@@ -959,6 +959,248 @@ def t_med_15(conn):
         (media2, sku), "uq_product_images_primary_sku")
 
 
+
+# ═══════════════ اختبارات G6: المخزون والمشتريات على رأس V017 (بوابة G6) ═══════════════
+
+def _g6_purch_fixture(conn):
+    """مورد وأمر واستلام مرحّل وفاتورة مرحّلة — سلسلة كاملة داخل معاملة واحدة."""
+    I = ids(conn)
+    sup = one(conn, "INSERT INTO purch.suppliers (code, name_ar) "
+                    "VALUES (CONCAT('TG6SUP-', nextval('purch.g6_doc_seq')),'مورد اختبار G6') RETURNING supplier_id")[0]
+    po = one(conn, "INSERT INTO purch.purchase_orders (po_number, supplier_id, warehouse_id, status, created_by) "
+                   "VALUES (CONCAT('PO-', nextval('purch.g6_doc_seq')), %s, %s, 'ORDERED', %s) RETURNING po_id",
+             (sup, I["wh"], I["owner"]))[0]
+    run_sql(conn, "INSERT INTO purch.purchase_order_lines (po_id, sku_id, qty, uom_id, unit_cost) VALUES (%s,%s,5,%s,24)",
+             (po, I["box"], I["piece"]))
+    rc = one(conn, "INSERT INTO purch.purchase_receipts (receipt_number, supplier_id, po_id, warehouse_id, status, received_by, posted_at, idempotency_key) "
+                   "VALUES (CONCAT('RC-', nextval('purch.g6_doc_seq')), %s, %s, %s, 'POSTED', %s, now(), CONCAT('tg6-rc-', nextval('purch.g6_doc_seq'))) RETURNING receipt_id",
+             (sup, po, I["wh"], I["owner"]))[0]
+    run_sql(conn, "INSERT INTO purch.purchase_receipt_lines (receipt_id, sku_id, qty, uom_id, conversion_factor, unit_cost, base_qty, line_total) "
+                  "VALUES (%s,%s,5,%s,12,24,60,120)", (rc, I["bag"], I["piece"]))
+    run_sql(conn, "INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, "
+                  "conversion_factor, source_doc_type, source_doc_id, branch_id, user_id) "
+                  "VALUES (%s,%s,'RECEIVE',1,60,%s,12,'purch.receipt',%s,%s,%s)",
+             (I["bag"], I["wh"], I["piece"], rc, I["branch"], I["owner"]))
+    inv = one(conn, "INSERT INTO purch.supplier_invoices (invoice_number, supplier_id, receipt_id, subtotal, tax_total, grand_total, "
+                    "status, invoice_date, created_by, posted_at) VALUES ('TG6-INV-1', %s, %s, 120, 5, 125, 'POSTED', current_date, %s, now()) "
+                    "RETURNING invoice_id", (sup, rc, I["owner"]))[0]
+    conn.commit()
+    return {"supplier": sup, "po": po, "receipt": rc, "invoice": inv}
+
+
+@test("T-G6-01", "Purchasing", "لا تكرار استلام: مفتاح Idempotency واحد لا يرحّل مستندين (فهرس V017 الفريد الجزئي)")
+def t_g6_01(conn):
+    I = ids(conn)
+    f = _g6_purch_fixture(conn)
+    key = one(conn, "SELECT idempotency_key FROM purch.purchase_receipts WHERE receipt_id=%s", (f["receipt"],))[0]
+    expect_error(conn,
+        "INSERT INTO purch.purchase_receipts (receipt_number, supplier_id, warehouse_id, status, received_by, idempotency_key) "
+        "VALUES (CONCAT('RC-', nextval('purch.g6_doc_seq')), %s, %s, 'DRAFT', %s, %s)",
+        (f["supplier"], I["wh"], I["owner"], key), "uq_receipts_idempotency")
+
+
+@test("T-G6-02", "Purchasing", "لا تخصيص بأكثر من قيمة الفاتورة عند الالتزام (حارس V017 tf_invoice_allocation_guard)")
+def t_g6_02(conn):
+    I = ids(conn)
+    f = _g6_purch_fixture(conn)
+    p1 = one(conn, "INSERT INTO purch.supplier_payments (voucher_number, supplier_id, treasury_account_id, amount, payment_method, "
+                   "payment_date, status, created_by, posted_at) VALUES (CONCAT('SP-', nextval('purch.g6_doc_seq')), %s, %s, 80, 'CASH', "
+                   "current_date, 'POSTED', %s, now()) RETURNING payment_id", (f["supplier"], I["safe"], I["owner"]))[0]
+    p2 = one(conn, "INSERT INTO purch.supplier_payments (voucher_number, supplier_id, treasury_account_id, amount, payment_method, "
+                   "payment_date, status, created_by, posted_at) VALUES (CONCAT('SP-', nextval('purch.g6_doc_seq')), %s, %s, 80, 'CASH', "
+                   "current_date, 'POSTED', %s, now()) RETURNING payment_id", (f["supplier"], I["safe"], I["owner"]))[0]
+    run_sql(conn, "INSERT INTO purch.supplier_payment_allocations (payment_id, invoice_id, amount) VALUES (%s,%s,80)", (p1, f["invoice"]))
+    run_sql(conn, "INSERT INTO purch.supplier_payment_allocations (payment_id, invoice_id, amount) VALUES (%s,%s,80)", (p2, f["invoice"]))
+
+    def commit_fn():
+        pass
+    expect_commit_error(conn, commit_fn, "INVOICE_OVER_PAYMENT")
+    conn.rollback()
+    _g6_purch_fixture(conn)   # بيئة نظيفة لاحقة بعد التراجع
+
+
+@test("T-G6-03", "Inventory", "نوع تسوية غير معروف يُرفض (adjustment_kind_domain — V017)")
+def t_g6_03(conn):
+    I = ids(conn)
+    a = one(conn, "INSERT INTO core.approvals (entity_type, entity_id, requested_by, decided_by, decision, decided_at) "
+                  "VALUES ('inv.adjustment', 1, %s, %s, 'APPROVED', now()) RETURNING approval_id", (I["owner"], I["sup"]))[0]
+    expect_error(conn,
+        "INSERT INTO inv.stock_adjustments (warehouse_id, sku_id, new_qty, reason, approval_id, adjustment_kind, created_by) "
+        "VALUES (%s,%s,5,'اختبار',%s,'GALAXY',%s)",
+        (I["wh"], I["bag"], a, I["owner"]), "adjust_kind_domain")
+    conn.rollback()
+
+
+@test("T-G6-04", "Inventory", "رصيد معتمد سالب للتسوية مرفوض (adjust_new_qty_nonneg — V017)")
+def t_g6_04(conn):
+    I = ids(conn)
+    a = one(conn, "INSERT INTO core.approvals (entity_type, entity_id, requested_by, decided_by, decision, decided_at) "
+                  "VALUES ('inv.adjustment', 1, %s, %s, 'APPROVED', now()) RETURNING approval_id", (I["owner"], I["sup"]))[0]
+    expect_error(conn,
+        "INSERT INTO inv.stock_adjustments (warehouse_id, sku_id, new_qty, reason, approval_id, adjustment_kind, created_by) "
+        "VALUES (%s,%s,-5,'اختبار',%s,'QUICK',%s)",
+        (I["wh"], I["bag"], a, I["owner"]), "adjust_new_qty_nonneg")
+    conn.rollback()
+
+
+@test("T-G6-05", "Inventory", "التسوية بلا اعتماد مرفوضة (adjust_approval_required — V003 يعاد فحصه على رأس V017)")
+def t_g6_05(conn):
+    I = ids(conn)
+    expect_error(conn,
+        "INSERT INTO inv.stock_adjustments (warehouse_id, sku_id, new_qty, reason, adjustment_kind, created_by) "
+        "VALUES (%s,%s,5,'اختبار بلا اعتماد','QUICK',%s)",
+        (I["wh"], I["bag"], I["owner"]), "adjust_approval_required")
+    conn.rollback()
+
+
+@test("T-G6-06", "Inventory", "جرد: المعتمد = الجارّ مرفوض (count_approval_distinct — V003)")
+def t_g6_06(conn):
+    I = ids(conn)
+    c = one(conn, "INSERT INTO inv.count_sessions (warehouse_id, status, counted_by) VALUES (%s,'RECONCILED',%s) RETURNING count_id",
+             (I["wh"], I["owner"]))[0]
+    expect_error(conn,
+        "UPDATE inv.count_sessions SET status='APPROVED', approved_by=%s, approved_at=now() WHERE count_id=%s",
+        (I["owner"], c), "count_approval_distinct")
+    conn.rollback()
+
+
+@test("T-G6-07", "Inventory", "تحويل من مخزن إلى نفسه مرفوض (transfer_wh_distinct — V003)")
+def t_g6_07(conn):
+    I = ids(conn)
+    expect_error(conn,
+        "INSERT INTO inv.transfer_orders (from_warehouse_id, to_warehouse_id, created_by) VALUES (%s,%s,%s)",
+        (I["wh"], I["wh"], I["owner"]), "transfer_wh_distinct")
+    conn.rollback()
+
+
+@test("T-G6-08", "Inventory", "الرصيد السالب بلا اعتماد مشرف مرفوض (D-03=SUPERVISOR_APPROVAL — مشغل V003)")
+def t_g6_08(conn):
+    I = ids(conn)
+    f = _g6_purch_fixture(conn)
+    # كمية الخروج نسبية: الرصيد الحالي + 100 → سالب حتماً مهما أضافت فحوص سابقة
+    cur = one(conn, "SELECT COALESCE(base_qty,0) FROM inv.stock_balances WHERE sku_id=%s AND warehouse_id=%s",
+              (I["bag"], I["wh"]))[0]
+    out_qty = cur + 100
+    expect_error(conn,
+        "INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, "
+        "conversion_factor, source_doc_type, source_doc_id, branch_id, user_id, reason) "
+        "VALUES (%s,%s,'TRANSFER_OUT',-1,%s,%s,1,'inv.transfer',1,%s,%s,'اختبار سالب بلا اعتماد')",
+        (I["bag"], I["wh"], out_qty, I["piece"], I["branch"], I["owner"]), "NEGATIVE_STOCK")
+    conn.rollback()
+
+
+@test("T-G6-09", "Inventory", "الحركة السالبة تُقبل باعتماد مشرف معتمد (D-03 بالوجه الإيجابي)")
+def t_g6_09(conn):
+    I = ids(conn)
+    f = _g6_purch_fixture(conn)
+    a = one(conn, "INSERT INTO core.approvals (entity_type, entity_id, requested_by, decided_by, decision, decided_at) "
+                  "VALUES ('inv.transfer', 1, %s, %s, 'APPROVED', now()) RETURNING approval_id", (I["owner"], I["sup"]))[0]
+    cur = one(conn, "SELECT COALESCE(base_qty,0) FROM inv.stock_balances WHERE sku_id=%s AND warehouse_id=%s",
+              (I["bag"], I["wh"]))[0]
+    out_qty = cur + 60   # يجعل الرصيد النهائي -60 بالضبط (سالب باعتماد)
+    m = one(conn, "INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, "
+                  "conversion_factor, source_doc_type, source_doc_id, approval_id, branch_id, user_id, reason) "
+                  "VALUES (%s,%s,'TRANSFER_OUT',-1,%s,%s,1,'inv.transfer',1,%s,%s,%s,'اختبار سالب باعتماد') RETURNING movement_id",
+             (I["bag"], I["wh"], out_qty, I["piece"], a, I["branch"], I["owner"]))[0]
+    bal = one(conn, "SELECT base_qty FROM inv.stock_balances WHERE sku_id=%s AND warehouse_id=%s", (I["bag"], I["wh"]))[0]
+    assert bal == -60, f"الرصيد المتوقع -60 بعد خروج نسبي باعتماد، حصلنا {bal}"
+    conn.commit()
+
+
+@test("T-G6-10", "Purchasing", "رقم فاتورة مورد مكرر لنفس المورد مرفوض (uq فاتورة من V004)")
+def t_g6_10(conn):
+    I = ids(conn)
+    f = _g6_purch_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO purch.supplier_invoices (invoice_number, supplier_id, subtotal, tax_total, grand_total, status, invoice_date, created_by) "
+        "VALUES ('TG6-INV-1', %s, 10, 0, 10, 'DRAFT', current_date, %s)",
+        (f["supplier"], I["owner"]), "supplier_invoices_supplier_id_invoice_number_key")
+    conn.rollback()
+
+
+@test("T-G6-11", "Purchasing", "مرتجع بلا مستند أصلي مرفوض (sup_return_has_origin — V004)")
+def t_g6_11(conn):
+    I = ids(conn)
+    f = _g6_purch_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO purch.supplier_returns (return_number, supplier_id, warehouse_id, status, refund_method, created_by) "
+        "VALUES (CONCAT('SR-', nextval('purch.g6_doc_seq')), %s, %s, 'DRAFT', 'CREDIT_NOTE', %s)",
+        (f["supplier"], I["wh"], I["owner"]), "sup_return_has_origin")
+    conn.rollback()
+
+
+@test("T-G6-12", "Purchasing", "سداد بحساب خزينة غير موجود مرفوض (FK من V006)")
+def t_g6_12(conn):
+    I = ids(conn)
+    f = _g6_purch_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO purch.supplier_payments (voucher_number, supplier_id, treasury_account_id, amount, payment_method, payment_date, created_by) "
+        "VALUES (CONCAT('SP-', nextval('purch.g6_doc_seq')), %s, 99999, 50, 'CASH', current_date, %s)",
+        (f["supplier"], I["owner"]), "suppay_treasury_fk")
+    conn.rollback()
+
+
+@test("T-G6-13", "Purchasing", "أعمدة لقطات الأسطر من V017 موجودة (base_qty/line_total/lot_code/target_sku_id)")
+def t_g6_13(conn):
+    cols = {r[0] for r in all_rows(conn, """
+        SELECT column_name FROM information_schema.columns
+        WHERE (table_schema='purch' AND table_name='purchase_receipt_lines' AND column_name IN ('base_qty','line_total','lot_code','lot_expiry'))
+           OR (table_schema='purch' AND table_name='supplier_return_lines' AND column_name IN ('target_sku_id','base_qty'))
+           OR (table_schema='inv' AND table_name='count_sessions' AND column_name='approved_at')
+    """)}
+    missing = {"base_qty", "line_total", "lot_code", "lot_expiry", "target_sku_id", "approved_at"} - cols
+    assert not missing, f"أعمدة V017 مفقودة: {missing}"
+
+
+@test("T-G6-14", "Security", "صلاحيات V017: 16 صلاحية G6 بإسناداتها الحرفية (قراءة×7 ومصفوفة الرصد)")
+def t_g6_14(conn):
+    def count(code, roles):
+        rows = all_rows(conn, """
+            SELECT r.code FROM core.roles r
+            JOIN core.role_permissions rp ON rp.role_id=r.role_id
+            JOIN core.permissions p ON p.permission_id=rp.permission_id
+            WHERE p.code=%s AND r.code = ANY(%s)
+        """, (code, list(roles)))
+        return len(rows)
+
+    assert count("inventory.read", ["OWNER","MANAGER","SUPERVISOR","CASHIER","STOREKEEPER","ACCOUNTANT","AUDITOR"]) == 7
+    assert count("purchasing.read", ["OWNER","MANAGER","SUPERVISOR","CASHIER","STOREKEEPER","ACCOUNTANT","AUDITOR"]) == 7
+    assert count("inventory.warehouse.manage", ["OWNER","MANAGER"]) == 2
+    assert count("inventory.stocktake.run", ["OWNER","MANAGER","STOREKEEPER"]) == 3
+    assert count("inventory.stocktake.approve", ["OWNER","MANAGER"]) == 2
+    assert count("inventory.reservation.manage", ["OWNER","MANAGER","STOREKEEPER"]) == 3
+    assert count("purchasing.manage", ["OWNER","MANAGER","STOREKEEPER"]) == 3
+    assert count("purchasing.receive", ["OWNER","MANAGER","STOREKEEPER"]) == 3
+    assert count("purchasing.invoice.manage", ["OWNER","MANAGER","ACCOUNTANT"]) == 3
+    assert count("purchasing.payment.post", ["OWNER","ACCOUNTANT"]) == 2
+    assert count("purchasing.return.post", ["OWNER","MANAGER","STOREKEEPER"]) == 3
+    assert count("suppliers.manage", ["OWNER","MANAGER"]) == 2
+    assert count("customers.manage", ["OWNER","MANAGER"]) == 2
+    assert count("parties.read", ["OWNER","MANAGER","STOREKEEPER","ACCOUNTANT","AUDITOR"]) == 5
+    assert count("security.approval.decide", ["OWNER","MANAGER","SUPERVISOR"]) == 3
+    assert count("finance.treasury.read", ["OWNER","MANAGER","ACCOUNTANT"]) == 3
+
+
+@test("T-G6-15", "Purchasing", "لا يبت طالب العملية في طلبه (approvals_no_self — V003)")
+def t_g6_15(conn):
+    I = ids(conn)
+    a = one(conn, "INSERT INTO core.approvals (entity_type, entity_id, requested_by) VALUES ('inv.adjustment', 1, %s) RETURNING approval_id",
+             (I["owner"],))[0]
+    expect_error(conn,
+        "UPDATE core.approvals SET decision='APPROVED', decided_by=%s, decided_at=now() WHERE approval_id=%s",
+        (I["owner"], a), "approvals_no_self")
+    conn.rollback()
+
+
+@test("T-G6-16", "Inventory", "حجز المخزون لا يقبل كمية غير موجبة (قيود V003 على qty_base)")
+def t_g6_16(conn):
+    I = ids(conn)
+    expect_error(conn,
+        "INSERT INTO inv.stock_reservations (sku_id, warehouse_id, qty_base, source_doc_type, source_doc_id) VALUES (%s,%s,-5,'t.test',1)",
+        (I["bag"], I["wh"]), "check")
+    conn.rollback()
+
+
 # ───────────────────────────── التشغيل ─────────────────────────────
 ORDER = {"Flow": 0, "Inventory": 1, "Catalog": 1, "Media": 1, "Sales": 2, "Pricing": 2, "Shifts": 2,
          "Purchasing": 2, "Finance": 3, "Printing": 4, "Security": 4, "Audit": 4, "Ops": 5, "Env": 6}

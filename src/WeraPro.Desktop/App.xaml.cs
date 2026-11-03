@@ -79,6 +79,14 @@ public sealed partial class App : Application
                 services.AddSingleton<ViewModels.MediaLibraryViewModel>();
                 services.AddTransient<ViewModels.ProductEditorViewModel>();
                 services.AddTransient<ViewModels.MediaImportViewModel>();
+                // ── G6: المخزون والمشتريات والأطراف ──
+                services.AddTransient<ViewModels.InventoryDashboardViewModel>();
+                services.AddTransient<ViewModels.MovementCardViewModel>();
+                services.AddTransient<ViewModels.StocktakeViewModel>();
+                services.AddTransient<ViewModels.TransfersViewModel>();
+                services.AddTransient<ViewModels.WarehousesViewModel>();
+                services.AddTransient<ViewModels.PurchasingViewModel>();
+                services.AddTransient<ViewModels.PartiesViewModel>();
             })
             .Build();
 

@@ -1,0 +1,60 @@
+<!-- Views/WarehousesPage.xaml — WERA PRO HD Desktop (G6)
+     إدارة المخازن والفروع (PAGE-28): رئيسي/فرعي/خارجي — التعطيل لا الحذف
+     (لكل حركة تاريخية مستند)، والإنشاء للمالك/المدير (رصد الصفحة). -->
+<Page
+    x:Class="WeraPro.Desktop.Views.WarehousesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" FlowDirection="RTL"
+    xmlns:vm="using:WeraPro.Desktop.ViewModels">
+
+    <Grid RowSpacing="10" Padding="18,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button x:Name="CreateButton" Content="مخزن جديد…" Style="{StaticResource AccentButtonStyle}" Click="Create_Click"/>
+            <Button Content="تنشيط/تعطيل المحدد" x:Name="ToggleStateButton" Click="Toggle_Click"/>
+            <ProgressRing x:Name="LoadingRing" Width="22" Height="22" Visibility="Collapsed"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" x:Name="ErrorText" FontSize="13" Foreground="{StaticResource WeraStatusDangerBrush}" Visibility="Collapsed" TextWrapping="Wrap"/>
+
+        <ListView Grid.Row="2" x:Name="WarehousesList" ItemsSource="{x:Bind Vm.Warehouses}" SelectionMode="Single">
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Grid Padding="10,6" Background="{StaticResource WeraSurfaceSubtleBrush}" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/><ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="100"/><ColumnDefinition Width="110"/><ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="الكود" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="1" Text="الاسم" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="2" Text="الفرع" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="3" Text="النوع" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="4" Text="الحالة" FontWeight="SemiBold" FontSize="12"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.HeaderTemplate>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="vm:WarehouseRow">
+                    <Grid Padding="10,7" ColumnSpacing="10" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/><ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="100"/><ColumnDefinition Width="110"/><ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Bind Code}" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1" Text="{x:Bind NameAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="2" Text="{x:Bind Branch}" FontSize="12"/>
+                        <TextBlock Grid.Column="3" Text="{x:Bind TypeAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="4" Text="{x:Bind StateAr}" FontSize="12"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>

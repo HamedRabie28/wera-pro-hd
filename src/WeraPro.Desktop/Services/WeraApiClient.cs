@@ -467,6 +467,311 @@ public sealed class WeraApiClient(
         return detail;
     }
 
+    // ── المخزون (G6 — §12.1/§12.2) ───────────────────────────────────────
+
+    public async Task<ApiCallResult<List<WarehouseDto>>> GetWarehousesAsync(bool includeInactive, CancellationToken ct = default)
+    {
+        var result = await GetAsync<List<WarehouseDto>>(ApiRoutes.InventoryWarehouses + "?includeInactive=" + (includeInactive ? "true" : "false"), ct);
+        return result.Map(v => v ?? []);
+    }
+
+    public async Task<ApiCallResult<WarehouseDto>> CreateWarehouseAsync(CreateWarehouseRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateWarehouseRequest, WarehouseDto>(ApiRoutes.InventoryWarehouses, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<IgnoreBody>> SetWarehouseStatusAsync(long warehouseId, bool isActive, string? reasonAr, CancellationToken ct = default)
+        => await PostAsync<SetWarehouseStatusRequest, IgnoreBody>(
+            InventoryWarehouseById(warehouseId) + "/status", new SetWarehouseStatusRequest(isActive, reasonAr), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<StockBalanceSearchResponse>> SearchBalancesAsync(
+        string? query, long? warehouseId, bool? belowReorder, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string> { "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture), "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        if (!string.IsNullOrWhiteSpace(query)) qs.Add("query=" + Uri.EscapeDataString(query.Trim()));
+        if (warehouseId is { } w) qs.Add("warehouseId=" + w.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        if (belowReorder is { } b) qs.Add("belowReorder=" + (b ? "true" : "false"));
+        return await GetAsync<StockBalanceSearchResponse>(ApiRoutes.InventoryBalances + "?" + string.Join("&", qs), ct);
+    }
+
+    public async Task<ApiCallResult<InventoryValuationResponse>> GetValuationAsync(long? warehouseId, CancellationToken ct = default)
+        => await GetAsync<InventoryValuationResponse>(ApiRoutes.InventoryValuation + (warehouseId is { } w ? "?warehouseId=" + w.ToString(System.Globalization.CultureInfo.InvariantCulture) : ""), ct);
+
+    public async Task<ApiCallResult<List<StockMovementCardDto>>> GetMovementCardAsync(long skuId, long? warehouseId, CancellationToken ct = default)
+        => await GetAsync<List<StockMovementCardDto>>(
+            ApiRoutes.InventoryBalances.Replace("balances", "skus", StringComparison.Ordinal) + $"/{skuId}/movements" + (warehouseId is { } w ? "?warehouseId=" + w.ToString(System.Globalization.CultureInfo.InvariantCulture) : ""), ct);
+
+    public async Task<ApiCallResult<List<ReservationDto>>> GetReservationsAsync(bool activeOnly, CancellationToken ct = default)
+    {
+        var result = await GetAsync<List<ReservationDto>>(ApiRoutes.InventoryReservations + "?activeOnly=" + (activeOnly ? "true" : "false"), ct);
+        return result.Map(v => v ?? []);
+    }
+
+    public async Task<ApiCallResult<ReservationDto>> ReserveStockAsync(ReserveStockRequest request, CancellationToken ct = default)
+        => await PostAsync<ReserveStockRequest, ReservationDto>(ApiRoutes.InventoryReservations, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<IgnoreBody>> ReleaseReservationAsync(long reservationId, string? reasonAr, CancellationToken ct = default)
+        => await PostAsync<ReleaseReservationRequest, IgnoreBody>(
+            ApiRoutes.InventoryReservations + $"/{reservationId}/release", new ReleaseReservationRequest(reasonAr), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<StocktakeDto>> OpenStocktakeAsync(OpenStocktakeRequest request, CancellationToken ct = default)
+        => await PostAsync<OpenStocktakeRequest, StocktakeDto>(ApiRoutes.InventoryStocktakes, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<StocktakeDetailsResponse>> RecordCountLinesAsync(long countId, RecordCountLinesRequest request, CancellationToken ct = default)
+        => await PostAsync<RecordCountLinesRequest, StocktakeDetailsResponse>(
+            InventoryStocktakeById(countId) + "/lines", request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<IgnoreBody>> StocktakeActionAsync(long countId, string action, CancellationToken ct = default)
+        => await PostAsync<object, IgnoreBody>(InventoryStocktakeById(countId) + "/" + action, new { }, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<ApproveStocktakeResponse>> ApproveStocktakeAsync(long countId, CancellationToken ct = default)
+        => await PostAsync<object, ApproveStocktakeResponse>(InventoryStocktakeById(countId) + "/approve", new { }, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<List<StocktakeDto>>> GetStocktakesAsync(int page, int pageSize, CancellationToken ct = default)
+    {
+        var result = await GetAsync<StocktakeListResponse>(ApiRoutes.InventoryStocktakes + "?page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture) + "&pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
+        return result.Map(v => v?.Items ?? []);
+    }
+
+    public async Task<ApiCallResult<StocktakeDetailsResponse>> GetStocktakeAsync(long countId, CancellationToken ct = default)
+        => await GetAsync<StocktakeDetailsResponse>(InventoryStocktakeById(countId), ct);
+
+    public async Task<ApiCallResult<PostAdjustmentResponse>> PostAdjustmentAsync(PostAdjustmentRequest request, CancellationToken ct = default)
+        => await PostAsync<PostAdjustmentRequest, PostAdjustmentResponse>(ApiRoutes.InventoryAdjustments, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<TransferDto>> CreateTransferAsync(CreateTransferRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateTransferRequest, TransferDto>(ApiRoutes.InventoryTransfers, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<TransferActionResponse>> SendTransferAsync(long transferId, long? approvalId, CancellationToken ct = default)
+        => await PostAsync<SendTransferRequest, TransferActionResponse>(
+            InventoryTransferById(transferId) + "/send", new SendTransferRequest(approvalId, null), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<TransferActionResponse>> ReceiveTransferAsync(long transferId, CancellationToken ct = default)
+        => await PostAsync<object, TransferActionResponse>(InventoryTransferById(transferId) + "/receive", new { }, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<IgnoreBody>> CancelTransferAsync(long transferId, CancellationToken ct = default)
+        => await PostAsync<object, IgnoreBody>(InventoryTransferById(transferId) + "/cancel", new { }, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<List<TransferDto>>> GetTransfersAsync(string? status, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string> { "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture), "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        var result = await GetAsync<List<TransferDto>>(ApiRoutes.InventoryTransfers + "?" + string.Join("&", qs), ct);
+        return result.Map(v => v ?? []);
+    }
+
+    public async Task<ApiCallResult<TransferDto>> GetTransferAsync(long transferId, CancellationToken ct = default)
+        => await GetAsync<TransferDto>(InventoryTransferById(transferId), ct);
+
+    public async Task<ApiCallResult<List<ReorderSuggestionDto>>> GetReorderAsync(long? warehouseId, CancellationToken ct = default)
+    {
+        var result = await GetAsync<ReorderReportResponse>(ApiRoutes.InventoryReorder + (warehouseId is { } w ? "?warehouseId=" + w.ToString(System.Globalization.CultureInfo.InvariantCulture) : ""), ct);
+        return result.Map(v => v?.Items ?? []);
+    }
+
+    public async Task<ApiCallResult<List<LotDto>>> GetLotsAsync(int? expiringInDays, CancellationToken ct = default)
+    {
+        var result = await GetAsync<LotsReportResponse>(ApiRoutes.InventoryLots + (expiringInDays is { } d ? "?expiringInDays=" + d.ToString(System.Globalization.CultureInfo.InvariantCulture) : ""), ct);
+        return result.Map(v => v?.Items ?? []);
+    }
+
+    // ── الاعتمادات (G6 — D-03 ب) ─────────────────────────────────────────
+
+    public async Task<ApiCallResult<ApprovalDto>> CreateApprovalAsync(CreateApprovalRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateApprovalRequest, ApprovalDto>(ApiRoutes.Approvals, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<ApprovalDto>> DecideApprovalAsync(long approvalId, DecideApprovalRequest request, CancellationToken ct = default)
+        => await PostAsync<DecideApprovalRequest, ApprovalDto>(ApiRoutes.Approvals + $"/{approvalId}/decision", request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<List<ApprovalDto>>> GetApprovalsAsync(string? status, CancellationToken ct = default)
+    {
+        var qs = string.IsNullOrWhiteSpace(status) ? "" : "?status=" + Uri.EscapeDataString(status);
+        var result = await GetAsync<ApprovalListResponse>(ApiRoutes.Approvals + qs, ct);
+        return result.Map(v => v?.Items ?? []);
+    }
+
+    // ── المشتريات (G6 — §12.3) ───────────────────────────────────────────
+
+    public async Task<ApiCallResult<SupplierSearchResponse>> SearchSuppliersAsync(string? query, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string> { "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture), "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        if (!string.IsNullOrWhiteSpace(query)) qs.Add("query=" + Uri.EscapeDataString(query.Trim()));
+        return await GetAsync<SupplierSearchResponse>(ApiRoutes.PurchasingSuppliers + "?" + string.Join("&", qs), ct);
+    }
+
+    public async Task<ApiCallResult<SupplierDto>> CreateSupplierAsync(CreateSupplierRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateSupplierRequest, SupplierDto>(ApiRoutes.PurchasingSuppliers, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<IgnoreBody>> SetSupplierStatusAsync(long supplierId, string status, string? reasonAr, CancellationToken ct = default)
+        => await PostAsync<SetPartyStatusRequest, IgnoreBody>(
+            PurchasingSupplierById(supplierId) + "/status", new SetPartyStatusRequest(status, reasonAr), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<PartyStatementResponse>> GetSupplierStatementAsync(long supplierId, DateOnly? from, DateOnly? to, string? docType, CancellationToken ct = default)
+        => await GetAsync<PartyStatementResponse>(PartyStatementUrl(PurchasingSupplierById(supplierId) + "/statement", from, to, docType), ct);
+
+    public async Task<ApiCallResult<PurchaseOrderDto>> CreatePurchaseOrderAsync(CreatePurchaseOrderRequest request, CancellationToken ct = default)
+        => await PostAsync<CreatePurchaseOrderRequest, PurchaseOrderDto>(ApiRoutes.PurchasingOrders, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<PurchaseOrderDto>> GetPurchaseOrderAsync(long poId, CancellationToken ct = default)
+        => await GetAsync<PurchaseOrderDto>(PurchasingOrderById(poId), ct);
+
+    public async Task<ApiCallResult<List<PurchaseOrderDto>>> GetPurchaseOrdersAsync(string? status, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string> { "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture), "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        var result = await GetAsync<List<PurchaseOrderDto>>(ApiRoutes.PurchasingOrders + "?" + string.Join("&", qs), ct);
+        return result.Map(v => v ?? []);
+    }
+
+    public async Task<ApiCallResult<PurchaseOrderDto>> ReplacePoLinesAsync(long poId, ReplacePurchaseOrderLinesRequest request, CancellationToken ct = default)
+        => await PutAsync<ReplacePurchaseOrderLinesRequest, PurchaseOrderDto>(PurchasingOrderById(poId) + "/lines", request, ct);
+
+    public async Task<ApiCallResult<PoStatusChangeResponse>> PoActionAsync(long poId, string action, string? reasonAr, CancellationToken ct = default)
+        => await PostAsync<ClosePoRequest, PoStatusChangeResponse>(
+            PurchasingOrderById(poId) + "/" + action, new ClosePoRequest(reasonAr), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<ReceiptDto>> CreateReceiptAsync(CreateReceiptRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateReceiptRequest, ReceiptDto>(ApiRoutes.PurchasingReceipts, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<ReceiptDto>> GetReceiptAsync(long receiptId, CancellationToken ct = default)
+        => await GetAsync<ReceiptDto>(PurchasingReceiptById(receiptId), ct);
+
+    public async Task<ApiCallResult<List<ReceiptDto>>> GetReceiptsAsync(string? status, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string> { "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture), "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        var result = await GetAsync<List<ReceiptDto>>(ApiRoutes.PurchasingReceipts + "?" + string.Join("&", qs), ct);
+        return result.Map(v => v ?? []);
+    }
+
+    public async Task<ApiCallResult<PostReceiptResponse>> PostReceiptAsync(long receiptId, string? idempotencyKey, CancellationToken ct = default)
+        => await PostAsync<PostDocumentRequest, PostReceiptResponse>(
+            PurchasingReceiptById(receiptId) + "/post", new PostDocumentRequest(idempotencyKey), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<ReceiptDto>> CancelReceiptAsync(long receiptId, CancellationToken ct = default)
+        => await PostAsync<object, ReceiptDto>(PurchasingReceiptById(receiptId) + "/cancel", new { }, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<SupplierInvoiceDto>> CreateInvoiceAsync(CreateSupplierInvoiceRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateSupplierInvoiceRequest, SupplierInvoiceDto>(ApiRoutes.PurchasingInvoices, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<List<SupplierInvoiceDto>>> GetInvoicesAsync(string? status, long? supplierId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string> { "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture), "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        if (supplierId is { } sup) qs.Add("supplierId=" + sup.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        var result = await GetAsync<List<SupplierInvoiceDto>>(ApiRoutes.PurchasingInvoices + "?" + string.Join("&", qs), ct);
+        return result.Map(v => v ?? []);
+    }
+
+    public async Task<ApiCallResult<SupplierInvoiceDto>> GetInvoiceAsync(long invoiceId, CancellationToken ct = default)
+        => await GetAsync<SupplierInvoiceDto>(PurchasingInvoiceById(invoiceId), ct);
+
+    public async Task<ApiCallResult<PostInvoiceResponse>> PostInvoiceAsync(long invoiceId, string? idempotencyKey, CancellationToken ct = default)
+        => await PostAsync<PostDocumentRequest, PostInvoiceResponse>(
+            PurchasingInvoiceById(invoiceId) + "/post", new PostDocumentRequest(idempotencyKey), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<SupplierInvoiceDto>> CancelInvoiceAsync(long invoiceId, CancellationToken ct = default)
+        => await PostAsync<object, SupplierInvoiceDto>(PurchasingInvoiceById(invoiceId) + "/cancel", new { }, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<SupplierPaymentDto>> CreatePaymentAsync(CreateSupplierPaymentRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateSupplierPaymentRequest, SupplierPaymentDto>(ApiRoutes.PurchasingPayments, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<List<SupplierPaymentDto>>> GetPaymentsAsync(long? supplierId, string? status, CancellationToken ct = default)
+    {
+        var qs = new List<string>();
+        if (supplierId is { } sup) qs.Add("supplierId=" + sup.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        var url = ApiRoutes.PurchasingPayments + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
+        var result = await GetAsync<List<SupplierPaymentDto>>(url, ct);
+        return result.Map(v => v ?? []);
+    }
+
+    public async Task<ApiCallResult<PostPaymentResponse>> PostPaymentAsync(long paymentId, string? idempotencyKey, CancellationToken ct = default)
+        => await PostAsync<PostDocumentRequest, PostPaymentResponse>(
+            ApiRoutes.PurchasingPayments + $"/{paymentId}/post", new PostDocumentRequest(idempotencyKey), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<SupplierPaymentDto>> CancelPaymentAsync(long paymentId, CancellationToken ct = default)
+        => await PostAsync<object, SupplierPaymentDto>(ApiRoutes.PurchasingPayments + $"/{paymentId}/cancel", new { }, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<SupplierReturnDto>> CreateReturnAsync(CreateSupplierReturnRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateSupplierReturnRequest, SupplierReturnDto>(ApiRoutes.PurchasingReturns, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<List<SupplierReturnDto>>> GetReturnsAsync(string? status, long? supplierId, CancellationToken ct = default)
+    {
+        var qs = new List<string>();
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        if (supplierId is { } sup) qs.Add("supplierId=" + sup.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        var url = ApiRoutes.PurchasingReturns + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
+        var result = await GetAsync<List<SupplierReturnDto>>(url, ct);
+        return result.Map(v => v ?? []);
+    }
+
+    public async Task<ApiCallResult<PostReturnResponse>> PostReturnAsync(long returnId, string? idempotencyKey, CancellationToken ct = default)
+        => await PostAsync<PostDocumentRequest, PostReturnResponse>(
+            ApiRoutes.PurchasingReturns + $"/{returnId}/post", new PostDocumentRequest(idempotencyKey), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<SupplierReturnDto>> CancelReturnAsync(long returnId, CancellationToken ct = default)
+        => await PostAsync<object, SupplierReturnDto>(ApiRoutes.PurchasingReturns + $"/{returnId}/cancel", new { }, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<List<TreasuryAccountDto>>> GetTreasuryAccountsAsync(CancellationToken ct = default)
+    {
+        var result = await GetAsync<TreasuryAccountListResponse>(ApiRoutes.PurchasingTreasuryAccounts, ct);
+        return result.Map(v => v?.Items ?? []);
+    }
+
+    // ── الأطراف (G6 — §13) ───────────────────────────────────────────────
+
+    public async Task<ApiCallResult<CustomerSearchResponse>> SearchCustomersAsync(string? query, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string> { "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture), "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        if (!string.IsNullOrWhiteSpace(query)) qs.Add("query=" + Uri.EscapeDataString(query.Trim()));
+        return await GetAsync<CustomerSearchResponse>(ApiRoutes.PartiesCustomers + "?" + string.Join("&", qs), ct);
+    }
+
+    public async Task<ApiCallResult<CustomerDto>> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken ct = default)
+        => await PostAsync<CreateCustomerRequest, CustomerDto>(ApiRoutes.PartiesCustomers, request, allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<IgnoreBody>> SetCustomerStatusAsync(long customerId, string status, string? reasonAr, CancellationToken ct = default)
+        => await PostAsync<SetPartyStatusRequest, IgnoreBody>(
+            ApiRoutes.PartiesCustomers + $"/{customerId}/status", new SetPartyStatusRequest(status, reasonAr), allowAnonymous: false, ct);
+
+    public async Task<ApiCallResult<PartyStatementResponse>> GetCustomerStatementAsync(long customerId, DateOnly? from, DateOnly? to, string? docType, CancellationToken ct = default)
+        => await GetAsync<PartyStatementResponse>(PartyStatementUrl(ApiRoutes.PartiesCustomers + $"/{customerId}/statement", from, to, docType), ct);
+
+    private static string InventoryWarehouseById(long id) => ApiRoutes.InventoryWarehouses + $"/{id}";
+    private static string InventoryStocktakeById(long id) => ApiRoutes.InventoryStocktakes + $"/{id}";
+    private static string InventoryTransferById(long id) => ApiRoutes.InventoryTransfers + $"/{id}";
+    private static string PurchasingSupplierById(long id) => ApiRoutes.PurchasingSuppliers + $"/{id}";
+    private static string PurchasingOrderById(long id) => ApiRoutes.PurchasingOrders + $"/{id}";
+    private static string PurchasingReceiptById(long id) => ApiRoutes.PurchasingReceipts + $"/{id}";
+    private static string PurchasingInvoiceById(long id) => ApiRoutes.PurchasingInvoices + $"/{id}";
+
+    private static string PartyStatementUrl(string baseUri, DateOnly? from, DateOnly? to, string? docType)
+    {
+        var qs = new List<string>();
+        if (from is { } f) qs.Add("from=" + f.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+        if (to is { } t) qs.Add("to=" + t.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+        if (!string.IsNullOrWhiteSpace(docType)) qs.Add("docType=" + Uri.EscapeDataString(docType));
+        return baseUri + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
+    }
+
+    private async Task<ApiCallResult<TRes>> PutAsync<TReq, TRes>(string url, TReq body, CancellationToken ct)
+    {
+        try
+        {
+            using var client = CreateClient();
+            using var response = await client.PutAsJsonAsync(url, body, ct);
+            return await ReadAsync<TRes>(response, ct);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiCallResult<TRes>.Fail("انتهت مهلة الطلب — تحقق من حالة الخادم");
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "فشل اتصال بـ{Url}", url);
+            return ApiCallResult<TRes>.Fail("تعذر الوصول إلى الخادم — تحقق من العنوان والاتصال");
+        }
+    }
+
     private async Task<ApiCallResult<T>> GetAsync<T>(string url, CancellationToken ct)
     {
         try

@@ -47,6 +47,34 @@ public sealed class WeraDbContext : DbContext
     public DbSet<MediaImportJobRow> MediaImportJobs => Set<MediaImportJobRow>();
     public DbSet<MediaImportFileRow> MediaImportFiles => Set<MediaImportFileRow>();
 
+    // ── G6: المخزون والأرصدة والدفعات والتحويلات (V003/V017) ──
+    public DbSet<StockBalanceRow> StockBalances => Set<StockBalanceRow>();
+    public DbSet<LotRow> Lots => Set<LotRow>();
+    public DbSet<StockReservationRow> StockReservations => Set<StockReservationRow>();
+    public DbSet<CountSessionRow> CountSessions => Set<CountSessionRow>();
+    public DbSet<CountLineRow> CountLines => Set<CountLineRow>();
+    public DbSet<StockAdjustmentRow> StockAdjustments => Set<StockAdjustmentRow>();
+    public DbSet<TransferOrderRow> TransferOrders => Set<TransferOrderRow>();
+    public DbSet<TransferLineRow> TransferLines => Set<TransferLineRow>();
+    public DbSet<ApprovalRow> Approvals => Set<ApprovalRow>();
+
+    // ── G6: المشتريات والأطراف والخزينة والتكلفة (V004/V005/V006/V017) ──
+    public DbSet<SupplierRow> Suppliers => Set<SupplierRow>();
+    public DbSet<PurchaseOrderRow> PurchaseOrders => Set<PurchaseOrderRow>();
+    public DbSet<PurchaseOrderLineRow> PurchaseOrderLines => Set<PurchaseOrderLineRow>();
+    public DbSet<PurchaseReceiptRow> PurchaseReceipts => Set<PurchaseReceiptRow>();
+    public DbSet<PurchaseReceiptLineRow> PurchaseReceiptLines => Set<PurchaseReceiptLineRow>();
+    public DbSet<SupplierInvoiceRow> SupplierInvoices => Set<SupplierInvoiceRow>();
+    public DbSet<SupplierInvoiceLineRow> SupplierInvoiceLines => Set<SupplierInvoiceLineRow>();
+    public DbSet<SupplierPaymentRow> SupplierPayments => Set<SupplierPaymentRow>();
+    public DbSet<SupplierPaymentAllocationRow> SupplierPaymentAllocations => Set<SupplierPaymentAllocationRow>();
+    public DbSet<SupplierReturnRow> SupplierReturns => Set<SupplierReturnRow>();
+    public DbSet<SupplierReturnLineRow> SupplierReturnLines => Set<SupplierReturnLineRow>();
+    public DbSet<TreasuryAccountRow> TreasuryAccounts => Set<TreasuryAccountRow>();
+    public DbSet<TreasuryTxnRow> TreasuryTransactions => Set<TreasuryTxnRow>();
+    public DbSet<CostLayerRow> CostLayers => Set<CostLayerRow>();
+    public DbSet<CustomerRow> Customers => Set<CustomerRow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("core");

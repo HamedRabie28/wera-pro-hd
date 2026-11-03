@@ -22,6 +22,25 @@ public static class ApiRoutes
     public const string SkuDefaultImage = Prefix + "/catalog/skus/{skuId:long}/default-image";
     public const string Media = Prefix + "/media";
     public const string MediaImportJobs = Prefix + "/media/import-jobs";
+    // ── G6: المخزون والمشتريات والأطراف والاعتمادات ──
+    public const string InventoryWarehouses = Prefix + "/inventory/warehouses";
+    public const string InventoryBalances = Prefix + "/inventory/balances";
+    public const string InventoryValuation = Prefix + "/inventory/valuation";
+    public const string InventoryReservations = Prefix + "/inventory/reservations";
+    public const string InventoryStocktakes = Prefix + "/inventory/stocktakes";
+    public const string InventoryAdjustments = Prefix + "/inventory/adjustments";
+    public const string InventoryTransfers = Prefix + "/inventory/transfers";
+    public const string InventoryReorder = Prefix + "/inventory/reorder";
+    public const string InventoryLots = Prefix + "/inventory/lots";
+    public const string PurchasingSuppliers = Prefix + "/purchasing/suppliers";
+    public const string PurchasingOrders = Prefix + "/purchasing/purchase-orders";
+    public const string PurchasingReceipts = Prefix + "/purchasing/purchase-receipts";
+    public const string PurchasingInvoices = Prefix + "/purchasing/supplier-invoices";
+    public const string PurchasingPayments = Prefix + "/purchasing/supplier-payments";
+    public const string PurchasingReturns = Prefix + "/purchasing/supplier-returns";
+    public const string PurchasingTreasuryAccounts = Prefix + "/purchasing/treasury-accounts";
+    public const string PartiesCustomers = Prefix + "/parties/customers";
+    public const string Approvals = Prefix + "/approvals";
     public const string HealthLive = "health/live";
     public const string HealthReady = "health/ready";
 }

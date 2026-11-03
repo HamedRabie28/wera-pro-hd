@@ -49,8 +49,9 @@
                     <muxc:NavigationViewItem Content="المبيعات (G7)" Tag="sales" IsEnabled="False" ToolTipService.ToolTip="يبني في بوابة G7 — غير متاح بعد"/>
                     <muxc:NavigationViewItem Content="الكتالوج" Tag="catalog" ToolTipService.ToolTip="G4: المنتجات وصيغ البيع والعبوات والباركود — بحث Exact Match"/>
                     <muxc:NavigationViewItem Content="مكتبة الصور" Tag="media" ToolTipService.ToolTip="G5: رفع/ربط/فك ربط/رئيسية/مكررات — الحذف محمي بمراجعة"/>
-                    <muxc:NavigationViewItem Content="المخزون (G6)" Tag="inventory" IsEnabled="False" ToolTipService.ToolTip="يبني في بوابة G6 — غير متاح بعد"/>
-                    <muxc:NavigationViewItem Content="المشتريات (G6)" Tag="purchasing" IsEnabled="False" ToolTipService.ToolTip="يبني في بوابة G6 — غير متاح بعد"/>
+                    <muxc:NavigationViewItem Content="المخزون" Tag="inventory" ToolTipService.ToolTip="G6: لوحة الأرصدة والنواقص والدفعات والتقييم + الجرد والتحويلات والمخازن"/>
+                    <muxc:NavigationViewItem Content="المشتريات" Tag="purchasing" ToolTipService.ToolTip="G6: السلة والاستلامات وفواتير الموردين والسداد والمرتجعات"/>
+                    <muxc:NavigationViewItem Content="الأطراف" Tag="parties" ToolTipService.ToolTip="G6: الموردون والعملاء وكشوف الحساب — التعطيل لا الحذف"/>
                 </muxc:NavigationView.MenuItems>
             </muxc:NavigationView>
 
@@ -115,6 +116,24 @@
 
             <!-- مكتبة الوسائط (G5 · PAGE-16) — تُعرض عند اختيار «مكتبة الصور» -->
             <views:MediaLibraryPage x:Name="MediaContent" Visibility="Collapsed"/>
+
+            <!-- المخزون (G6 · PAGE-18..23) — تبويبات: الأرصدة/النواقص/الدفعات/التقييم -->
+            <views:InventoryHubPage x:Name="InventoryContent" Visibility="Collapsed"/>
+
+            <!-- الجرد والتسويات (G6 · PAGE-20) -->
+            <views:StocktakePage x:Name="StocktakeContent" Visibility="Collapsed"/>
+
+            <!-- التحويلات بين المخازن (G6 · PAGE-21) -->
+            <views:TransfersPage x:Name="TransfersContent" Visibility="Collapsed"/>
+
+            <!-- المشتريات (G6 · PAGE-24..27) — تبويبات: السلة/الاستلامات/الفواتير والسداد/المرتجعات -->
+            <views:PurchasingHubPage x:Name="PurchasingContent" Visibility="Collapsed"/>
+
+            <!-- الأطراف (G6 · PAGE-29..32) — الموردون والعملاء وكشوف الحساب -->
+            <views:PartiesPage x:Name="PartiesContent" Visibility="Collapsed"/>
+
+            <!-- إدارة المخازن (G6 · PAGE-28) -->
+            <views:WarehousesPage x:Name="WarehousesContent" Visibility="Collapsed"/>
         </Grid>
     </Grid>
 </Window>

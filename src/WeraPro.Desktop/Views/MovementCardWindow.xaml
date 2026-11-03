@@ -1,0 +1,68 @@
+<!-- Views/MovementCardWindow.xaml — WERA PRO HD Desktop (G6)
+     كرت حركة المنتج (PAGE-19): تسلسل كل حركة موثقة بمصدرها ولقطة معامل
+     تحويلها ورصيدها الجاري — تقرير يطابق دفتر الحركة حرفياً (بوابة القبول). -->
+<Window
+    x:Class="WeraPro.Desktop.Views.MovementCardWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" xmlns:vm="using:WeraPro.Desktop.ViewModels">
+
+    <Grid RowSpacing="10" Padding="18,14" Background="{StaticResource WeraSurfaceBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TitleText" FontSize="18" FontWeight="SemiBold"/>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10">
+            <ProgressRing x:Name="LoadingRing" Width="20" Height="20" Visibility="Collapsed"/>
+            <TextBlock x:Name="ErrorText" Foreground="{StaticResource WeraStatusDangerBrush}" FontSize="13" Visibility="Collapsed"/>
+        </StackPanel>
+
+        <ListView Grid.Row="2" x:Name="MovementsList" ItemsSource="{x:Bind Vm.Movements}">
+            <ListView.HeaderTemplate>
+                <DataTemplate>
+                    <Grid Padding="10,6" Background="{StaticResource WeraSurfaceSubtleBrush}" ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/><ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="100"/><ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="80"/><ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="100"/><ColumnDefinition Width="110"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="الوقت" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="1" Text="النوع" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="2" Text="الكمية (أساس)" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="3" Text="العامل" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="4" Text="الرصيد الجاري" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="5" Text="المستند المصدر" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="6" Text="بواسطة" FontWeight="SemiBold" FontSize="12"/>
+                        <TextBlock Grid.Column="7" Text="السبب" FontWeight="SemiBold" FontSize="12"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.HeaderTemplate>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="vm:MovementRow">
+                    <Grid Padding="10,7" ColumnSpacing="10" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/><ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="100"/><ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="80"/><ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="100"/><ColumnDefinition Width="110"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Bind WhenAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="1" Text="{x:Bind TypeAr}" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="2" Text="{x:Bind QtyAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="3" Text="{x:Bind FactorAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="4" Text="{x:Bind BalanceAr}" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="5" Text="{x:Bind SourceAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="6" Text="{x:Bind ByAr}" FontSize="12"/>
+                        <TextBlock Grid.Column="7" Text="{x:Bind ReasonAr}" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Window>

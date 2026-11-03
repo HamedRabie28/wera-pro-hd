@@ -1,0 +1,113 @@
+<!-- Views/StocktakePage.xaml — WERA PRO HD Desktop (G6)
+     الجرد والتسويات (PAGE-20): فتح جلسة وتسجيل العد بلقطة الدفتر وقت العد،
+     والمقارنة والاعتماد من غير الجارّ (فصل واجبات — قيد V003)، والفرق الصفر
+     بلا حركة — أزرار الحالة تظهر بحسب صلاحية الجلسة الحقيقية. -->
+<Page
+    x:Class="WeraPro.Desktop.Views.StocktakePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" FlowDirection="RTL"
+    xmlns:vm="using:WeraPro.Desktop.ViewModels"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
+
+    <Grid RowSpacing="10" Padding="18,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <muxc:DropDownButton Content="فتح جلسة جرد" x:Name="OpenMenuButton">
+                <muxc:DropDownButton.Flyout>
+                    <MenuFlyout x:Name="WarehouseMenu"/>
+                </muxc:DropDownButton.Flyout>
+            </muxc:DropDownButton>
+            <Button x:Name="RecordButton" Content="تسجيل عدّ…" Click="Record_Click"/>
+            <Button x:Name="CloseButton" Content="إغلاق العد" Click="Close_Click"/>
+            <Button x:Name="ReconcileButton" Content="مطابقة" Click="Reconcile_Click"/>
+            <Button x:Name="ApproveButton" Content="اعتماد التسوية (غير الجارّ)" Style="{StaticResource AccentButtonStyle}" Click="Approve_Click"/>
+            <Button x:Name="CancelButton" Content="إلغاء الجلسة" Click="Cancel_Click"/>
+            <ProgressRing x:Name="LoadingRing" Width="22" Height="22" Visibility="Collapsed"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnSpacing="14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="380"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- جلسات الجرد -->
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/><RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="جلسات الجرد" FontSize="14" FontWeight="SemiBold"/>
+                <ListView Grid.Row="1" x:Name="SessionsList" ItemsSource="{x:Bind Vm.Sessions}" SelectionMode="Single"
+                          SelectionChanged="SessionsList_SelectionChanged">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StocktakeRow">
+                            <StackPanel Padding="8,6" Spacing="2" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="{x:Bind Warehouse}" FontSize="13" FontWeight="SemiBold"/>
+                                    <TextBlock Text="·" FontSize="13"/>
+                                    <TextBlock Text="{x:Bind StatusAr}" FontSize="13"/>
+                                </StackPanel>
+                                <TextBlock FontSize="11" Foreground="{StaticResource WeraTextSecondaryBrush}">
+                                    <Run Text="جارّها: "/><Run Text="{x:Bind CounterAr}"/>
+                                    <Run Text=" · الاعتماد: "/><Run Text="{x:Bind ApproverAr}"/>
+                                </TextBlock>
+                                <TextBlock FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}">
+                                    <Run Text="{x:Bind OpenedAr}"/><Run Text=" · "/><Run Text="{x:Bind LinesAr}"/>
+                                    <Run Text=" · الفرق: "/><Run Text="{x:Bind VarianceAr}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- أسطر الجلسة المحددة -->
+            <Grid Grid.Column="1" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="InfoText" Text="اختر جلسة لعرض أسطرها ولقطة الدفتر والفرق" FontSize="13"/>
+                <TextBlock x:Name="ErrorText" Grid.Row="1" Foreground="{StaticResource WeraStatusDangerBrush}" FontSize="13" Visibility="Collapsed" TextWrapping="Wrap"/>
+                <ListView Grid.Row="2" ItemsSource="{x:Bind Vm.SelectedLines}">
+                    <ListView.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid Padding="10,6" Background="{StaticResource WeraSurfaceSubtleBrush}" ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/><ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/><ColumnDefinition Width="120"/><ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="الصيغة" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBlock Grid.Column="1" Text="الاسم" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBlock Grid.Column="2" Text="دفترياً وقت العد" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBlock Grid.Column="3" Text="المعدود" FontWeight="SemiBold" FontSize="12"/>
+                                <TextBlock Grid.Column="4" Text="الفرق" FontWeight="SemiBold" FontSize="12"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.HeaderTemplate>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CountLineRow">
+                            <Grid Padding="10,7" ColumnSpacing="10" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/><ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="120"/><ColumnDefinition Width="120"/><ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Bind SkuCode}" FontSize="12" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1" Text="{x:Bind Name}" FontSize="12"/>
+                                <TextBlock Grid.Column="2" Text="{x:Bind SystemAr}" FontSize="12"/>
+                                <TextBlock Grid.Column="3" Text="{x:Bind CountedAr}" FontSize="12"/>
+                                <TextBlock Grid.Column="4" Text="{x:Bind VarianceAr}" FontSize="12"
+                                           Foreground="{StaticResource WeraStatusDangerBrush}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>

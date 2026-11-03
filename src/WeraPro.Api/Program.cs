@@ -127,6 +127,29 @@ try
     builder.Services.AddScoped<WeraPro.Application.Media.MediaImportFileProcessor>();
     builder.Services.AddHostedService<WeraPro.BackgroundServices.MediaImportWorker>();
 
+    // ── المخزون والمشتريات والأطراف (G6) ──
+    builder.Services.AddScoped<WeraPro.Application.Inventory.IInventoryRepository, WeraPro.Infrastructure.Persistence.Repositories.InventoryRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.IApprovalRepository, WeraPro.Infrastructure.Persistence.Repositories.ApprovalRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.IPurchasingRepository, WeraPro.Infrastructure.Persistence.Repositories.PurchasingRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.ICustomerRepository, WeraPro.Infrastructure.Persistence.Repositories.CustomerRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.PurchasingLineResolver>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.ManageWarehousesUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.GetStockBalancesUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.GetInventoryReportsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.ManageReservationsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.ManageStocktakesUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.PostQuickAdjustmentUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.ManageTransfersUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.GetInventoryAdvisoriesUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Inventory.ManageApprovalsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.ManageSuppliersUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.ManageCustomersUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.ManagePurchaseOrdersUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.ManageReceiptsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.ManageSupplierInvoicesUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.ManageSupplierPaymentsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Purchasing.ManageSupplierReturnsUseCase>();
+
     // ── التحقق الموحد (ADR-007) ──
     builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -287,7 +310,9 @@ try
        .MapReferenceEndpoints()
        .MapAuditEndpoints()
        .MapCatalogEndpoints()
-       .MapMediaEndpoints();
+       .MapMediaEndpoints()
+       .MapInventoryEndpoints()
+       .MapPurchasingEndpoints();
 
     app.Run();
     return 0;

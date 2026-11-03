@@ -60,13 +60,20 @@ public sealed partial class ShellWindow : Window
 
     private void NavTop_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        // G4: «الكتالوج» يفتح صفحة الكتالوج؛ G5: «مكتبة الصور» تفتح صفحة المكتبة؛
-        // «التشغيل» يعيد للرئيسية — صفحة واحدة ظاهرة في كل لحظة
+        // G4: «الكتالوج»؛ G5: «مكتبة الصور»؛ G6: «المخزون/المشتريات/الأطراف/المخازن» —
+        // صفحة واحدة ظاهرة في كل لحظة («المخزون» مركز لسباقات G6 فتفتح اللوحة والجرد والتحويلات معاً)
         if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
-            HomeContent.Visibility = tag is "catalog" or "media" ? Visibility.Collapsed : Visibility.Visible;
+            var g6 = tag is "inventory" or "purchasing" or "parties" or "warehouses";
+            HomeContent.Visibility = tag is "catalog" or "media" || g6 ? Visibility.Collapsed : Visibility.Visible;
             CatalogContent.Visibility = tag == "catalog" ? Visibility.Visible : Visibility.Collapsed;
             MediaContent.Visibility = tag == "media" ? Visibility.Visible : Visibility.Collapsed;
+            InventoryContent.Visibility = tag == "inventory" ? Visibility.Visible : Visibility.Collapsed;
+            StocktakeContent.Visibility = tag == "inventory" ? Visibility.Visible : Visibility.Collapsed;
+            TransfersContent.Visibility = tag == "inventory" ? Visibility.Visible : Visibility.Collapsed;
+            WarehousesContent.Visibility = tag == "warehouses" ? Visibility.Visible : Visibility.Collapsed;
+            PurchasingContent.Visibility = tag == "purchasing" ? Visibility.Visible : Visibility.Collapsed;
+            PartiesContent.Visibility = tag == "parties" ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

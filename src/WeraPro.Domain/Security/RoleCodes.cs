@@ -61,4 +61,54 @@ public static class PermissionCodes
 
     /// <summary>تشغيل استيراد المنتجات/الصور الدفعي — OWNER (V009) + STOREKEEPER (V016).</summary>
     public const string CatalogImportRun = "catalog.import.run";
+
+    // ── صلاحيات G6 (V017 — المخزون والمشتريات والأطراف والاعتمادات) ──
+
+    /// <summary>قراءة الأرصدة وكرت الحركة والنواقص والدفعات — كل الأدوار (V017: تكوين عمل).</summary>
+    public const string InventoryRead = "inventory.read";
+
+    /// <summary>إدارة المخازن والفروع الفرعية/الخارجية — OWNER/MANAGER (V017 · رصد PAGE-28).</summary>
+    public const string InventoryWarehouseManage = "inventory.warehouse.manage";
+
+    /// <summary>فتح جلسة جرد وتسجيل العد — OWNER/MANAGER/STOREKEEPER (V017 · رصد PAGE-20).</summary>
+    public const string InventoryStocktakeRun = "inventory.stocktake.run";
+
+    /// <summary>اعتماد تسوية الجرد — OWNER/MANAGER (V017؛ المعتمد ≠ الجارّ بقيد V003).</summary>
+    public const string InventoryStocktakeApprove = "inventory.stocktake.approve";
+
+    /// <summary>حجز المخزون وتحريره — OWNER/MANAGER/STOREKEEPER (V017 · §12.1 الحجز والمتاح).</summary>
+    public const string InventoryReservationManage = "inventory.reservation.manage";
+
+    /// <summary>قراءة المشتريات والاستلامات والفواتير — كل الأدوار (V017: تكوين عمل).</summary>
+    public const string PurchasingRead = "purchasing.read";
+
+    /// <summary>سلة المشتريات والمسودات وأوامر الشراء — OWNER/MANAGER/STOREKEEPER (V017 · رصد PAGE-24).</summary>
+    public const string PurchasingManage = "purchasing.manage";
+
+    /// <summary>ترحيل استلام المورد — OWNER/MANAGER/STOREKEEPER (V017 · رصد PAGE-25).</summary>
+    public const string PurchasingReceive = "purchasing.receive";
+
+    /// <summary>فواتير الموردين — OWNER/MANAGER/ACCOUNTANT (V017 · رصد PAGE-26).</summary>
+    public const string PurchasingInvoiceManage = "purchasing.invoice.manage";
+
+    /// <summary>سداد المورد بأثر خزينة واحد — OWNER/ACCOUNTANT (V017 · §12.3 ق3).</summary>
+    public const string PurchasingPaymentPost = "purchasing.payment.post";
+
+    /// <summary>مرتجع المورد — OWNER/MANAGER/STOREKEEPER (V017 · رصد PAGE-27).</summary>
+    public const string PurchasingReturnPost = "purchasing.return.post";
+
+    /// <summary>سجل الموردين — OWNER/MANAGER (V017 · رصد PAGE-31).</summary>
+    public const string SuppliersManage = "suppliers.manage";
+
+    /// <summary>سجل العملاء — OWNER/MANAGER (V017 · رصد PAGE-29).</summary>
+    public const string CustomersManage = "customers.manage";
+
+    /// <summary>قراءة الأطراف وكشوف الحساب — OWNER/MANAGER/STOREKEEPER/ACCOUNTANT/AUDITOR (V017).</summary>
+    public const string PartiesRead = "parties.read";
+
+    /// <summary>البت في طلبات الاعتماد — OWNER/MANAGER/SUPERVISOR (V017 · D-03 ب).</summary>
+    public const string SecurityApprovalDecide = "security.approval.decide";
+
+    /// <summary>قراءة حسابات الخزينة (إنشاؤها وإدارتها في G8) — OWNER/MANAGER/ACCOUNTANT (V017).</summary>
+    public const string FinanceTreasuryRead = "finance.treasury.read";
 }
