@@ -447,10 +447,11 @@ public sealed class MediaEndpointTests : IClassFixture<MediaApiFixture>
         var status = await _fx.PollUntilCompletedAsync(job, TimeSpan.FromSeconds(120));
         Assert.Equal("COMPLETED", status.GetProperty("state").GetString());
         var finalCounts = status.GetProperty("counts");
+        var finalReport = await client.GetFromJsonAsync<JsonElement>($"/api/v1/media/import-jobs/{job}/report");
         Assert.True(
             finalCounts.GetProperty("pending").GetInt32() == 0
-            && finalCounts.GetProperty("done").GetInt32() + finalCounts.GetProperty("skipped").GetInt32() == 300,
-            "العدادات النهائية: " + finalCounts.GetRawText() + " | report=" + client.GetFromJsonAsync<JsonElement>($"/api/v1/media/import-jobs/{job}/report").GetAwaiter().GetResult().GetRawText());
+                && finalCounts.GetProperty("done").GetInt32() + finalCounts.GetProperty("skipped").GetInt32() == 300,
+            "العدادات النهائية: " + finalCounts.GetRawText() + " | report=" + finalReport.GetRawText());
     }
 
     [Fact]
@@ -595,21 +596,29 @@ public sealed class MediaEndpointTests : IClassFixture<MediaApiFixture>
     }
 }
 
-/// <summary>مصنع صور اختبارية حقيقية (PNG بتدرجات مختلفة لكل seed).</summary>
+/// <summary>مصنع صور اختبارية حقيقية (PNG بتدرجات مختلفة لكل seed).
+/// الصيغة حقنية في seed كاملاً (بَتّان مستقلان: r0=seed&amp;0xFF وg0=(seed&gt;&gt;8)&amp;0xFF)
+/// — البذور المختلفة (حتى 65535) تنتج صوراً مختلفة دائماً حتى عند اتفاق
+/// seed mod 256، فلا تصطدم أقسام الاختبار المختلفة بذات البايتات عرضاً
+/// (اصطدام وقع فعلاً بين بذرة 1278 وبذرة 2302 في الجولات الأولى)؛
+/// وتمرير البذرة نفسها مرتين ينتج ذات الصورة عمداً (اختبارات التكرر المقصودة).
+/// </summary>
 public static class MediaImageFactory
 {
     public static byte[] GradientPng(int width, int height, int seed = 0)
     {
         using var surface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Opaque));
         var canvas = surface.Canvas;
+        var r0 = seed & 0xFF;        // بتات seed الدنيا — قناة r وb
+        var g0 = (seed >> 8) & 0xFF; // بتات seed العليا — قناة g (حقن كامل لا mod 256)
         for (var y = 0; y < height; y++)
         {
             for (var x = 0; x < width; x++)
             {
-                var r = (byte)((x * 7 + seed) % 256);
-                var g = (byte)((y * 5 + seed * 3) % 256);
-                var b = (byte)((x * y + seed) % 256);
-                canvas.DrawRect(x, y, 1, 1, new SKPaint { Color = new SKColor(r, g, b) });
+                var r = (x * 7 + r0) % 256;
+                var g = (y * 5 + g0) % 256;
+                var b = (x * y + r0 + g0) % 256;
+                canvas.DrawRect(x, y, 1, 1, new SKPaint { Color = new SKColor((byte)r, (byte)g, (byte)b) });
             }
         }
         using var image = surface.Snapshot();

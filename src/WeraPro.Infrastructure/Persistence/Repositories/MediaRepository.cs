@@ -506,10 +506,15 @@ public sealed class MediaRepository : IMediaRepository, IMediaImportRepository
                         .SetProperty(j => j.State, "RUNNING")
                         .SetProperty(j => j.StartedAt, j => j.StartedAt ?? _clock.GetUtcNow()), ct);
 
-                // تعافي الانهيار: PROCESSING المعلقة (من إقلاع سابق) تعود PENDING
+                // تعافي الانهيار عند التشغيل/الاستئناف — بحراسة المهلة نفسها:
+                // لا يُعاد إدراج ملف قيد المعالجة لدى عامل حي في مثيل آخر.
+                var cutoff = _clock.GetUtcNow().AddSeconds(-MediaPolicy.StaleProcessingGraceSeconds);
                 await _db.MediaImportFiles.AsNoTracking()
-                    .Where(f => f.JobId == jobId && f.State == "PROCESSING")
-                    .ExecuteUpdateAsync(s => s.SetProperty(f => f.State, "PENDING"), ct);
+                    .Where(f => f.JobId == jobId && f.State == "PROCESSING"
+                        && (f.ProcessedAt == null || f.ProcessedAt < cutoff))
+                    .ExecuteUpdateAsync(s => s
+                        .SetProperty(f => f.State, "PENDING")
+                        .SetProperty(f => f.ProcessedAt, (DateTimeOffset?)null), ct);
 
                 await tx.CommitAsync(ct);
                 return affected > 0;
@@ -541,6 +546,13 @@ public sealed class MediaRepository : IMediaRepository, IMediaImportRepository
                 .SetProperty(j => j.FinishedAt, _clock.GetUtcNow()), ct);
         if (affected == 0)
         {
+            // سباق إقفال بين عاملين: إن أقفلها غيرنا فلا خطأ — idempotent
+            var state = await _db.MediaImportJobs.AsNoTracking()
+                .Where(j => j.JobId == jobId).Select(j => j.State).FirstOrDefaultAsync(ct);
+            if (state == "COMPLETED")
+            {
+                return;
+            }
             throw new InvalidOperationException("إقفال المهمة يتطلب حالة RUNNING");
         }
     }
@@ -608,46 +620,63 @@ public sealed class MediaRepository : IMediaRepository, IMediaImportRepository
 
     public async Task<ImportFileRowInfo?> TryPickNextPendingAsync(long jobId, CancellationToken ct = default)
     {
-        var strategy = _db.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(async () =>
+        // التقاط ذري واحد لكل ملف: FOR UPDATE SKIP LOCKED يوزّع الملفات بين
+        // العمال المتوازيين على خادم مشترك (عامل واحد في المثيل الواحد — لكن
+        // الإقلاعات المتوازية والمصانع المتعددة حقيقة قائمة)، و processed_at
+        // تُختم وقت الالتقاط: حراسة التعافي لا تلمس ملفاً ملتقطاً حديثاً بل
+        // المعلّق فعلاً من انهيار سابق (أنظر RequeueStaleProcessingAsync).
+        var connection = _db.Database.GetDbConnection();
+        if (connection.State != System.Data.ConnectionState.Open)
         {
-            await using var tx = await _db.Database.BeginTransactionAsync(ct);
-            try
-            {
-                var candidate = await _db.MediaImportFiles.AsNoTracking()
-                    .Where(f => f.JobId == jobId && f.State == "PENDING")
-                    .OrderBy(f => f.Ordinal)
-                    .FirstOrDefaultAsync(ct);
-                if (candidate is null)
-                {
-                    await tx.CommitAsync(ct);
-                    return null;
-                }
-
-                await _db.MediaImportFiles.AsNoTracking()
-                    .Where(f => f.FileId == candidate.FileId)
-                    .ExecuteUpdateAsync(s => s.SetProperty(f => f.State, "PROCESSING"), ct);
-
-                await tx.CommitAsync(ct);
-                // الحالة في القاعدة أصبحت PROCESSING — أعد اللقطة كما هي عليه
-                candidate.State = "PROCESSING";
-                return MapFile(candidate);
-            }
-            catch
-            {
-                await tx.RollbackAsync(CancellationToken.None);
-                throw;
-            }
-        });
+            await _db.Database.OpenConnectionAsync(ct);
+        }
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE catalog.media_import_files
+               SET state = 'PROCESSING',
+                   processed_at = now()
+             WHERE file_id = (
+                   SELECT file_id
+                     FROM catalog.media_import_files
+                    WHERE job_id = @j AND state = 'PENDING'
+                    ORDER BY ordinal
+                      FOR UPDATE SKIP LOCKED
+                     LIMIT 1)
+            RETURNING file_id, job_id, ordinal, client_name, staging_key, size_bytes,
+                      state, sha256, error_code, skip_reason, media_id, processed_at
+            """;
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "j";
+        parameter.Value = jobId;
+        command.Parameters.Add(parameter);
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        if (!await reader.ReadAsync(ct))
+        {
+            return null;
+        }
+        return new ImportFileRowInfo(
+            reader.GetInt64(0), reader.GetInt64(1), reader.GetInt32(2), reader.GetString(3),
+            reader.IsDBNull(4) ? null : reader.GetString(4), reader.GetInt64(5), reader.GetString(6),
+            reader.IsDBNull(7) ? null : reader.GetString(7), reader.IsDBNull(8) ? null : reader.GetString(8),
+            reader.IsDBNull(9) ? null : reader.GetString(9),
+            reader.IsDBNull(10) ? null : reader.GetInt64(10),
+            reader.IsDBNull(11) ? null : new DateTimeOffset(
+                DateTime.SpecifyKind(reader.GetDateTime(11), DateTimeKind.Utc)));
     }
 
     public async Task<int> RequeueStaleProcessingAsync(long jobId, CancellationToken ct = default)
     {
-        // تعافي الانهيار: PROCESSING بلا معالج حي تعود PENDING (معالج واحد متسلسل —
-        // أي PROCESSING يُرى عند بدء الدورة هو من إقلاع سابق). لا تمس DONE/SKIPPED/FAILED.
+        // تعافي الانهيار المحتاط: لا يُعاد إدراج إلا ما هو معلّق فعلاً — أي
+        // PROCESSING بلا ختم التقاط (NULL) أو بختم أقدم من مهلة السماح.
+        // الملف الملتقط قبل لحظات (عامل حي في مثيل آخر) لا يُلمس أبداً —
+        // وإلا لتضاعفت معالجته بين العمال المتوازيين.
+        var cutoff = _clock.GetUtcNow().AddSeconds(-MediaPolicy.StaleProcessingGraceSeconds);
         return await _db.MediaImportFiles.AsNoTracking()
-            .Where(f => f.JobId == jobId && f.State == "PROCESSING")
-            .ExecuteUpdateAsync(s => s.SetProperty(f => f.State, "PENDING"), ct);
+            .Where(f => f.JobId == jobId && f.State == "PROCESSING"
+                && (f.ProcessedAt == null || f.ProcessedAt < cutoff))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(f => f.State, "PENDING")
+                .SetProperty(f => f.ProcessedAt, (DateTimeOffset?)null), ct);
     }
 
     public async Task<ImportFileRowInfo?> FindFileAsync(long fileId, CancellationToken ct = default)
@@ -694,6 +723,8 @@ public sealed class MediaRepository : IMediaRepository, IMediaImportRepository
                             .SetProperty(f => f.State, "DONE")
                             .SetProperty(f => f.Sha256, outcome.Sha256)
                             .SetProperty(f => f.MediaId, asset.MediaId)
+                            .SetProperty(f => f.ErrorCode, (string?)null)
+                            .SetProperty(f => f.SkipReason, (string?)null)
                             .SetProperty(f => f.ProcessedAt, now), ct);
                 }
                 else

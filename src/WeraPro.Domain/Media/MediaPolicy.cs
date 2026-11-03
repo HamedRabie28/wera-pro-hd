@@ -34,6 +34,13 @@ public static class MediaPolicy
     public const int VisualSuspectHammingThreshold = 8;
 
     /// <summary>
+    /// مهلة سماح تعافي الانهيار (§6.1): صف PROCESSING لا يُعاد إدراجه PENDING
+    /// إلا بعد هذه المهلة من وقت الالتقاط (أو إن كان بلا ختم التقاط أصلاً) —
+    /// فلا يُلمس ملف قيد المعالجة لدى عامل حي، ويُشفى المعلّق من انهيار سابق.
+    /// </summary>
+    public const int StaleProcessingGraceSeconds = 30;
+
+    /// <summary>
     /// مقاس النسخة المصغرة: احتواء داخل الصندوق مع حفظ النسبة —
     /// تصغير فقط؛ إن كان المصدر أصغر من الصندوق يبقى بمقاسه (لا تكبير §6.1).
     /// </summary>
