@@ -192,6 +192,24 @@ public static class CatalogEndpoints
             }
         }).RequireAuthorization(PermissionCodes.InventoryMovementPost);
 
+        // ── الصورة الافتراضية لصيغة بيع (G5 — §6.3: تغذي POS وشبكة الكتالوج) ─
+        group.MapGet("/skus/{skuId:long}/default-image", async (
+            long skuId,
+            [FromServices] WeraPro.Application.Media.GetSkuDefaultImageUseCase useCase,
+            HttpContext http,
+            CancellationToken ct) =>
+        {
+            var result = await useCase.ExecuteAsync(skuId, ct);
+            return result.IsSuccess
+                ? Results.Ok(new Contracts.V1.SkuDefaultImageResponse(
+                    result.Value!.SkuId,
+                    result.Value.SkuCode,
+                    result.Value.SourceAr,
+                    result.Value.MediaId,
+                    result.Value.HasThumbPos))
+                : Problem(http, StatusCodes.Status404NotFound, "الصيغة غير موجودة", result.Error!.MessageAr);
+        }).RequireAuthorization(PermissionCodes.CatalogProductRead);
+
         return app;
     }
 

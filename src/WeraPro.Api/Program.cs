@@ -98,6 +98,35 @@ try
     builder.Services.AddScoped<WeraPro.Application.Catalog.PostStockMovementUseCase>();
     builder.Services.AddScoped<WeraPro.Application.Catalog.SetProductStatusUseCase>();
 
+    // ── الوسائط (G5) ──
+    builder.Services.Configure<WeraPro.Infrastructure.Media.MediaStorageOptions>(
+        builder.Configuration.GetSection(WeraPro.Infrastructure.Media.MediaStorageOptions.SectionName));
+    builder.Services.AddSingleton<WeraPro.Application.Media.IMediaStorage, WeraPro.Infrastructure.Media.LocalFileStorage>();
+    builder.Services.AddSingleton<WeraPro.Application.Media.IMediaImageProcessor, WeraPro.Infrastructure.Media.SkiaImageProcessor>();
+    builder.Services.AddScoped<WeraPro.Infrastructure.Persistence.Repositories.MediaRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Media.IMediaRepository>(sp => sp.GetRequiredService<WeraPro.Infrastructure.Persistence.Repositories.MediaRepository>());
+    builder.Services.AddScoped<WeraPro.Application.Media.IMediaImportRepository>(sp => sp.GetRequiredService<WeraPro.Infrastructure.Persistence.Repositories.MediaRepository>());
+    builder.Services.AddScoped<WeraPro.Application.Media.UploadMediaUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.SearchMediaUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.GetMediaDetailsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.ServeMediaVariantUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.LinkMediaUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.UnlinkMediaUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.SetPrimaryLinkUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.DeleteMediaUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.ReprocessThumbnailsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.GetDuplicatesReportUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.GetSkuDefaultImageUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.CreateImportJobUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.GetImportJobUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.AddImportFilesUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.StartImportJobUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.CancelImportJobUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.ListImportFilesUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.GetImportReportUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Media.MediaImportFileProcessor>();
+    builder.Services.AddHostedService<WeraPro.BackgroundServices.MediaImportWorker>();
+
     // ── التحقق الموحد (ADR-007) ──
     builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -257,7 +286,8 @@ try
     app.MapAuthEndpoints()
        .MapReferenceEndpoints()
        .MapAuditEndpoints()
-       .MapCatalogEndpoints();
+       .MapCatalogEndpoints()
+       .MapMediaEndpoints();
 
     app.Run();
     return 0;

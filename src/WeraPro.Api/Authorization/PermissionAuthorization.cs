@@ -81,6 +81,18 @@ public static class PermissionPolicy
                 options.AddPolicy(code,
                     p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
             }
+
+            // ── صلاحيات الوسائط G5 (V016 + V009) ──
+            foreach (var code in new[]
+            {
+                PermissionCodes.CatalogMediaRead,
+                PermissionCodes.CatalogMediaManage,
+                PermissionCodes.CatalogImportRun,
+            })
+            {
+                options.AddPolicy(code,
+                    p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
+            }
         });
     }
 }

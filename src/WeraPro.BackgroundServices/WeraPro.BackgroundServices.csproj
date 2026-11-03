@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    WeraPro.BackgroundServices — G5: العامل الخلفي لاستيراد الصور الدفعي.
+    أنشئ في البوابة التي تحتاجه أولاً (قاعدة «لا مشاريع فارغة» من G3):
+    يحرّك MediaImportFileProcessor ملفاً واحداً في الدورة — متزامن داخل
+    المهمة (حدود ذاكرة §6.1) وبأثر ملف لكل معاملة.
+  -->
+  <PropertyGroup>
+    <RootNamespace>WeraPro.BackgroundServices</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WeraPro.Domain\WeraPro.Domain.csproj" />
+    <ProjectReference Include="..\WeraPro.Application\WeraPro.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>

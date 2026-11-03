@@ -52,4 +52,13 @@ public static class PermissionCodes
 
     /// <summary>ترحيل حركة مخزون موثقة إلى الدفتر — OWNER/MANAGER/STOREKEEPER (V015).</summary>
     public const string InventoryMovementPost = "inventory.movement.post";
+
+    /// <summary>قراءة مكتبة الوسائط ومصغرات الكتالوج/POS — كل الأدوار (V016).</summary>
+    public const string CatalogMediaRead = "catalog.media.read";
+
+    /// <summary>إدارة المكتبة: رفع/ربط/فك ربط/رئيسية/إعادة معالجة/حذف أصل — OWNER/MANAGER/STOREKEEPER (V016).</summary>
+    public const string CatalogMediaManage = "catalog.media.manage";
+
+    /// <summary>تشغيل استيراد المنتجات/الصور الدفعي — OWNER (V009) + STOREKEEPER (V016).</summary>
+    public const string CatalogImportRun = "catalog.import.run";
 }

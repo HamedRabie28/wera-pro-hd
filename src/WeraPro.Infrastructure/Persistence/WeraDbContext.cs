@@ -41,6 +41,12 @@ public sealed class WeraDbContext : DbContext
     public DbSet<WarehouseRow> Warehouses => Set<WarehouseRow>();
     public DbSet<StockMovementRow> StockMovements => Set<StockMovementRow>();
 
+    // ── الوسائط ومهام الاستيراد (G5 — V002/V016) ──
+    public DbSet<MediaAssetRow> MediaAssets => Set<MediaAssetRow>();
+    public DbSet<ProductImageRow> ProductImages => Set<ProductImageRow>();
+    public DbSet<MediaImportJobRow> MediaImportJobs => Set<MediaImportJobRow>();
+    public DbSet<MediaImportFileRow> MediaImportFiles => Set<MediaImportFileRow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("core");

@@ -19,6 +19,9 @@ public static class ApiRoutes
     public const string CatalogProductStatus = Prefix + "/catalog/products/{productId:long}/status";
     public const string CatalogLookup = Prefix + "/catalog/lookup";
     public const string CatalogStockMovements = Prefix + "/catalog/skus/{skuId:long}/stock-movements";
+    public const string SkuDefaultImage = Prefix + "/catalog/skus/{skuId:long}/default-image";
+    public const string Media = Prefix + "/media";
+    public const string MediaImportJobs = Prefix + "/media/import-jobs";
     public const string HealthLive = "health/live";
     public const string HealthReady = "health/ready";
 }

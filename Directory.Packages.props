@@ -25,6 +25,12 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
 
+    <!-- معالجة الصور (G5 — مكتبة الوسائط): ImageSharp 2.1.x مُدارة خالصة عبر
+         Linux/Windows بلا اعتماديات أصلية؛ 2.1.x تحت ترخيص Apache-2.0 (لا
+         تُستخدم 3.x+ المقيدة بترخيص Six Labors Split) -->
+    <PackageVersion Include="SkiaSharp" Version="3.119.0" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.0" />
+
     <!-- السجلات (Serilog — إخفاء الأسرار إلزامي §18) -->
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
