@@ -66,12 +66,13 @@ public sealed class MediaImportJobRowConfiguration : IEntityTypeConfiguration<Me
         builder.Property(x => x.JobId).HasColumnName("job_id").ValueGeneratedOnAdd();
         builder.Property(x => x.Label).HasColumnName("label").HasMaxLength(120);
         builder.Property(x => x.State).HasColumnName("state").HasMaxLength(16);
+        builder.Property(x => x.StorageScope).HasColumnName("storage_scope").HasMaxLength(16).IsFixedLength();
         builder.Property(x => x.CreatedBy).HasColumnName("created_by");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.StartedAt).HasColumnName("started_at");
         builder.Property(x => x.FinishedAt).HasColumnName("finished_at");
 
-        builder.HasIndex(x => x.JobId).HasDatabaseName("idx_media_import_jobs_running")
+        builder.HasIndex(x => new { x.StorageScope, x.JobId }).HasDatabaseName("idx_media_import_jobs_running")
             .HasFilter("state = 'RUNNING'");
     }
 }

@@ -727,8 +727,240 @@ def t_env_02(conn):
     return f"{n} إعداداً مرتبطاً بقرارات · محسوم OWNER_CONFIRMED={settled} (D-01/D-07 بـV011 وD-02/D-03 بـV012) · بانتظار المالك={pending} (بقية D-xx)"
 
 
+# ───────────────────────────── G5: مكتبة الوسائط (V016) ─────────────────────────────
+
+def _media_fixture(conn, n=1):
+    """أصل وسائط داخل المعاملة الحالية (يتراجع مع نهاية الاختبار) — مفتاح وبصمة فريدان لكل استدعاء."""
+    cur = conn.cursor()
+    sha = ("a" * 63) + str(n % 10)
+    cur.execute(
+        "INSERT INTO catalog.media_assets (storage_key, sha256, mime_type, width_px, height_px, size_bytes, uploaded_by) "
+        "VALUES (%s, %s, 'image/png', 64, 48, 1024, "
+        "(SELECT user_id FROM core.users WHERE username='t_owner')) RETURNING media_id",
+        (f"media/a{'b' * 61}{n:02d}/orig.png", sha))
+    media_id = cur.fetchone()[0]
+    cur.close()
+    return media_id
+
+
+def _job_fixture(conn, label="مهمة قيود G5", scope="0123456789abcdef"):
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO catalog.media_import_jobs (label, storage_scope, created_by) "
+        "VALUES (%s, %s, (SELECT user_id FROM core.users WHERE username='t_owner')) RETURNING job_id",
+        (label, scope))
+    job_id = cur.fetchone()[0]
+    cur.close()
+    return job_id
+
+
+@test("T-MED-01", "Media", "بصمة نطاق تخزين بصيغة غير صالحة تُرفض (16 سداسياً صغيراً فقط — V016)")
+def t_med_01(conn):
+    # الطول الزائد ترفضه سعة CHAR(16) قبل فحص الصيغة — كلاهما رفض صحيح
+    for bad, tokens in [
+        ("ABCDEF0123456789", ("mij_scope_format",)),   # كبيرة
+        ("0123456789abcde", ("mij_scope_format",)),    # 15 محرفاً
+        ("0123456789abcdefg", ("mij_scope_format", "value too long")),  # 17 محرفاً
+        ("0123456789abcdeg", ("mij_scope_format",)),   # محرف غير سداسي
+    ]:
+        expect_error(conn,
+            "INSERT INTO catalog.media_import_jobs (label, storage_scope, created_by) "
+            "VALUES ('نطاق خاطئ', %s, (SELECT user_id FROM core.users WHERE username='t_owner'))",
+            (bad,), *tokens)
+    # الصيغة الصحيحة تُقبل (داخل SAVEPOINT يتراجع تلقائياً)
+    with sp(conn) as cur:
+        cur.execute(
+            "INSERT INTO catalog.media_import_jobs (label, storage_scope, created_by) "
+            "VALUES ('نطاق صحيح', 'fedcba9876543210', (SELECT user_id FROM core.users WHERE username='t_owner'))")
+    return "4 صيغ مرفوضة (كبيرة/قصيرة/طويلة/غير سداسية — الطويلة ترفضها سعة CHAR16 قبل الفحص) والصحيحة تُقبل"
+
+
+@test("T-MED-02", "Media", "حالة ملف استيراد خارج المجموعة تُرفض (PENDING/PROCESSING/DONE/FAILED/SKIPPED)")
+def t_med_02(conn):
+    # قيد الحالة وقيد اتساق النتيجة يقيّمان معاً — كلاهما رفض صحيح لنفس الإدخال
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state) "
+        "VALUES (%s, 1, 'x.png', 'staging/0000000001/000001.bin', 100, 'INVENTED')",
+        (job_id := _job_fixture(conn),), "mif_state_valid", "mif_done_shape")
+
+
+@test("T-MED-03", "Media", "نتيجة الملف متسقة مع حالته: DONE بلا أصل أو مع خطأ تُرفض (mif_done_shape)")
+def t_med_03(conn):
+    job = _job_fixture(conn)
+    media = _media_fixture(conn)
+    # DONE بلا media_id ولا sha256
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state) "
+        "VALUES (%s, 1, 'x.png', 'staging/0000000001/000001.bin', 100, 'DONE')",
+        (job,), "mif_done_shape")
+    # DONE مع error_code (نتيجة متناقضة)
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state, sha256, media_id, error_code) "
+        "VALUES (%s, 2, 'y.png', 'staging/0000000001/000002.bin', 100, 'DONE', %s, %s, 'CORRUPT_IMAGE')",
+        (job, "b" * 64, media), "mif_done_shape")
+
+
+@test("T-MED-04", "Media", "FAILED بأصل أو بلا خطأ تُرفض — الفشل له سبب مسمى دائماً")
+def t_med_04(conn):
+    job = _job_fixture(conn)
+    media = _media_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state, media_id) "
+        "VALUES (%s, 1, 'x.png', 'staging/0000000001/000001.bin', 100, 'FAILED', %s)",
+        (job, media), "mif_done_shape")
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state) "
+        "VALUES (%s, 2, 'y.png', 'staging/0000000001/000002.bin', 100, 'FAILED')",
+        (job,), "mif_done_shape")
+
+
+@test("T-MED-05", "Media", "SKIPPED بلا سبب تخطٍ أو مع خطأ تُرفض — التخطي مبرر دوماً (مكرر قائم)")
+def t_med_05(conn):
+    job = _job_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state, sha256) "
+        "VALUES (%s, 1, 'x.png', 'staging/0000000001/000001.bin', 100, 'SKIPPED', %s)",
+        (job, "c" * 64), "mif_done_shape")
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state, sha256, error_code) "
+        "VALUES (%s, 2, 'y.png', 'staging/0000000001/000002.bin', 100, 'SKIPPED', %s, 'FILE_TOO_LARGE')",
+        (job, "c" * 64), "mif_done_shape")
+
+
+@test("T-MED-06", "Media", "PENDING بنتيجة (sha256/خطأ/سبب) تُرفض — العمل غير المنجز بلا نتيجة")
+def t_med_06(conn):
+    job = _job_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state, sha256) "
+        "VALUES (%s, 1, 'x.png', 'staging/0000000001/000001.bin', 100, 'PENDING', %s)",
+        (job, "d" * 64), "mif_done_shape")
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes, state, error_code) "
+        "VALUES (%s, 2, 'y.png', 'staging/0000000001/000002.bin', 100, 'PROCESSING', 'LATER')",
+        (job,), "mif_done_shape")
+
+
+@test("T-MED-07", "Media", "PENDING بلا staging تُرفض — لا عمل مؤجل بلا بايتات (mif_staging_shape)")
+def t_med_07(conn):
+    job = _job_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, size_bytes, state) "
+        "VALUES (%s, 1, 'x.png', 100, 'PENDING')",
+        (job,), "mif_staging_shape")
+
+
+@test("T-MED-08", "Media", "ترتيب مكرر داخل المهمة يُرفض — لكل ملف ترتيب واحد")
+def t_med_08(conn):
+    job = _job_fixture(conn)
+    # الصف الأول يُثبَّت داخل معاملة الاختبار (لا SAVEPOINT — ليظل أمام محاولة التكرار)
+    run_sql(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes) "
+        "VALUES (%s, 7, 'a.png', 'staging/0000000001/000007.bin', 100)", (job,))
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes) "
+        "VALUES (%s, 7, 'b.png', 'staging/0000000001/000007x.bin', 101)",
+        (job,), "media_import_files_job_id_ordinal_key")
+
+
+@test("T-MED-09", "Media", "حجم ملف غير موجب يُرفض — لا ملف صفري أو سالب")
+def t_med_09(conn):
+    job = _job_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes) "
+        "VALUES (%s, 1, 'x.png', 'staging/0000000001/000001.bin', 0)",
+        (job,), "media_import_files_size_bytes_check")
+
+
+@test("T-MED-10", "Media", "ربط مزدوج لنفس الصورة بنفس المنتج يُرفض (uq_product_images_media_product)")
+def t_med_10(conn):
+    media = _media_fixture(conn)
+    product = one(conn, "SELECT product_id FROM catalog.products WHERE code='TPRD1'")[0]
+    run_sql(conn, "INSERT INTO catalog.product_images (media_id, product_id) VALUES (%s, %s)", (media, product))
+    expect_error(conn,
+        "INSERT INTO catalog.product_images (media_id, product_id, sort_order) VALUES (%s, %s, 1)",
+        (media, product), "uq_product_images_media_product")
+
+
+@test("T-MED-11", "Media", "ربط مزدوج لنفس الصورة بنفس الصيغة يُرفض (uq_product_images_media_sku)")
+def t_med_11(conn):
+    media = _media_fixture(conn)
+    sku = one(conn, "SELECT sku_id FROM catalog.skus WHERE sku_code='TBAG'")[0]
+    run_sql(conn, "INSERT INTO catalog.product_images (media_id, sku_id) VALUES (%s, %s)", (media, sku))
+    expect_error(conn,
+        "INSERT INTO catalog.product_images (media_id, sku_id, sort_order) VALUES (%s, %s, 1)",
+        (media, sku), "uq_product_images_media_sku")
+
+
+@test("T-MED-12", "Media", "حالة المهمة متسقة: OPEN بلا بدء وCOMPLETED بلا إقفال تُرفضان")
+def t_med_12(conn):
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_jobs (label, storage_scope, created_by, started_at) "
+        "VALUES ('بدء بلا تشغيل', '0123456789abcdef', "
+        "(SELECT user_id FROM core.users WHERE username='t_owner'), now())",
+        (), "mij_open_not_started")
+    expect_error(conn,
+        "INSERT INTO catalog.media_import_jobs (label, storage_scope, created_by, state) "
+        "VALUES ('إقفال بلا وقت', '0123456789abcdef', "
+        "(SELECT user_id FROM core.users WHERE username='t_owner'), 'COMPLETED')",
+        (), "mij_finished_terminal")
+
+
+@test("T-MED-13", "Media", "حذف المهمة تتالي ملفاتها (ON DELETE CASCADE) — لا ملفات يتيمة")
+def t_med_13(conn):
+    job = _job_fixture(conn, label="مهمة تتالي")
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO catalog.media_import_files (job_id, ordinal, client_name, staging_key, size_bytes) "
+        "VALUES (%s, 1, 'a.png', 'staging/0000000001/000001.bin', 10), "
+        "(%s, 2, 'b.png', 'staging/0000000001/000002.bin', 20)", (job, job))
+    cur.execute("DELETE FROM catalog.media_import_jobs WHERE job_id = %s", (job,))
+    cur.execute("SELECT COUNT(*) FROM catalog.media_import_files WHERE job_id = %s", (job,))
+    remaining = cur.fetchone()[0]
+    cur.close()
+    assert remaining == 0, f"ملفات يتيمة بعد حذف المهمة: {remaining}"
+    return "ملفا المهمة حُذفا معها داخل المعاملة (يتراجع الاختبار تلقائياً)"
+
+
+@test("T-MED-14", "Media", "صلاحيات V016: قراءة الوسائط لكل الأدوار السبعة، والإدارة للمالك/المدير/المخازني، والاستيراد للمالك/المخازني")
+def t_med_14(conn):
+    roles = one(conn, "SELECT COUNT(*) FROM core.roles")[0]
+    readers = one(conn, """
+        SELECT COUNT(DISTINCT r.role_id) FROM core.roles r
+        JOIN core.role_permissions rp ON rp.role_id = r.role_id
+        JOIN core.permissions p ON p.permission_id = rp.permission_id
+        WHERE p.code = 'catalog.media.read'""")[0]
+    managers = all_rows(conn, """
+        SELECT r.code FROM core.roles r
+        WHERE r.code IN ('OWNER','MANAGER','STOREKEEPER')
+          AND EXISTS (SELECT 1 FROM core.role_permissions rp
+                      JOIN core.permissions p ON p.permission_id = rp.permission_id
+                      WHERE rp.role_id = r.role_id AND p.code = 'catalog.media.manage')""")
+    importers = all_rows(conn, """
+        SELECT r.code FROM core.roles r
+        WHERE EXISTS (SELECT 1 FROM core.role_permissions rp
+                      JOIN core.permissions p ON p.permission_id = rp.permission_id
+                      WHERE rp.role_id = r.role_id AND p.code = 'catalog.import.run')""")
+    assert roles == 7, f"عدد الأدوار {roles} — متوقع 7"
+    assert readers == 7, f"قراءة الوسائط لـ{readers} دوراً — متوقع 7 (كل الأدوار)"
+    assert {r[0] for r in managers} == {"OWNER", "MANAGER", "STOREKEEPER"}, f"الإدارة: {[r[0] for r in managers]}"
+    assert "STOREKEEPER" in {r[0] for r in importers}, f"الاستيراد لا يشمل المخازني: {[r[0] for r in importers]}"
+    assert "OWNER" in {r[0] for r in importers}, "الاستيراد لا يشمل المالك"
+    return f"قراءة×7 أدوار · إدارة×3 (م/مش/خ) · استيراد يشمل م/خ — من {roles} أدوار"
+
+
+@test("T-MED-15", "Media", "صورة رئيسية ثانية لنفس الصيغة تُرفض (uq_product_images_primary_sku من V002)")
+def t_med_15(conn):
+    media = _media_fixture(conn, n=1)
+    media2 = _media_fixture(conn, n=2)  # أصل ثانٍ فريد داخل المعاملة نفسها
+    sku = one(conn, "SELECT sku_id FROM catalog.skus WHERE sku_code='TBOX'")[0]
+    run_sql(conn, "INSERT INTO catalog.product_images (media_id, sku_id, is_primary) VALUES (%s, %s, TRUE)", (media, sku))
+    expect_error(conn,
+        "INSERT INTO catalog.product_images (media_id, sku_id, is_primary) VALUES (%s, %s, TRUE)",
+        (media2, sku), "uq_product_images_primary_sku")
+
+
 # ───────────────────────────── التشغيل ─────────────────────────────
-ORDER = {"Flow": 0, "Inventory": 1, "Catalog": 1, "Sales": 2, "Pricing": 2, "Shifts": 2,
+ORDER = {"Flow": 0, "Inventory": 1, "Catalog": 1, "Media": 1, "Sales": 2, "Pricing": 2, "Shifts": 2,
          "Purchasing": 2, "Finance": 3, "Printing": 4, "Security": 4, "Audit": 4, "Ops": 5, "Env": 6}
 
 

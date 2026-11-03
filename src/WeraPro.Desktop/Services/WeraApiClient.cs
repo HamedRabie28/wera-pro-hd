@@ -179,6 +179,294 @@ public sealed class WeraApiClient(
         return await GetAsync<CatalogReferenceResponse>(ApiRoutes.CatalogReference, ct);
     }
 
+    // ── مكتبة الوسائط (G5 — §6) ──────────────────────────────────────────
+
+    /// <summary>بحث المكتبة بترقيم خادمي — بادئة البصمة/النوع/حالة الربط.</summary>
+    public async Task<ApiCallResult<MediaSearchResponse>> SearchMediaAsync(
+        string? sha, string? mime, string? linkState, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = new List<string>
+        {
+            "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        };
+        if (!string.IsNullOrWhiteSpace(sha))
+        {
+            qs.Add("sha=" + Uri.EscapeDataString(sha.Trim()));
+        }
+        if (!string.IsNullOrWhiteSpace(mime))
+        {
+            qs.Add("mime=" + Uri.EscapeDataString(mime));
+        }
+        if (!string.IsNullOrWhiteSpace(linkState))
+        {
+            qs.Add("linkState=" + Uri.EscapeDataString(linkState));
+        }
+        return await GetAsync<MediaSearchResponse>(ApiRoutes.Media + "?" + string.Join("&", qs), ct);
+    }
+
+    public async Task<ApiCallResult<MediaDetailsResponse>> GetMediaDetailsAsync(long mediaId, CancellationToken ct = default)
+    {
+        return await GetAsync<MediaDetailsResponse>(MediaById(mediaId), ct);
+    }
+
+    /// <summary>بايتات نسخة (original/thumb-catalog/thumb-pos/preview) — تستخدمها المصغرات والمعاينة.</summary>
+    public async Task<MediaVariantFetch> GetMediaVariantAsync(long mediaId, string variant, CancellationToken ct = default)
+    {
+        try
+        {
+            using var client = CreateClient();
+            using var response = await client.GetAsync(MediaById(mediaId) + "/content/" + variant, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                return MediaVariantFetch.Fail(await ReadErrorAsync(response, ct));
+            }
+            var bytes = await response.Content.ReadAsByteArrayAsync(ct);
+            return MediaVariantFetch.Ok(bytes, response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream");
+        }
+        catch (TaskCanceledException)
+        {
+            return MediaVariantFetch.Fail("انتهت مهلة الطلب — تحقق من حالة الخادم");
+        }
+        catch (HttpRequestException)
+        {
+            return MediaVariantFetch.Fail("تعذر الوصول إلى الخادم — تحقق من العنوان والاتصال");
+        }
+    }
+
+    /// <summary>رفع صورة واحدة — النتيجة تشير للموجود عند التطابق التام (409).</summary>
+    public async Task<ApiCallResult<UploadMediaResponse>> UploadMediaAsync(string filePath, CancellationToken ct = default)
+    {
+        try
+        {
+            await using var source = File.OpenRead(filePath);
+            using var owned = new MemoryStream();
+            await source.CopyToAsync(owned, 64 * 1024, ct);
+            owned.Position = 0;
+            return await UploadMediaAsync(Path.GetFileName(filePath), owned, ct);
+        }
+        catch (IOException ex)
+        {
+            logger.LogWarning(ex, "تعذر قراءة ملف الرفع {Path}", filePath);
+            return ApiCallResult<UploadMediaResponse>.Fail("تعذر قراءة الملف من القرص");
+        }
+    }
+
+    /// <summary>رفع بايتات صورة باسم عرض من العميل (client_name للعرض فقط §6.1).</summary>
+    public async Task<ApiCallResult<UploadMediaResponse>> UploadMediaAsync(string fileName, Stream content, CancellationToken ct = default)
+    {
+        try
+        {
+            using var client = CreateClient();
+            using var form = new MultipartFormDataContent();
+            var part = new StreamContent(content);
+            part.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+            form.Add(part, "file", fileName);
+            using var response = await client.PostAsync(ApiRoutes.Media, form, ct);
+            return await ReadAsync<UploadMediaResponse>(response, ct);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiCallResult<UploadMediaResponse>.Fail("انتهت مهلة الطلب — تحقق من حالة الخادم");
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "فشل رفع الوسائط");
+            return ApiCallResult<UploadMediaResponse>.Fail("تعذر الوصول إلى الخادم — تحقق من العنوان والاتصال");
+        }
+    }
+
+    public async Task<ApiCallResult<MediaLinkDto>> LinkMediaAsync(
+        long mediaId, long? productId, long? skuId, bool makePrimary, CancellationToken ct = default)
+    {
+        return await PostAsync<LinkMediaRequest, MediaLinkDto>(
+            MediaById(mediaId) + "/links",
+            new LinkMediaRequest(productId, skuId, makePrimary), allowAnonymous: false, ct);
+    }
+
+    /// <summary>فك ربط — لا يمس الأصل أبداً؛ يعيد عدد الروابط المتبقية للأصل.</summary>
+    public async Task<ApiCallResult<int>> UnlinkMediaAsync(long linkId, CancellationToken ct = default)
+    {
+        var result = await DeleteAsync<UnlinkResponse>(ApiRoutes.Media + "/links/" + linkId, ct);
+        return result.Map(r => r.RemainingLinksForAsset);
+    }
+
+    public async Task<ApiCallResult<MediaLinkDto>> SetPrimaryLinkAsync(long linkId, CancellationToken ct = default)
+    {
+        return await PostWithResponseAsync<MediaLinkDto>(
+            ApiRoutes.Media + "/links/" + linkId + "/set-primary", ct);
+    }
+
+    /// <summary>
+    /// حذف أصل — يُرفض خادمياً ما دام مربوطاً (409 يحمل الروابط = المراجعة)؛
+    /// الرسالة تعرضها الواجهة والروابط تُجلب بتفاصيل الأصل عند الحاجة.
+    /// </summary>
+    public async Task<ApiCallResult<long>> DeleteMediaAsync(long mediaId, CancellationToken ct = default)
+    {
+        var result = await DeleteAsync<IgnoreBody>(MediaById(mediaId), ct);
+        return result.Map(_ => mediaId);
+    }
+
+    public async Task<ApiCallResult<MediaDto>> ReprocessThumbnailsAsync(long mediaId, CancellationToken ct = default)
+    {
+        return await PostWithResponseAsync<MediaDto>(MediaById(mediaId) + "/reprocess-thumbnails", ct);
+    }
+
+    /// <summary>تقرير المكررات — عرض فقط (لا دمج/حذف تلقائي §6.2).</summary>
+    public async Task<ApiCallResult<MediaDuplicatesReportResponse>> GetDuplicatesReportAsync(
+        int page = 1, CancellationToken ct = default)
+    {
+        return await GetAsync<MediaDuplicatesReportResponse>(
+            ApiRoutes.Media + "/duplicates?page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
+    }
+
+    public async Task<ApiCallResult<SkuDefaultImageResponse>> GetSkuDefaultImageAsync(long skuId, CancellationToken ct = default)
+    {
+        var url = ApiRoutes.SkuDefaultImage.Replace(
+            "{skuId:long}", skuId.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal);
+        return await GetAsync<SkuDefaultImageResponse>(url, ct);
+    }
+
+    // ── استيراد الصور الدفعي (G5 — §6.1) ────────────────────────────────
+
+    public async Task<ApiCallResult<ImportJobDto>> CreateImportJobAsync(string label, CancellationToken ct = default)
+    {
+        return await PostAsync<CreateImportJobRequest, ImportJobDto>(
+            ApiRoutes.MediaImportJobs, new CreateImportJobRequest(label), allowAnonymous: false, ct);
+    }
+
+    public async Task<ApiCallResult<ImportJobDto>> GetImportJobAsync(long jobId, CancellationToken ct = default)
+    {
+        return await GetAsync<ImportJobDto>(ImportJobById(jobId), ct);
+    }
+
+    public async Task<ApiCallResult<ImportJobDto>> StartImportJobAsync(long jobId, CancellationToken ct = default)
+    {
+        return await PostWithResponseAsync<ImportJobDto>(ImportJobById(jobId) + "/start", ct);
+    }
+
+    public async Task<ApiCallResult<ImportJobDto>> CancelImportJobAsync(long jobId, CancellationToken ct = default)
+    {
+        return await PostWithResponseAsync<ImportJobDto>(ImportJobById(jobId) + "/cancel", ct);
+    }
+
+    /// <summary>ترحيل ملفات إلى staging المهمة — multipart متعدد (client_name للعرض فقط).</summary>
+    public async Task<ApiCallResult<ImportAddFilesResponse>> AddImportFilesAsync(
+        long jobId, IReadOnlyList<(string FileName, Stream Content)> files, CancellationToken ct = default)
+    {
+        try
+        {
+            using var client = CreateClient();
+            using var form = new MultipartFormDataContent();
+            foreach (var (name, content) in files)
+            {
+                var part = new StreamContent(content);
+                part.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                form.Add(part, "files", name);
+            }
+            using var response = await client.PostAsync(ImportJobById(jobId) + "/files", form, ct);
+            return await ReadAsync<ImportAddFilesResponse>(response, ct);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiCallResult<ImportAddFilesResponse>.Fail("انتهت مهلة الطلب — تحقق من حالة الخادم");
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "فشل ترحيل ملفات الاستيراد");
+            return ApiCallResult<ImportAddFilesResponse>.Fail("تعذر الوصول إلى الخادم — تحقق من العنوان والاتصال");
+        }
+    }
+
+    public async Task<ApiCallResult<ImportFilesPageResponse>> GetImportFilesAsync(
+        long jobId, string? state, int page, int pageSize, CancellationToken ct = default)
+    {
+        var qs = "page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            + "&pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if (!string.IsNullOrWhiteSpace(state))
+        {
+            qs += "&state=" + Uri.EscapeDataString(state);
+        }
+        return await GetAsync<ImportFilesPageResponse>(ImportJobById(jobId) + "/files?" + qs, ct);
+    }
+
+    public async Task<ApiCallResult<ImportReportResponse>> GetImportReportAsync(long jobId, CancellationToken ct = default)
+    {
+        return await GetAsync<ImportReportResponse>(ImportJobById(jobId) + "/report", ct);
+    }
+
+    private static string MediaById(long mediaId) =>
+        ApiRoutes.Media + "/" + mediaId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string ImportJobById(long jobId) =>
+        ApiRoutes.MediaImportJobs + "/" + jobId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>DELETE عام — 204 بلا جسد أو JSON عند الرفض (رسالة عربية).</summary>
+    private async Task<ApiCallResult<T>> DeleteAsync<T>(string url, CancellationToken ct)
+    {
+        try
+        {
+            using var client = CreateClient();
+            using var response = await client.DeleteAsync(url, ct);
+            if (response.IsSuccessStatusCode && response.Content.Headers.ContentLength is 0 or null)
+            {
+                return ApiCallResult<T>.Ok(default!);
+            }
+            return await ReadAsync<T>(response, ct);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiCallResult<T>.Fail("انتهت مهلة الطلب — تحقق من حالة الخادم");
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "فشل اتصال بـ{Url}", url);
+            return ApiCallResult<T>.Fail("تعذر الوصول إلى الخادم — تحقق من العنوان والاتصال");
+        }
+    }
+
+    /// <summary>POST بلا جسد يقرأ استجابة JSON (start/cancel/set-primary).</summary>
+    private async Task<ApiCallResult<T>> PostWithResponseAsync<T>(string url, CancellationToken ct)
+    {
+        try
+        {
+            using var client = CreateClient();
+            using var response = await client.PostAsync(url, content: null, ct);
+            return await ReadAsync<T>(response, ct);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiCallResult<T>.Fail("انتهت مهلة الطلب — تحقق من حالة الخادم");
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "فشل اتصال بـ{Url}", url);
+            return ApiCallResult<T>.Fail("تعذر الوصول إلى الخادم — تحقق من العنوان والاتصال");
+        }
+    }
+
+    /// <summary>قراءة رسالة الخطأ العربية من ProblemDetails (بلا 500 خام للواجهة).</summary>
+    private static async Task<string> ReadErrorAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        var detail = "تعذر إكمال الطلب";
+        try
+        {
+            if (response.Content.Headers.ContentType?.MediaType?.Contains("json") == true)
+            {
+                var problem = await response.Content.ReadFromJsonAsync<ApiProblem>(Json, ct);
+                if (problem is not null)
+                {
+                    detail = problem.Detail ?? problem.Title ?? detail;
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // نص غير JSON — نكتفي بالرسالة العامة
+        }
+        return detail;
+    }
+
     private async Task<ApiCallResult<T>> GetAsync<T>(string url, CancellationToken ct)
     {
         try
@@ -254,3 +542,16 @@ public sealed record ApiCallResult<T>(bool Ok, T? Value, string? ErrorAr)
     public ApiCallResult<TOut> Map<TOut>(Func<T, TOut> map) =>
         Ok ? ApiCallResult<TOut>.Ok(map(Value!)) : ApiCallResult<TOut>.Fail(ErrorAr!);
 }
+
+/// <summary>نتيجة جلب بايتات نسخة وسائط — للمصغرات والمعاينة (ETag خادمي للتخزين المؤقت).</summary>
+public sealed record MediaVariantFetch(bool Ok, byte[]? Bytes, string? MimeType, string? ErrorAr)
+{
+    public static MediaVariantFetch Ok(byte[] bytes, string mimeType) => new(true, bytes, mimeType, null);
+    public static MediaVariantFetch Fail(string errorAr) => new(false, null, null, errorAr);
+}
+
+/// <summary>جسد استجابة فك الربط: معرف الربط وعدد الروابط المتبقية للأصل.</summary>
+public sealed record UnlinkResponse(long LinkId, int RemainingLinksForAsset);
+
+/// <summary>علامة «بلا جسد يُقرأ» لعمليات الحذف الناجحة (204).</summary>
+public sealed record IgnoreBody;

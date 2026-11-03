@@ -81,6 +81,7 @@ public sealed record ImportJobDto(
     long JobId,
     string Label,
     string State,            // OPEN | RUNNING | COMPLETED | CANCELLED
+    string StorageScope,     // بصمة نطاق التخزين (16 سداسياً) — تشخيص الملكية
     DateTimeOffset CreatedAt,
     DateTimeOffset? StartedAt,
     DateTimeOffset? FinishedAt,

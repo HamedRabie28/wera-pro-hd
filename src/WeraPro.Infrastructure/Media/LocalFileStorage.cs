@@ -34,6 +34,9 @@ public sealed class LocalFileStorage : IMediaStorage
     /// <summary>للدليل الجذر — تشخيص فقط، لا يُستخدم في المفاتيح.</summary>
     public string Root => _root;
 
+    /// <summary>بصمة نطاق الجذر (16 سداسياً صغيراً) — تُختَم بها المهام عند الإنشاء ويستقصي بها العامل (لا معالجة لبايتات خارج الجذر).</summary>
+    public string StorageScopeId => MediaStorageScope.Compute(_root);
+
     public long? GetAvailableFreeBytes()
     {
         try

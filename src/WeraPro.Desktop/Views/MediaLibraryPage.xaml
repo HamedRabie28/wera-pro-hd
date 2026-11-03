@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Views/MediaLibraryPage.xaml — PAGE-16 مكتبة الصور والوسائط (LF-G*) · G5
+  شبكة أصول بمصغرات حقيقية (thumb-catalog 320 — لا الأصل في الشبكة) + بحث
+  ببادئة البصمة + فلترة النوع/الربط + ترقيم خادمي + لوحة تفاصيل بالروابط
+  وعمليات الربط/فك الربط/الرئيسية/الحذف المحمي بالمراجعة + إعادة معالجة.
+  الصلاحيات الكتابية تُقرأ من الجلسة — الحماية الحاسمة خادمية (§18).
+-->
+<UserControl
+    x:Class="WeraPro.Desktop.Views.MediaLibraryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{StaticResource WeraSurfaceBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Padding="28,20,28,12" Spacing="4">
+            <TextBlock Text="مكتبة الصور والوسائط" FontFamily="{StaticResource WeraFontDisplay}"
+                       FontSize="26" FontWeight="Bold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+            <TextBlock Text="رفع وربط وفك ربط وصورة رئيسية ومكررات — الحذف محمي بمراجعة الروابط · ترقيم من الخادم"
+                       FontSize="13" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="{StaticResource WeraSurfaceBaseBrush}"
+                BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                CornerRadius="14" Margin="28,0,28,24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="330"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Toolbar: بحث البصمة + فلاتر + رفع + استيراد دفعي + مكررات -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="10" Padding="14,11">
+                    <TextBlock Text="الأصول" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14.5"
+                               FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}" VerticalAlignment="Center"/>
+                    <TextBox x:Name="ShaBox" PlaceholderText="بادئة بصمة SHA-256 (8 محارف فأكثر)…" Width="250" Height="38"
+                             KeyDown="ShaBox_KeyDown"/>
+                    <Button Content="بحث" Background="{StaticResource WeraActionPrimaryBrush}" Foreground="White" BorderThickness="0" CornerRadius="10" Click="Search_Click"/>
+                    <ComboBox x:Name="MimeFilter" Width="110" Height="38" SelectedIndex="0" SelectionChanged="Filter_Changed">
+                        <ComboBoxItem Content="النوع: الكل"/>
+                        <ComboBoxItem Content="JPEG"/>
+                        <ComboBoxItem Content="PNG"/>
+                    </ComboBox>
+                    <ComboBox x:Name="LinkFilter" Width="140" Height="38" SelectedIndex="0" SelectionChanged="Filter_Changed">
+                        <ComboBoxItem Content="الربط: الكل"/>
+                        <ComboBoxItem Content="مربوطة"/>
+                        <ComboBoxItem Content="غير مربوطة"/>
+                    </ComboBox>
+                    <Button Content="⟳ تحديث" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Click="Refresh_Click"/>
+                    <Button x:Name="UploadBtn" Content="⬆ رفع صورة" Background="{StaticResource WeraActionPrimaryBrush}" Foreground="White" BorderThickness="0" CornerRadius="10" Click="Upload_Click"/>
+                    <Button x:Name="ImportBtn" Content="⇪ استيراد دفعي…" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Click="Import_Click"/>
+                    <Button x:Name="DuplicatesBtn" Content="◇ المكررات" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Click="Duplicates_Click"/>
+                </StackPanel>
+
+                <!-- الملخص الحقيقي من الخادم -->
+                <TextBlock Grid.Row="1" Grid.Column="0" x:Name="SummaryText" Text="—" FontSize="12"
+                           Foreground="{StaticResource WeraTextSecondaryBrush}" Padding="14,2,14,8"/>
+
+                <!-- شبكة الأصول: مصغرة + بيانات وصفية — تحميل بتكاسل لكل بطاقة -->
+                <ScrollViewer Grid.Row="2" Grid.Column="0" Padding="14,4">
+                    <ItemsControl x:Name="CardsControl">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsWrapGrid Orientation="Horizontal" ItemWidth="172" ItemHeight="214"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="views:MediaCardRow" xmlns:views="using:WeraPro.Desktop.ViewModels">
+                                <Border Width="160" Height="202" Margin="4,4" CornerRadius="12"
+                                        Background="{StaticResource WeraSurfaceBaseBrush}"
+                                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                                        Padding="0" PointerPressed="Card_PointerPressed" Tag="{x:Bind MediaId}">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="128"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <Border Grid.Row="0" Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="12,12,0,0">
+                                            <Grid>
+                                                <Image Source="{x:Bind Thumb, Mode=OneWay}"
+                                                       Stretch="Uniform" Margin="6"/>
+                                                <Border Visibility="{x:Bind views:MediaConverters.BoolToVis(ThumbFailed), Mode=OneWay}"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock Text="لا تتوفر مصغرة" FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Grid.Row="1" Padding="10,6" Spacing="2">
+                                            <TextBlock FontFamily="{StaticResource WeraFontMono}" FontSize="11"
+                                                       Foreground="{StaticResource WeraTextSecondaryBrush}" Text="{x:Bind ShaShort}"/>
+                                            <TextBlock FontSize="12" Text="{x:Bind DimensionsAr}"/>
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock FontSize="11.5" Foreground="{StaticResource WeraTextMutedBrush}" Text="{x:Bind MimeAr}"/>
+                                                <TextBlock FontSize="11.5" Foreground="{StaticResource WeraTextMutedBrush}" Text="·"/>
+                                                <TextBlock FontSize="11.5" Foreground="{StaticResource WeraTextMutedBrush}" Text="{x:Bind SizeAr}"/>
+                                            </StackPanel>
+                                            <TextBlock FontSize="11.5" Foreground="{StaticResource WeraBrandNavyBrush}" FontWeight="SemiBold" Text="{x:Bind LinksAr}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- حالات صدق: تحميل · خطأ · فارغ -->
+                <ProgressRing Grid.Row="2" Grid.Column="0" x:Name="LoadingRing" Width="36" Height="36"
+                              HorizontalAlignment="Center" VerticalAlignment="Center" IsActive="False"/>
+                <StackPanel Grid.Row="2" Grid.Column="0" x:Name="ErrorPanel" Visibility="Collapsed"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" MaxWidth="420">
+                    <TextBlock x:Name="ErrorText" TextWrapping="Wrap" FontSize="13.5"
+                               Foreground="{StaticResource WeraStatusDangerBrush}" HorizontalAlignment="Center"/>
+                    <Button Content="إعادة المحاولة" Background="{StaticResource WeraActionPrimaryBrush}" Foreground="White" BorderThickness="0" CornerRadius="10" Click="Refresh_Click" HorizontalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Grid.Row="2" Grid.Column="0" x:Name="EmptyText" Text="لا أصول تطابق البحث — ارفع صورة أولى أو غيّر الفلاتر" Visibility="Collapsed"
+                           FontSize="13.5" Foreground="{StaticResource WeraTextMutedBrush}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                <!-- Pagination -->
+                <StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" Spacing="12" Padding="14,10"
+                            BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,1,0,0">
+                    <Button x:Name="PrevBtn" Content="‹ السابق" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Click="PrevPage_Click"/>
+                    <Button x:Name="NextBtn" Content="التالي ›" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Click="NextPage_Click"/>
+                    <TextBlock x:Name="PageText" Text="—" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- ══ لوحة التفاصيل: الأصل المحدد + روابطه + العمليات ══ -->
+                <Border Grid.Row="0" Grid.Column="1" Grid.RowSpan="4"
+                        Background="{StaticResource WeraSurfaceSubtleBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1,0,0,0" Padding="16,12">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="التفاصيل والعمليات" FontFamily="{StaticResource WeraFontDisplay}" FontSize="15"
+                                   FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <TextBlock x:Name="DetailsHint" TextWrapping="Wrap" FontSize="12.5"
+                                   Foreground="{StaticResource WeraTextMutedBrush}"
+                                   Text="اختر بطاقة من الشبكة لعرض روابطها وعملياتها"/>
+                        <StackPanel x:Name="DetailsPanel" Visibility="Collapsed" Spacing="10">
+                            <TextBlock x:Name="SelectedSha" FontFamily="{StaticResource WeraFontMono}" FontSize="10.5"
+                                       Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="SelectedMeta" FontSize="12.5"/>
+                            <TextBlock x:Name="UploadedText" FontSize="11.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+
+                            <TextBlock Text="الروابط (منتج / صيغة بيع)" FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                            <ScrollViewer MaxHeight="168">
+                                <ItemsControl x:Name="LinksControl">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="views:MediaLinkRow" xmlns:views="using:WeraPro.Desktop.ViewModels">
+                                            <Border Background="{StaticResource WeraSurfaceBaseBrush}" CornerRadius="10"
+                                                    BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="1"
+                                                    Padding="10,7" Margin="0,0,0,6">
+                                                <StackPanel Spacing="3">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <TextBlock Text="{x:Bind TargetTypeAr}" FontSize="11" Foreground="{StaticResource WeraActionPrimaryBrush}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{x:Bind PrimaryAr}" FontSize="11" Foreground="{StaticResource WeraAccentGoldBrush}" FontWeight="SemiBold"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{x:Bind Target}" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Button Content="رئيسية" FontSize="11" Padding="8,3" CornerRadius="8" Click="SetPrimary_Click" Tag="{x:Bind LinkId}"/>
+                                                        <Button Content="فك الربط" FontSize="11" Padding="8,3" CornerRadius="8" Click="Unlink_Click" Tag="{x:Bind LinkId}"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="ربط بهدف…" Background="{StaticResource WeraActionPrimaryBrush}" Foreground="White" BorderThickness="0" CornerRadius="10" Click="Link_Click"/>
+                                <Button Content="معاينة" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Click="Preview_Click"/>
+                                <Button Content="إعادة معالجة" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="10" Click="Reprocess_Click"/>
+                            </StackPanel>
+                            <Button x:Name="DeleteBtn" Content="حذف الأصل نهائياً" HorizontalAlignment="Stretch"
+                                    Background="{StaticResource WeraStatusDangerBrush}" Foreground="White" BorderThickness="0" CornerRadius="10" Click="Delete_Click"/>
+                        </StackPanel>
+                        <TextBlock x:Name="StatusText" TextWrapping="Wrap" FontSize="12"
+                                   Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -465,12 +465,18 @@ public sealed class MediaRepository : IMediaRepository, IMediaImportRepository
 
     // ══ IMediaImportRepository — مهام الاستيراد ════════════════════════════
 
-    public async Task<long> CreateJobAsync(string label, long userId, CancellationToken ct = default)
+    public async Task<long> CreateJobAsync(string label, long userId, string storageScope, CancellationToken ct = default)
     {
+        if (!MediaStorageScope.IsValid(storageScope))
+        {
+            // رفض صريح لا تخمين: البصمة صيغة معروفة أو لا إدراج
+            throw new InvalidOperationException($"بصمة نطاق تخزين غير صالحة: '{storageScope}'");
+        }
         var row = new MediaImportJobRow
         {
             Label = label,
             State = "OPEN",
+            StorageScope = storageScope,
             CreatedBy = userId,
             CreatedAt = _clock.GetUtcNow(),
         };
@@ -485,9 +491,9 @@ public sealed class MediaRepository : IMediaRepository, IMediaImportRepository
         return row is null ? null : MapJob(row);
     }
 
-    public async Task<IReadOnlyList<long>> ListRunningJobIdsAsync(CancellationToken ct = default) =>
+    public async Task<IReadOnlyList<long>> ListRunningJobIdsAsync(string storageScope, CancellationToken ct = default) =>
         await _db.MediaImportJobs.AsNoTracking()
-            .Where(j => j.State == "RUNNING")
+            .Where(j => j.State == "RUNNING" && j.StorageScope == storageScope)
             .OrderBy(j => j.JobId)
             .Select(j => j.JobId)
             .ToListAsync(ct);
@@ -801,7 +807,7 @@ public sealed class MediaRepository : IMediaRepository, IMediaImportRepository
     }
 
     private static MediaImportJobInfo MapJob(MediaImportJobRow row) => new(
-        row.JobId, row.Label, row.State, row.CreatedBy, row.CreatedAt, row.StartedAt, row.FinishedAt);
+        row.JobId, row.Label, row.State, row.StorageScope, row.CreatedBy, row.CreatedAt, row.StartedAt, row.FinishedAt);
 
     private static ImportFileRowInfo MapFile(MediaImportFileRow row) => new(
         row.FileId, row.JobId, row.Ordinal, row.ClientName, row.StagingKey, row.SizeBytes,

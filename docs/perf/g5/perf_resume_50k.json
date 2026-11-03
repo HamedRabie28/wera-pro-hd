@@ -1,0 +1,23 @@
+{
+  "mode": "resume-after-crash",
+  "resume_seconds": 138.38,
+  "api_latency_ms_during_resume": {
+    "samples": 136,
+    "p50": 7.4,
+    "max": 128.1
+  },
+  "server_rss_kb": {
+    "peak": 236400,
+    "after": 202592
+  },
+  "final_state": "COMPLETED",
+  "counts": {
+    "pending": 0,
+    "processing": 0,
+    "done": 50000,
+    "failed": 0,
+    "skipped": 0,
+    "total": 50000
+  },
+  "errors_by_code": {}
+}

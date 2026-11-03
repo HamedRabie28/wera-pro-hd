@@ -435,7 +435,7 @@ public static class MediaEndpoints
     {
         var c = counts ?? new MediaImportCounts(0, 0, 0, 0, 0);
         return new ImportJobDto(
-            job.JobId, job.Label, job.State, job.CreatedAt, job.StartedAt, job.FinishedAt,
+            job.JobId, job.Label, job.State, job.StorageScope, job.CreatedAt, job.StartedAt, job.FinishedAt,
             new ImportCountsDto(c.Pending, c.Processing, c.Done, c.Failed, c.Skipped));
     }
 

@@ -484,6 +484,61 @@ public sealed class MediaEndpointTests : IClassFixture<MediaApiFixture>
     }
 
     [Fact]
+    public async Task ImportJob_ForeignStorageScope_IgnoredUntilScopeRestored()
+    {
+        // انحدار سباق العمال: مهمة ببصمة نطاق أجنبية (مثيل بجذر تخزين آخر على
+        // القاعدة نفسها) لا يلمسها عامل هذا المثيل إطلاقاً — لا DONE ولا FAILED
+        // (كانت تفشل كلها بPROCESSING_FAILURE لأن بايتاتها المؤقتة خارج الجذر).
+        using var client = await ClientAsync("g5.owner", "Owner#G5-Pass");
+        var job = await _fx.CreateJobAsync("نطاق أجنبي");
+        await _fx.AddFilesAsync(job, new (string, byte[])[]
+        {
+            ("a.png", MediaImageFactory.GradientPng(10, 10, seed: 2301)),
+            ("b.png", MediaImageFactory.GradientPng(11, 11, seed: 2302)),
+            ("c.png", MediaImageFactory.GradientPng(12, 12, seed: 2303)),
+            ("d.png", MediaImageFactory.GradientPng(13, 13, seed: 2304)),
+        });
+
+        // بصمة أجنبية ثم تشغيل — العامل المحلي لا يرها
+        await using (var conn = new NpgsqlConnection(WeraApiFactory.TestDbUri))
+        {
+            await conn.OpenAsync();
+            await using var foreign = new NpgsqlCommand(
+                "UPDATE catalog.media_import_jobs SET storage_scope='ffffffffffffffff' WHERE job_id=@j", conn);
+            foreign.Parameters.AddWithValue("j", job);
+            Assert.Equal(1, await foreign.ExecuteNonQueryAsync());
+        }
+        await _fx.StartJobAsync(job);
+
+        await Task.Delay(2000); // ≥ 3 دورات عامل خامول (500ms) — كافية ليلتقطها لو رآها
+        var status = await client.GetFromJsonAsync<JsonElement>($"/api/v1/media/import-jobs/{job}");
+        Assert.Equal("RUNNING", status.GetProperty("state").GetString());
+        var counts = status.GetProperty("counts");
+        Assert.Equal(4, counts.GetProperty("pending").GetInt32());
+        Assert.Equal(0, counts.GetProperty("done").GetInt32());
+        Assert.Equal(0, counts.GetProperty("failed").GetInt32());
+
+        // استعادة البصمة الحقيقية (من مهمة أنشأها هذا المثيل) → يلتقطها فوراً وتكتمل
+        var probe = await _fx.CreateJobAsync("مسبار البصمة");
+        var probeScope = (await client.GetFromJsonAsync<JsonElement>($"/api/v1/media/import-jobs/{probe}"))
+            .GetProperty("storageScope").GetString();
+        Assert.False(string.IsNullOrWhiteSpace(probeScope), "استجابة المهمة لا تحمل بصمة النطاق");
+        Assert.Matches("^[0-9a-f]{16}$", probeScope!);
+        await using (var conn = new NpgsqlConnection(WeraApiFactory.TestDbUri))
+        {
+            await conn.OpenAsync();
+            await using var restore = new NpgsqlCommand(
+                "UPDATE catalog.media_import_jobs SET storage_scope=@s WHERE job_id=@j", conn);
+            restore.Parameters.AddWithValue("s", probeScope);
+            restore.Parameters.AddWithValue("j", job);
+            Assert.Equal(1, await restore.ExecuteNonQueryAsync());
+        }
+        var final = await _fx.PollUntilCompletedAsync(job, TimeSpan.FromSeconds(60));
+        Assert.Equal("COMPLETED", final.GetProperty("state").GetString());
+        Assert.Equal(4, final.GetProperty("counts").GetProperty("done").GetInt32());
+    }
+
+    [Fact]
     public async Task ImportJob_AddToRunning_409_AndTerminalTransitionsRejected()
     {
         using var client = await ClientAsync("g5.owner", "Owner#G5-Pass");

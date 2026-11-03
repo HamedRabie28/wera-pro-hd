@@ -1,0 +1,33 @@
+{
+  "images": 5000,
+  "batch_size": 250,
+  "upload_seconds": 16.85,
+  "upload_batches": 20,
+  "upload_batch_median_ms": 604.1,
+  "upload_throughput_files_per_sec": 296.7,
+  "process_seconds": 28.47,
+  "process_throughput_files_per_sec": 175.6,
+  "total_seconds": 45.32,
+  "api_latency_ms_during_import": {
+    "samples": 28,
+    "p50": 4.5,
+    "max": 95.6
+  },
+  "status_poll_ms_median": 4.6,
+  "server_rss_kb": {
+    "baseline": 163788,
+    "peak": 249684,
+    "after": 206492
+  },
+  "final_state": "COMPLETED",
+  "counts": {
+    "pending": 0,
+    "processing": 0,
+    "done": 256,
+    "failed": 0,
+    "skipped": 4744,
+    "total": 5000
+  },
+  "errors_by_code": {},
+  "storage_scope": "3e4692d11ea537e6"
+}

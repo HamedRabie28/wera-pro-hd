@@ -47,6 +47,7 @@ public sealed class MediaImportJobRow
     public long JobId { get; set; }
     public required string Label { get; set; }
     public required string State { get; set; } = "OPEN";
+    public required string StorageScope { get; set; } = "";
     public long CreatedBy { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? StartedAt { get; set; }

@@ -16,7 +16,12 @@
 --   3) تفرد ربط الصورة بالهدف نفسه: فهرسان فريدان جزئيان على
 --      catalog.product_images (media_id, product_id) و(media_id, sku_id) —
 --      لا ربط مزدوج لنفس الصورة بنفس الهدف.
---   4) الصلاحيات (§18):
+--   4) بصمة نطاق التخزين على المهمة (storage_scope): 16 سداسياً صغيراً من
+--      SHA-256 لمسار جذر المخزن المُطبَّع — لا يعالج أي عامل إلا مهمات بصمته،
+--      فلا يسرق مثيلٌ بجذر مختلف ملفات مهمةٍ بايتاتها المؤقتة خارج متناوله
+--      (كانت ستفشل كلها بPROCESSING_FAILURE بلا سبب ظاهر). مثيلات تشترك في
+--      الجذر (قرص مشترك) تتشارك البصمة فتتعاون عبر SKIP LOCKED بطبيعتها.
+--   5) الصلاحيات (§18):
 --      - catalog.media.read  → الأدوار السبعة كلها (كل محطة تعرض مصغرات
 --        الكتالوج/POS — قراءة تكوين عمل، نمط V014/V015).
 --      - catalog.media.manage → OWNER/MANAGER/STOREKEEPER (رصد PAGE-16:
@@ -54,20 +59,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_product_images_media_sku
 
 -- ── 3) مهام استيراد الصور الدفعي (§6.1: حالة كل ملف في القاعدة) ───────────
 CREATE TABLE catalog.media_import_jobs (
-    job_id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    label       TEXT NOT NULL,
-    state       TEXT NOT NULL DEFAULT 'OPEN',
-    created_by  BIGINT NOT NULL REFERENCES core.users(user_id),
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    started_at  TIMESTAMPTZ,
-    finished_at TIMESTAMPTZ,
+    job_id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    label         TEXT NOT NULL,
+    state         TEXT NOT NULL DEFAULT 'OPEN',
+    storage_scope CHAR(16) NOT NULL,
+    created_by    BIGINT NOT NULL REFERENCES core.users(user_id),
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at    TIMESTAMPTZ,
+    finished_at   TIMESTAMPTZ,
     CONSTRAINT mij_state_valid CHECK (state IN ('OPEN', 'RUNNING', 'COMPLETED', 'CANCELLED')),
     CONSTRAINT mij_open_not_started CHECK (state <> 'OPEN' OR started_at IS NULL),
-    CONSTRAINT mij_finished_terminal CHECK (state NOT IN ('COMPLETED', 'CANCELLED') OR finished_at IS NOT NULL)
+    CONSTRAINT mij_finished_terminal CHECK (state NOT IN ('COMPLETED', 'CANCELLED') OR finished_at IS NOT NULL),
+    CONSTRAINT mij_scope_format CHECK (storage_scope ~ '^[0-9a-f]{16}$')
 );
-COMMENT ON TABLE catalog.media_import_jobs IS 'مهام استيراد الصور الدفعي: حالة المهمة محفوظة في القاعدة — الإلغاء الآمن يتوقف عن الالتقاط الجديد، والاستئناف يقرأ حالات الملفات (لا عداد processed) §6.1';
+COMMENT ON TABLE catalog.media_import_jobs IS 'مهام استيراد الصور الدفعي: حالة المهمة محفوظة في القاعدة — الإلغاء الآمن يتوقف عن الالتقاط الجديد، والاستئناف يقرأ حالات الملفات (لا عداد processed) §6.1؛ storage_scope تمنع عمالاً بجذر تخزين مختلف من لمس بايتاتها';
+COMMENT ON COLUMN catalog.media_import_jobs.storage_scope IS 'بصمة نطاق التخزين (16 سداسياً من SHA-256 لمسار الجذر المُطبَّع) — لا يعالج عاملٌ إلا مهمات بصمته؛ الجذور المشتركة تتعاون عبر SKIP LOCKED';
 
-CREATE INDEX idx_media_import_jobs_running ON catalog.media_import_jobs (job_id) WHERE state = 'RUNNING';
+CREATE INDEX idx_media_import_jobs_running ON catalog.media_import_jobs (storage_scope, job_id) WHERE state = 'RUNNING';
 
 CREATE TABLE catalog.media_import_files (
     file_id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

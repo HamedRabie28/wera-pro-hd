@@ -57,12 +57,13 @@ public interface IMediaRepository
 /// <summary>مستودع مهام الاستيراد الدفعي (G5 — catalog.media_import_jobs/files).</summary>
 public interface IMediaImportRepository
 {
-    Task<long> CreateJobAsync(string label, long userId, CancellationToken ct = default);
+    /// <summary>إنشاء مهمة مختومة ببصمة نطاق التخزين (جذر الـstaging الذي تُرحَّل إليه بايتاتها).</summary>
+    Task<long> CreateJobAsync(string label, long userId, string storageScope, CancellationToken ct = default);
 
     Task<MediaImportJobInfo?> FindJobAsync(long jobId, CancellationToken ct = default);
 
-    /// <summary>المهام الجارية — يستهلكها العامل الخلفي (دورة واحدة لكل ملف).</summary>
-    Task<IReadOnlyList<long>> ListRunningJobIdsAsync(CancellationToken ct = default);
+    /// <summary>المهام الجارية في نطاق التخزين المعطى حصراً — لا يرى العامل مهمات جذرٍ لا يملك بايتاتها المؤقتة (سلامة المعالجة الموزعة).</summary>
+    Task<IReadOnlyList<long>> ListRunningJobIdsAsync(string storageScope, CancellationToken ct = default);
 
     /// <summary>OPEN|CANCELLED → RUNNING + إعادة إدراج PROCESSING المعلقة (تعافي الانهيار) — false إن كانت الحالة لا تسمح.</summary>
     Task<bool> TryStartJobAsync(long jobId, CancellationToken ct = default);
@@ -192,6 +193,7 @@ public sealed record MediaImportJobInfo(
     long JobId,
     string Label,
     string State,
+    string StorageScope,
     long CreatedBy,
     DateTimeOffset CreatedAt,
     DateTimeOffset? StartedAt,
@@ -270,6 +272,9 @@ public sealed class MediaProcessingException(string code, string messageAr) : Ex
 /// </summary>
 public interface IMediaStorage
 {
+    /// <summary>بصمة نطاق هذا الجذر (16 محرفاً سداسياً) — تُختَم بها المهام ويُسلَّم بها العامل (لا معالجة لبايتات خارج الجذر).</summary>
+    string StorageScopeId { get; }
+
     long? GetAvailableFreeBytes();
 
     /// <summary>كتابة ذرية (مؤقت ثم نقل) — المفتاح يجب أن يكون مُداراً وإلا يرمي.</summary>

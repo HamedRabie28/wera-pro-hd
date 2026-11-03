@@ -15,6 +15,7 @@ public sealed partial class ShellWindow : Window
     {
         InitializeComponent();
         Title = "WERA PRO HD — Shell الإداري";
+        App.ActiveWindow = this;
 
         _vm = App.Host.Services.GetRequiredService<ShellViewModel>();
         _vm.LoggedOut += OnLoggedOut;
@@ -59,11 +60,13 @@ public sealed partial class ShellWindow : Window
 
     private void NavTop_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        // G4: «الكتالوج» مفعّل — يفتح صفحة الكتالوج؛ «التشغيل» يعيد للرئيسية
+        // G4: «الكتالوج» يفتح صفحة الكتالوج؛ G5: «مكتبة الصور» تفتح صفحة المكتبة؛
+        // «التشغيل» يعيد للرئيسية — صفحة واحدة ظاهرة في كل لحظة
         if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
-            HomeContent.Visibility = tag == "catalog" ? Visibility.Collapsed : Visibility.Visible;
+            HomeContent.Visibility = tag is "catalog" or "media" ? Visibility.Collapsed : Visibility.Visible;
             CatalogContent.Visibility = tag == "catalog" ? Visibility.Visible : Visibility.Collapsed;
+            MediaContent.Visibility = tag == "media" ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

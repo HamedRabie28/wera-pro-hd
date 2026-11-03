@@ -5,8 +5,8 @@ using WeraPro.Application.Abstractions;
 using WeraPro.Domain.Media;
 using WeraPro.Domain.SharedKernel;
 
-/// <summary>إنشاء مهمة استيراد (OPEN) — الملفات تُضاف ثم يُبدأ التشغيل.</summary>
-public sealed class CreateImportJobUseCase(IMediaImportRepository repo, IAuditWriter audit, ICurrentUser user)
+/// <summary>إنشاء مهمة استيراد (OPEN) — الملفات تُضاف ثم يُبدأ التشغيل. تُختَم ببصمة نطاق تخزين هذا المثيل فلا يعالجها إلا من يملك جذر بايتاتها.</summary>
+public sealed class CreateImportJobUseCase(IMediaImportRepository repo, IMediaStorage storage, IAuditWriter audit, ICurrentUser user)
 {
     public async Task<Result<MediaImportJobInfo>> ExecuteAsync(string label, string? correlationId, CancellationToken ct = default)
     {
@@ -14,7 +14,7 @@ public sealed class CreateImportJobUseCase(IMediaImportRepository repo, IAuditWr
         {
             return Result.Fail<MediaImportJobInfo>(new("LABEL_INVALID", "اسم المهمة بين 3 و120 محرفاً"));
         }
-        var jobId = await repo.CreateJobAsync(label.Trim(), user.IsAuthenticated ? user.UserId : 0, ct);
+        var jobId = await repo.CreateJobAsync(label.Trim(), user.IsAuthenticated ? user.UserId : 0, storage.StorageScopeId, ct);
         var job = await repo.FindJobAsync(jobId, ct);
 
         await audit.WriteAsync(new AuditEntry(
@@ -275,7 +275,9 @@ public sealed partial class MediaImportFileProcessor(
     /// <summary>دورة عمل واحدة — true إن عالجت ملفاً (يُستدعى فوراً مجدداً).</summary>
     public async Task<bool> RunOneCycleAsync(CancellationToken ct = default)
     {
-        var jobIds = await imports.ListRunningJobIdsAsync(ct);
+        // مهمات نطاق هذا الجذر حصراً: لا يُلتقط ملفٌ بايتاته المؤقتة خارج الجذر
+        // (مثيلات متعددة على قاعدة واحدة بأقراص مختلفة — سلامة المعالجة الموزعة)
+        var jobIds = await imports.ListRunningJobIdsAsync(storage.StorageScopeId, ct);
         foreach (var jobId in jobIds)
         {
             // تعافي الانهيار أولاً: PROCESSING المعلقة من إقلاع سابق تعود PENDING

@@ -1,0 +1,15 @@
+=== wera_perf100k ===
+job#1 [COMPLETED] "قياس مرجعي 100000 صورة"
+   files=100000 done=100000 skipped=0 failed=0 pending=0 processing=0
+   created=2026-11-03 18:03:40.752220+00:00 started=2026-11-03 18:07:52.053647+00:00 finished=2026-11-03 18:40:41.136995+00:00
+media_assets: total=100000 distinct_sha=100000
+with thumb-catalog: 100000
+=== wera_perf_g5 ===
+job#1 [COMPLETED] "قياس مرجعي 50000 صورة"
+   files=50000 done=50000 skipped=0 failed=0 pending=0 processing=0
+   created=2026-11-03 17:48:58.027586+00:00 started=2026-11-03 17:50:59.589858+00:00 finished=2026-11-03 18:01:51.920821+00:00
+job#2 [COMPLETED] "قياس مرجعي 500 صورة"
+   files=500 done=0 skipped=500 failed=0 pending=0 processing=0
+   created=2026-11-03 18:01:53.229358+00:00 started=2026-11-03 18:01:54.766554+00:00 finished=2026-11-03 18:01:56.884706+00:00
+media_assets: total=50000 distinct_sha=50000
+with thumb-catalog: 50000

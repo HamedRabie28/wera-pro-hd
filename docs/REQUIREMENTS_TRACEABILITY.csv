@@ -12,7 +12,7 @@ G0-010,G0 Governance,TEST_STRATEGY.md — منشأة ومعتمدة للتسلي
 CAT-001,Catalog,فصل كيانات Product / SKU / UnitOfMeasure / UnitConversion / PackageDefinition / Barcode,§4.1,PAGE-09..12,Catalog UseCases,products; skus; units; unit_conversions; packages; barcodes,T-DDL-01/03/04 + T-ENV-01 (ERD-01),IMPLEMENTED_TESTED_PASS,NOT_STARTED,Domain Lead
 CAT-002,Catalog,sale_mode صريح لكل SKU: COUNT/WEIGHT/PACK/SERIALIZED,§4.2,PAGE-10/11,Catalog UseCases,skus,T-CAT-002,G4,NOT_STARTED,Lead Team
 CAT-003,Catalog,سيناريو إلزامي: كيس مفرد وعلبة 12 كيسًا بسعرين مستقلين وأثر مخزون واحد,§4.3,PAGE-10/11 + POS,Pricing + Inventory,skus; packages; stock_movements,T-CAT-003 (مرجع مستقل),G4/G7,NOT_STARTED,Lead Team
-CAT-004,Catalog,نموذج منتج متعدد الأقسام (تعريف/نوع/عبوات/أسعار/وزن/باركود/مخزون/صور/مراجعة),§4.4,PAGE-10,Catalog UseCases,products + مرتبطة,T-CAT-004 (UI),G4,NOT_STARTED,Lead Team
+CAT-004,Catalog,نموذج منتج متعدد الأقسام (تعريف/نوع/عبوات/أسعار/وزن/باركود/مخزون/صور/مراجعة),§4.4,PAGE-10,Catalog UseCases,products + مرتبطة,T-CAT-004 (UI) + MediaLinkDialog + Search/Link/Primary,G4,COMPLETED_G4 (قسم الصور اكتمل خدمةً في G5: ربط بالمحرر عبر المكتبة),Lead Team
 CAT-005,Catalog,حفظ ذري: لا التزام جزئي، لا نجاح بصلي قبل commit، الاحتفاظ بمدخلات صحيحة عند الفشل,§4.5,PAGE-10,Catalog UseCases,معاملة واحدة,T-CAT-005,G4,NOT_STARTED,Lead Team
 CAT-006,Catalog,منع التحويل بين وحدات ذات أبعاد غير متوافعة ولا دوائر تحويل,§4.1,PAGE-13,UnitConversion Rules,unit_conversions,T-DDL-03 (بُعد) + T-DDL-04 (دورة) — الدورة العميقة في خدمة المجال G4,IMPLEMENTED_TESTED_PASS,NOT_STARTED,Lead Team
 CAT-007,Catalog,تفرد الباركود وفق النطاق + رسالة تعارض بالكود المتضارب,§3.1,PAGE-12,Barcode Resolution,barcodes (unique idx),T-CAT-007,G4,NOT_STARTED,Lead Team
@@ -25,10 +25,10 @@ WGT-003,Weighting,حساب وزن 1.275kg بدقة دون تقريب مبكر ق
 WGT-004,Weighting,وسم مصدر الوزن: SCALE_READING / WEIGHT_LABEL / MANUAL_WEIGHT / AMOUNT_DERIVED,§5.1,POS + التقارير,Weight Source Taxonomy,invoice_lines.weight_source,T-WGT-004,G7/G9,NOT_STARTED,Lead Team
 WGT-005,Weighting,رفض وزن صفري/سالب/قديم/غير مستقر/خارج حدود المنتج أو الجهاز,§5.1/§10.4,POS + PAGE-46,Scale Adapter + Validation,-,T-WGT-005,G7/G10,NOT_STARTED,Lead Team
 WGT-006,Weighting,decimal/NUMERIC ووحدة مخزون أساسية موحدة (مثل gram) وعامل تحويل صريح,§9.3,الكل,Domain Money/Weight Rules,NUMERIC columns,T-FLW-01/02 + DATA_DICTIONARY (عقد الدقة),IMPLEMENTED_TESTED_PASS,NOT_STARTED,Lead Team
-IMG-001,Media,مكتبة صور: أصل + مصغرات متعددة + metadata + كشف تكرار بhash,§6.1,PAGE-16,Media Services,media_assets; product_image_links,T-IMG-001,G5,NOT_STARTED,Infra Lead
-IMG-002,Media,استيراد دفعات: تقدم وإلغاء واستئناف قائم على معرفات مهام وحالة لكل ملف,§6.1/§6.2,PAGE-17,Import BackgroundService,media_import_jobs,T-IMG-002,G5,NOT_STARTED,Lead Team
-IMG-003,Media,صورة سياقية صغيرة في POS بthumbnail مخزن؛ فشل الصورة لا يعطل البيع,§6.3,POS,Media Cache,product_image_links,T-IMG-003,G5/G7,NOT_STARTED,Lead Team
-IMG-004,Media,لا حذف أصل مستخدم في مكان آخر دون مراجعة,§6.1,PAGE-16,Media Services,product_image_links,T-IMG-004,G5,NOT_STARTED,Lead Team
+IMG-001,Media,مكتبة صور: أصل + مصغرات متعددة + metadata + كشف تكرار بhash,§6.1,PAGE-16,Media Services,media_assets; product_image_links,T-IMG-001 + T-MED-01..15 + MediaEndpointTests×21 (رفع/مكرر/تالف/قنابل/نسخ) + perf 100k,G5,COMPLETED_G5,Infra Lead
+IMG-002,Media,استيراد دفعات: تقدم وإلغاء واستئناف قائم على معرفات مهام وحالة لكل ملف,§6.1/§6.2,PAGE-17,Import BackgroundService,media_import_jobs,T-IMG-002 + T-MED-02..13 + ImportJob tests (إلغاء/استئناف/نطاق/تعافي) + perf resume-after-crash,G5,COMPLETED_G5,Lead Team
+IMG-003,Media,صورة سياقية صغيرة في POS بthumbnail مخزن؛ فشل الصورة لا يعطل البيع,§6.3,POS,Media Cache,product_image_links,T-IMG-003 + G5_PERF§4,G5/G7,COMPLETED_G5_SERVER (واجهة POS في G7),Lead Team
+IMG-004,Media,لا حذف أصل مستخدم في مكان آخر دون مراجعة,§6.1,PAGE-16,Media Services,product_image_links,T-IMG-004 + T-MED-10/11 + DeleteOriginal_WhileLinked_409_CarriesReferences,G5,COMPLETED_G5,Lead Team
 INV-001,Inventory,دفتر حركات موثق: الرصيد نتيجة حركات ولا تحرير حر للرصيد,§12.1,PAGE-18/19,Inventory Ledger,stock_movements; stock_balances,T-INV-001,G6,NOT_STARTED,Inventory Lead
 INV-002,Inventory,جرد وتسوية بمستند واعتماد وفروق ظاهرة تاريخيًا,§12.2,PAGE-20,Stocktake UseCases,stocktakes; adjustments,T-INV-002,G6,NOT_STARTED,Lead Team
 INV-003,Inventory,تحويلات بين مخازن بحالات إرسال/استلام,§12.2,PAGE-21,Transfer UseCases,stock_transfers,T-INV-003,G6,NOT_STARTED,Lead Team

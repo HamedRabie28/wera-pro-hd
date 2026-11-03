@@ -340,6 +340,34 @@ public static class MediaStorageKeys
     }
 }
 
+/// <summary>
+/// بصمة نطاق التخزين (G5 — سلامة المعالجة الموزعة): 16 محرفاً سداسياً
+/// عشرياً صغيراً من SHA-256 للمسار المطلق المُطبَّع لجذر مخزن الوسائط.
+/// المهمة تُختم ببصمة جذرها عند الإنشاء، ولا يعالج أي عامل إلا مهمات بصمته —
+/// فلا يسرق مثيلٌ (بجذر مختلف) ملفات مهمةٍ بايتاتها المؤقتة خارج متناوله
+/// (وإلا فشلت كلها بPROCESSING_FAILURE بلا سبب ظاهر). مثيلات تشترك في الجذر
+/// (قرص مشترك/تثبيت متعدد سليم) تتشارك البصمة فتتعاون بطبيعتها مع SKIP LOCKED.
+/// </summary>
+public static class MediaStorageScope
+{
+    public const int Length = 16;
+
+    /// <summary>البصمة من المسار المطلق المُطبَّع للجذر — أول 16 محرفاً سداسية صغيرة.</summary>
+    public static string Compute(string absoluteRootPath)
+    {
+        var normalized = absoluteRootPath.TrimEnd('/', '\\').Replace('\\', '/');
+        var hash = System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(hash)[..Length].ToLowerInvariant();
+    }
+
+    /// <summary>فحص الصيغة الإجباري: 16 محرفاً سداسياً عشرياً صغيراً حصراً.</summary>
+    public static bool IsValid(string? scope) =>
+        scope is not null
+        && scope.Length == Length
+        && scope.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f');
+}
+
 /// <summary>حاسبة SHA-256 متدفقة — 64KB Buffer (لا تحميل الملف كاملاً §6.1).</summary>
 public static class MediaHasher
 {

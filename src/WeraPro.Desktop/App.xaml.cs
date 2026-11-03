@@ -16,6 +16,9 @@ public sealed partial class App : Application
 {
     public static IHost Host { get; private set; } = null!;
 
+    /// <summary>النافذة النشطة (تحدّثها Shell/POS عند الإنشاء) — لمنشئي الملفات ومربعات الحوار التي تحتاج مقبض نافذة.</summary>
+    public static Microsoft.UI.Xaml.Window? ActiveWindow { get; set; }
+
     public App()
     {
         InitializeComponent();
@@ -73,7 +76,9 @@ public sealed partial class App : Application
                 services.AddSingleton<ShellViewModel>();
                 services.AddSingleton<PosViewModel>();
                 services.AddSingleton<ViewModels.CatalogViewModel>();
+                services.AddSingleton<ViewModels.MediaLibraryViewModel>();
                 services.AddTransient<ViewModels.ProductEditorViewModel>();
+                services.AddTransient<ViewModels.MediaImportViewModel>();
             })
             .Build();
 
