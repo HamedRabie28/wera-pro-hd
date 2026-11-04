@@ -11,7 +11,7 @@ G0-009,G0 Governance,ARCHITECTURE_BRIEF.md — منشأة ومعتمدة للت�
 G0-010,G0 Governance,TEST_STRATEGY.md — منشأة ومعتمدة للتسليم,§22 G0,-,-,-,-,G0,COMPLETED_G0,Program Lead
 CAT-001,Catalog,فصل كيانات Product / SKU / UnitOfMeasure / UnitConversion / PackageDefinition / Barcode,§4.1,PAGE-09..12,Catalog UseCases,products; skus; units; unit_conversions; packages; barcodes,T-DDL-01/03/04 + T-ENV-01 (ERD-01),IMPLEMENTED_TESTED_PASS,NOT_STARTED,Domain Lead
 CAT-002,Catalog,sale_mode صريح لكل SKU: COUNT/WEIGHT/PACK/SERIALIZED,§4.2,PAGE-10/11,Catalog UseCases,skus,T-CAT-002,G4,NOT_STARTED,Lead Team
-CAT-003,Catalog,سيناريو إلزامي: كيس مفرد وعلبة 12 كيسًا بسعرين مستقلين وأثر مخزون واحد,§4.3,PAGE-10/11 + POS,Pricing + Inventory,skus; packages; stock_movements,T-CAT-003 (مرجع مستقل),G4/G7,NOT_STARTED,Lead Team
+CAT-003,Catalog,سيناريو إلزامي: كيس مفرد وعلبة 12 كيسًا بسعرين مستقلين وأثر مخزون واحد,§4.3,PAGE-10/11 + POS,Pricing + Inventory,skus; packages; stock_movements,T-CAT-003 (مرجع مستقل),G4/G7,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
 CAT-004,Catalog,نموذج منتج متعدد الأقسام (تعريف/نوع/عبوات/أسعار/وزن/باركود/مخزون/صور/مراجعة),§4.4,PAGE-10,Catalog UseCases,products + مرتبطة,T-CAT-004 (UI) + MediaLinkDialog + Search/Link/Primary,G4,COMPLETED_G4 (قسم الصور اكتمل خدمةً في G5: ربط بالمحرر عبر المكتبة),Lead Team
 CAT-005,Catalog,حفظ ذري: لا التزام جزئي، لا نجاح بصلي قبل commit، الاحتفاظ بمدخلات صحيحة عند الفشل,§4.5,PAGE-10,Catalog UseCases,معاملة واحدة,T-CAT-005,G4,NOT_STARTED,Lead Team
 CAT-006,Catalog,منع التحويل بين وحدات ذات أبعاد غير متوافعة ولا دوائر تحويل,§4.1,PAGE-13,UnitConversion Rules,unit_conversions,T-DDL-03 (بُعد) + T-DDL-04 (دورة) — الدورة العميقة في خدمة المجال G4,IMPLEMENTED_TESTED_PASS,NOT_STARTED,Lead Team
@@ -19,11 +19,11 @@ CAT-007,Catalog,تفرد الباركود وفق النطاق + رسالة تع�
 CAT-008,Catalog,قوائم أسعار بفعالية زمنية وضرائب وقيود,§4.1,PAGE-14,Pricing UseCases,price_lists; product_prices,T-CAT-008,G4,NOT_STARTED,Lead Team
 CAT-009,Catalog,تعطيل المنتج بدل حذفه؛ منع حذف المستخدم في مستندات مرحلة,§4.5,PAGE-09/10,Catalog UseCases,products.status,T-CAT-009,G4,NOT_STARTED,Lead Team
 CAT-010,Catalog,PLU وملفات VariableWeightBarcodeProfile قابلة للتهيئة,§5.3,PAGE-12/46,Barcode Profile Service,vw_barcode_profiles; plus,T-CAT-010,G4/G10,NOT_STARTED,Lead Team
-WGT-001,Weighting,الطرق الست لإدخال الوزن إلى السلة بمصدر موسوم,§9.3,POS + PAGE-46,WeightSale UseCases,invoice_lines(weight fields),T-WGT-001,G7,NOT_STARTED,POS Domain Lead
-WGT-002,Weighting,مثال مرجعي: 200 EGP/kg ومبلغ 70 EGP = 350g قبل التقريب,§9.3,POS,AmountDerived Calculator,-,T-WGT-002 (مرجع مستقل),G7,NOT_STARTED,Lead Team
-WGT-003,Weighting,حساب وزن 1.275kg بدقة دون تقريب مبكر قبل السعر,§9.3,POS,Pricing Engine,-,T-WGT-003,G7,NOT_STARTED,Lead Team
-WGT-004,Weighting,وسم مصدر الوزن: SCALE_READING / WEIGHT_LABEL / MANUAL_WEIGHT / AMOUNT_DERIVED,§5.1,POS + التقارير,Weight Source Taxonomy,invoice_lines.weight_source,T-WGT-004,G7/G9,NOT_STARTED,Lead Team
-WGT-005,Weighting,رفض وزن صفري/سالب/قديم/غير مستقر/خارج حدود المنتج أو الجهاز,§5.1/§10.4,POS + PAGE-46,Scale Adapter + Validation,-,T-WGT-005,G7/G10,NOT_STARTED,Lead Team
+WGT-001,Weighting,الطرق الست لإدخال الوزن إلى السلة بمصدر موسوم,§9.3,POS + PAGE-46,WeightSale UseCases,invoice_lines(weight fields),T-WGT-001,G7,COMPLETED_G7,POS Domain Lead
+WGT-002,Weighting,مثال مرجعي: 200 EGP/kg ومبلغ 70 EGP = 350g قبل التقريب,§9.3,POS,AmountDerived Calculator,-,T-WGT-002 (مرجع مستقل),G7,COMPLETED_G7,Lead Team
+WGT-003,Weighting,حساب وزن 1.275kg بدقة دون تقريب مبكر قبل السعر,§9.3,POS,Pricing Engine,-,T-WGT-003,G7,COMPLETED_G7,Lead Team
+WGT-004,Weighting,وسم مصدر الوزن: SCALE_READING / WEIGHT_LABEL / MANUAL_WEIGHT / AMOUNT_DERIVED,§5.1,POS + التقارير,Weight Source Taxonomy,invoice_lines.weight_source,T-WGT-004,G7/G9,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
+WGT-005,Weighting,رفض وزن صفري/سالب/قديم/غير مستقر/خارج حدود المنتج أو الجهاز,§5.1/§10.4,POS + PAGE-46,Scale Adapter + Validation,-,T-WGT-005,G7/G10,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
 WGT-006,Weighting,decimal/NUMERIC ووحدة مخزون أساسية موحدة (مثل gram) وعامل تحويل صريح,§9.3,الكل,Domain Money/Weight Rules,NUMERIC columns,T-FLW-01/02 + DATA_DICTIONARY (عقد الدقة),IMPLEMENTED_TESTED_PASS,NOT_STARTED,Lead Team
 IMG-001,Media,مكتبة صور: أصل + مصغرات متعددة + metadata + كشف تكرار بhash,§6.1,PAGE-16,Media Services,media_assets; product_image_links,T-IMG-001 + T-MED-01..15 + MediaEndpointTests×21 (رفع/مكرر/تالف/قنابل/نسخ) + perf 100k,G5,COMPLETED_G5,Infra Lead
 IMG-002,Media,استيراد دفعات: تقدم وإلغاء واستئناف قائم على معرفات مهام وحالة لكل ملف,§6.1/§6.2,PAGE-17,Import BackgroundService,media_import_jobs,T-IMG-002 + T-MED-02..13 + ImportJob tests (إلغاء/استئناف/نطاق/تعافي) + perf resume-after-crash,G5,COMPLETED_G5,Lead Team
@@ -34,28 +34,28 @@ INV-002,Inventory,جرد وتسوية بمستند واعتماد وفروق ظ�
 INV-003,Inventory,تحويلات بين مخازن بحالات إرسال/استلام,§12.2,PAGE-21,Transfer UseCases,stock_transfers,T-INV-003,G6,COMPLETED_G6,Lead Team
 INV-004,Inventory,نواقص وإعادة طلب وتقارير راكد,§12.2/§16.10,PAGE-22/61,Reorder + Analytics,reorder_levels,T-INV-004,G6/G9,COMPLETED_G6,Lead Team
 INV-005,Inventory,دفعات/صلاحية/سيريال عند التفعيل,§12.2,PAGE-23,Lot/Serial Tracking,lots; serials,T-INV-005,G6,COMPLETED_G6,Lead Team
-INV-006,Inventory,Quick Stock Adjustment من POS تفتح مستند تسوية مستقلًا بصلاحية وسبب,§9.2,POS + PAGE-20,Adjustment UseCase,adjustments,T-INV-006,G7,NOT_STARTED,Lead Team
+INV-006,Inventory,Quick Stock Adjustment من POS تفتح مستند تسوية مستقلًا بصلاحية وسبب,§9.2,POS + PAGE-20,Adjustment UseCase,adjustments,T-INV-006,G7,COMPLETED_G7,Lead Team
 PUR-001,Purchasing,الاستلام المعتمد هو من يرحب المخزون بتحويل عبوة صحيح (علبة = 12 وحدة),§12.3,PAGE-25,Receiving UseCases,receipts; stock_movements,T-PUR-001,G6,COMPLETED_G6,Purchasing Lead
 PUR-002,Purchasing,فواتير موردين وسداد جزئي دون تكرار سداد/مصروف,§12.2/§13,PAGE-26,Supplier Invoice + Payments,supplier_invoices; payments,T-PUR-002,G6,COMPLETED_G6,Lead Team
 PUR-003,Purchasing,مرتجع مورد مرتبط بالمستند الأصل,§12.2,PAGE-27,Supplier Returns,supplier_returns,T-PUR-003,G6,COMPLETED_G6,Lead Team
 PRT-001,Parties,عملاء: كشف حساب بفلترة ورصيد افتتاحي/ختامي وحد ائتمان (D-05),§13,PAGE-29/30,Customer Services,customers; ledger_entries,T-PRT-001,G6/G7,COMPLETED_G6_SERVER,Lead Team
 PRT-002,Parties,منع حذف طرف له مستندات — تعطيل فقط,§13,PAGE-29/31,Parties Services,parties.status,T-PRT-002,G6,COMPLETED_G6,Lead Team
 PRT-003,Parties,سندات قبض/صرف بتوزيع على فواتير ≤ المتبقي,§13,PAGE-37,Receipt/Voucher UseCases,vouchers; allocations,T-PRT-003,G8,NOT_STARTED,Lead Team
-POS-001,POS,نافذة POS مستقلة: لا تنقل إداري ولا Sidebar ولا شبكة منتجات؛ السلة مركزية,§9.0/§9.1,POS,POS Shell,-,T-POS-001 (UI),G2/G7,NOT_STARTED,POS Lead
-POS-002,POS,سلة بأعمدة كاملة وتمييز 1 قطعة/1 كيس/علبة 12/350g/1.275kg بلا دمج مضلل,§9.1C,POS,Cart Model,invoice_lines,T-POS-002,G7,NOT_STARTED,Lead Team
-POS-003,POS,تعديل السعر/الخصم بصلاحية وسبب وتسجيل السابق والجديد والموافق,§9.4,POS,PriceOverride UseCase,price_overrides,T-POS-003,G7,NOT_STARTED,Lead Team
-POS-004,POS,تعليق واستعادة دون إنشاء حركة وبمنع مسودتين مكررتين,§9.5,PAGE-06,Draft Services,sales_drafts,T-POS-004,G7,NOT_STARTED,Lead Team
-POS-005,POS,اختصارات F1–F12 قابلة للتخصيص مع كشف تعارض الماسح,§9.10,POS,Shortcut Map,-,T-POS-005,G7/G11,NOT_STARTED,Lead Team
-POS-006,POS,نوافذ POS الثمانية والعشرون المطلوبة (Lookup حتى Error Details),§9.11,POS,Dialog Services,-,T-POS-006 (UI),G7/G11,NOT_STARTED,Lead Team
-POS-007,POS,سجل نشاط الكاشير داخل POS بصلاحيات ولا تسريب خارجها,§9.2,POS,Activity Log,audit_log,T-POS-007,G7,NOT_STARTED,Lead Team
-POS-008,POS,جداول POS: 1/100/1000 سطر ومسح متتابع بلا تجميد ولا فقد سطر محدد,§9.12,POS,Virtualized Grid,-,T-POS-008,G7/G13,NOT_STARTED,Lead Team
-PAY-001,Payments,نقدي/بطاقة/Split/آجل بحالات موثقة ومراجع مستقلة لكل وسيلة,§9.6,POS + PAGE-08,Payment UseCases,payments,T-PAY-001,G7,NOT_STARTED,Payments Lead
-PAY-002,Payments,Idempotency: عند timeout استعلام بالمرجع قبل إعادة الإرسال — لا تكرار بيع/دفع/خصم,§9.5/§11.3,POS + API,Idempotency Middleware,idempotency_keys,T-PAY-002,G7,NOT_STARTED,Lead Team
-PAY-003,Payments,لا تخزين PIN/CVV/PAN كامل؛ PIN على جهاز الدفع فقط,§9.6,الكل,PCI Policy,-,T-PAY-003 (مراجعة أمنية),G7/G12,NOT_STARTED,Lead Team
+POS-001,POS,نافذة POS مستقلة: لا تنقل إداري ولا Sidebar ولا شبكة منتجات؛ السلة مركزية,§9.0/§9.1,POS,POS Shell,-,T-POS-001 (UI),G2/G7,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),POS Lead
+POS-002,POS,سلة بأعمدة كاملة وتمييز 1 قطعة/1 كيس/علبة 12/350g/1.275kg بلا دمج مضلل,§9.1C,POS,Cart Model,invoice_lines,T-POS-002,G7,COMPLETED_G7,Lead Team
+POS-003,POS,تعديل السعر/الخصم بصلاحية وسبب وتسجيل السابق والجديد والموافق,§9.4,POS,PriceOverride UseCase,price_overrides,T-POS-003,G7,COMPLETED_G7,Lead Team
+POS-004,POS,تعليق واستعادة دون إنشاء حركة وبمنع مسودتين مكررتين,§9.5,PAGE-06,Draft Services,sales_drafts,T-POS-004,G7,COMPLETED_G7,Lead Team
+POS-005,POS,اختصارات F1–F12 قابلة للتخصيص مع كشف تعارض الماسح,§9.10,POS,Shortcut Map,-,T-POS-005,G7/G11,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
+POS-006,POS,نوافذ POS الثمانية والعشرون المطلوبة (Lookup حتى Error Details),§9.11,POS,Dialog Services,-,T-POS-006 (UI),G7/G11,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
+POS-007,POS,سجل نشاط الكاشير داخل POS بصلاحيات ولا تسريب خارجها,§9.2,POS,Activity Log,audit_log,T-POS-007,G7,COMPLETED_G7,Lead Team
+POS-008,POS,جداول POS: 1/100/1000 سطر ومسح متتابع بلا تجميد ولا فقد سطر محدد,§9.12,POS,Virtualized Grid,-,T-POS-008,G7/G13,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
+PAY-001,Payments,نقدي/بطاقة/Split/آجل بحالات موثقة ومراجع مستقلة لكل وسيلة,§9.6,POS + PAGE-08,Payment UseCases,payments,T-PAY-001,G7,COMPLETED_G7,Payments Lead
+PAY-002,Payments,Idempotency: عند timeout استعلام بالمرجع قبل إعادة الإرسال — لا تكرار بيع/دفع/خصم,§9.5/§11.3,POS + API,Idempotency Middleware,idempotency_keys,T-PAY-002,G7,COMPLETED_G7,Lead Team
+PAY-003,Payments,لا تخزين PIN/CVV/PAN كامل؛ PIN على جهاز الدفع فقط,§9.6,الكل,PCI Policy,-,T-PAY-003 (مراجعة أمنية),G7/G12,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
 PAY-004,Payments,تكامل طرف دفع حقيقي معتمد (Sandbox للتطوير موسومة),§9.6,PAGE-43..46,IPaymentTerminal Adapter,-,T-PAY-004 (جهاز فعلي),G7/G10,BLOCKED_EXTERNAL_DEPENDENCY,Owner + Payments Lead
-RET-001,Returns,مرتجع ≤ المتبقي غير المرتجع ومرتبط بالفاتورة الأصل,§9.8,PAGE-05,Returns UseCases,returns; return_lines,T-RET-001,G7,NOT_STARTED,Lead Team
+RET-001,Returns,مرتجع ≤ المتبقي غير المرتجع ومرتبط بالفاتورة الأصل,§9.8,PAGE-05,Returns UseCases,returns; return_lines,T-RET-001,G7,COMPLETED_G7,Lead Team
 RET-002,Returns,رد المال بوسيلة الأصل؛ النقد استثناء بقرار موثق (D-04),§9.8,PAGE-05,Refund UseCases,refunds,T-RET-002,G7,BLOCKED_PRODUCT_DECISION,Owner
-RET-003,Returns,استبدال بفارق محسوب وأثر مخزني ومالي,§9.8,PAGE-05,Exchange UseCases,-,T-RET-003,G7,NOT_STARTED,Lead Team
+RET-003,Returns,استبدال بفارق محسوب وأثر مخزني ومالي,§9.8,PAGE-05,Exchange UseCases,-,T-RET-003,G7,COMPLETED_G7,Lead Team
 SFT-001,Shifts,دورة وردية بحالات مستقلة: OPEN→…→CLOSED مع DISCREPANCY قائمة,§9.9/§14.1/§16.8,PAGE-33/34,Shift UseCases,shifts,T-SFT-001,G8,NOT_STARTED,Retail Ops Lead
 SFT-002,Shifts,نقد متوقع/فعلي/فارق بسبب — يظل ظاهرًا حتى المعالجة,§14.1,PAGE-34,Shift Reconciliation,shift_cash_counts,T-SFT-002 (مرجع مستقل),G8,NOT_STARTED,Lead Team
 SFT-003,Shifts,فتح درج بصلاحية وسبب وأوقات طلب/استجابة وUNKNOWN صادقة,§9.9,POS,CashDrawer Adapter + Audit,drawer_events,T-SFT-003,G8/G10,NOT_STARTED,Lead Team
@@ -78,10 +78,10 @@ ANL-008,Analytics,توصيات حتمية موثقة بقاعدة وفترة و�
 ANL-009,Analytics,جودة بيانات التحليلات ووسم المؤشرات المتأثرة وحداثة rollups,§16.14,PAGE-65,Data Quality Checks,dq_checks,T-ANL-009,G9,NOT_STARTED,Lead Team
 ANL-010,Analytics,HOME-01 بعقد §7.5: مؤشرات من API فقط، تطابق التقارير، صلاحيات خادمية,§7.5,HOME-01,Home Aggregation API,-,T-ANL-010 (مجموعة مرجعية),G9,NOT_STARTED,Lead Team
 HRD-001,Hardware,عقود typed: IBarcodeScanner/IScaleDevice/IReceiptPrinter/ILabelPrinter/ICashDrawer/IPaymentTerminal,§10.5,PAGE-43..46,Hardware.Abstractions,-,T-HRD-001,G10,NOT_STARTED,Hardware Lead
-HRD-002,Hardware,قارئ USB-HID بلا إدخال مزدوج وإدارة تركيز موثوقة,§10.1,PAGE-43,Scanner Adapter,-,T-HRD-002 (فعلي),G7/G10,NOT_STARTED,Lead Team
+HRD-002,Hardware,قارئ USB-HID بلا إدخال مزدوج وإدارة تركيز موثوقة,§10.1,PAGE-43,Scanner Adapter,-,T-HRD-002 (فعلي),G7/G10,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
 HRD-003,Hardware,طابعة إيصال 58/80mm بتشكيل عربي صحيح وفشل طباعة لا يلغي البيع,§10.2,PAGE-44,Receipt Printer Adapter,print_jobs,T-HRD-003 (فعلي),G10,NOT_STARTED,Lead Team
 HRD-004,Hardware,طابعة ملصقات ZPL/TSPL بمعاينة واقعية وقراءة باركود فعلية للاختبار,§10.3,PAGE-45,Label Printer Adapter,-,T-HRD-004 (فعلي),G10,NOT_STARTED,Lead Team
-HRD-005,Hardware,ميزان: قراءة حديثة/مستقرة + tare/net وحد صلاحية عمر القراءة,§10.4,PAGE-46,Scale Adapter,-,T-HRD-005 (فعلي),G7/G10,NOT_STARTED,Lead Team
+HRD-005,Hardware,ميزان: قراءة حديثة/مستقرة + tare/net وحد صلاحية عمر القراءة,§10.4,PAGE-46,Scale Adapter,-,T-HRD-005 (فعلي),G7/G10,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
 HRD-006,Hardware,درج نقد بأوقات طلب/استجابة موثقة وUNKNOWN صادقة عند غياب المستشعر,§9.9/§10.2,POS,CashDrawer Adapter,drawer_events,T-HRD-006,G8/G10,NOT_STARTED,Lead Team
 HRD-014,Hardware,سياسة أجهزة صادقة: لا محاكاة في الإنتاج؛ BLOCKED/NOT_CONFIGURED معلنة,§10.6,الكل,Device Status Registry,device_registry,T-HRD-014,G10,NOT_STARTED,Lead Team
 SEC-001,Security,صلاحيات server-side لكل endpoint ومبدأ أقل صلاحية,§11.2/§18,API,Authorization Policies,-,T-SEC-001 (لكل دور),G3,NOT_STARTED,Security Lead
@@ -105,12 +105,12 @@ INT-002,Integration,Online-first مع حالة اتصال حقيقية معرو�
 INT-003,Integration,تخزين UTC وعرض بتوقيت الفرع المعتمد,§11.1,الكل,Time Policy,timestamptz,T-INT-003,G3/G9,NOT_STARTED,Lead Team
 TAX-001,Tax,محرك ضريبة قابل للتهيئة وفق الاختصاص المعتمد + فوترة رسمية,§0.2,PAGE-53,Tax Engine,tax_rules,T-TAX-001,G4/G12,UNBLOCKED_NOT_STARTED (حُسم D-01 أ — 2026-11-01),Owner (D-01 محسوم أ)
 PMR-001,Printing,المتوسط رول حراري 80mm بالقالب ROLL_MEDIUM_80 والصغير رول 58mm بالقالب ROLL_SMALL_58، وA4 وضع تفصيلي اختياري فقط بالقالب A4_DETAILED_FULL,§29.2,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T1+T2+T23,G2/G10,NOT_STARTED,Lead Team
-PMR-002,Printing,ممنوع اختيار A4 تلقائياً وممنوع التحويل إليه عند ازدحام المحتوى أو فشل طابعة 58/80mm,§29.2.3 و§29.9,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T10+T11+T12+T16,G7/G10,NOT_STARTED,Lead Team
+PMR-002,Printing,ممنوع اختيار A4 تلقائياً وممنوع التحويل إليه عند ازدحام المحتوى أو فشل طابعة 58/80mm,§29.2.3 و§29.9,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T10+T11+T12+T16,G7/G10,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
 PMR-003,Printing,قالب مستقل لكل نوع مستند × وسيط — لا تكبير/تصغير قالب لوسيط آخر,§29.3 و§29.6 ق3,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T3+T22,G2/G6/G10,NOT_STARTED,Lead Team
 PMR-004,Printing,فصل قيم الوسيط: MediaWidthMm وPrintableWidthMm وVerifiedMediaWidthMm وDPI والهوامش وإصدار Profile,§29.2.4,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T24+T25,G10,NOT_STARTED,Lead Team
 PMR-005,Printing,التوجيه: وسائط معتمدة → قالب المستند؛ مجهول/متضارب → HOLD PRINT JOB حتى معايرة المسؤول,§29.4,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T13,G10,NOT_STARTED,Lead Team
-PMR-006,Printing,محطة 80mm لا تطبع إيصال العميل بقالب 58mm أو A4؛ ومحطة 58mm ترسل قالب 58mm المستقل,§29.4,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T1+T2,G7/G10,NOT_STARTED,Lead Team
-PMR-007,Printing,فشل طابعة الرول: المستند يبقى محفوظاً والمهمة في حالة واضحة — لا إرسال تلقائي إلى طابعة A4 بديلة ولا مستند مالي جديد,§29.4 و§29.9,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T11+T12+T18,G7/G10,NOT_STARTED,Lead Team
+PMR-006,Printing,محطة 80mm لا تطبع إيصال العميل بقالب 58mm أو A4؛ ومحطة 58mm ترسل قالب 58mm المستقل,§29.4,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T1+T2,G7/G10,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
+PMR-007,Printing,فشل طابعة الرول: المستند يبقى محفوظاً والمهمة في حالة واضحة — لا إرسال تلقائي إلى طابعة A4 بديلة ولا مستند مالي جديد,§29.4 و§29.9,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T11+T12+T18,G7/G10,COMPLETED_G7 (ما يخص G7 — البقية في بوابة لاحقة),Lead Team
 PMR-008,Printing,الطول الديناميكي: Layout Engine يحسب الارتفاع قبل الإرسال مع مساحة تغذية/قص,§29.5.1,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T14+T16,G10,NOT_STARTED,Lead Team
 PMR-009,Printing,المستند الطويل: رول متصل بلا تصغير خط يضر القراءة وبلا قص للإجمالي/التذييل,§29.5.2,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T16,G10,NOT_STARTED,Lead Team
 PMR-010,Printing,تجاوز حدود الطابعة: خيارات صريحة (أجزاء مرقمة إن دُعم / طلب نسخة A4 تفصيلية) — لا تحويل تلقائي ولا حذف سطر إلزامي دون وسم «ملخص»,§29.5.2,-,Print Routing + Layout Engine + Printer Profiles,print.printer_profiles / print.print_jobs / print.document_templates / print.printer_document_roles / print.auto_print_rules / print.device_registry (صُممت وطُبقت DDL في G1),T-PRN-T16,G10,NOT_STARTED,Lead Team

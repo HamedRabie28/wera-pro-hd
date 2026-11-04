@@ -153,6 +153,34 @@ public static class WacMath
     /// <summary>تقييم المخزون بطبقات التكلفة الحالية (§16.2 تقييم وفق طريقة التكلفة المعتمدة).</summary>
     public static decimal Valuation(IEnumerable<(decimal Qty, decimal AvgUnitCost)> layers)
         => decimal.Round(layers.Sum(l => l.Qty * l.AvgUnitCost), 4, MidpointRounding.AwayFromZero);
+
+    /// <summary>
+    /// صرف بيع من طبقة WAC (G7 · §15.3): الكمية تنقص والمتوسط لا يتغير —
+    /// لقطة تكلفة السطر = avg × الكمية الأساسية المصروفة، وتُحفظ في الفاتورة التاريخية.
+    /// البيع المعتمد بمخزون سالب (D-03) يجعل كمية الطبقة سالبة بالمتوسط نفسه —
+    /// والتقييم لا يحتسب إلا ما يُملك (نمط G6: لا تقييم لمخزون غير مملوك).
+    /// </summary>
+    public static WacState ApplyIssue(WacState current, decimal issuedBaseQty)
+    {
+        if (issuedBaseQty <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(issuedBaseQty), issuedBaseQty, "كمية الصرف يجب أن تكون موجبة");
+        }
+        return new WacState(decimal.Round(current.QtyOnLayer - issuedBaseQty, 6, MidpointRounding.AwayFromZero), current.AvgUnitCost);
+    }
+
+    /// <summary>
+    /// إرجاع مرتجع بيع إلى طبقة WAC (G7 · §15.4): الكمية تعود والمتوسط يبقى —
+    /// البضاعة الراجعة تدخل بالمتوسط الجاري لا بتكلفة تاريخية (سياسة D-02 أ على المرتجع).
+    /// </summary>
+    public static WacState ApplyReturn(WacState current, decimal returnedBaseQty)
+    {
+        if (returnedBaseQty <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(returnedBaseQty), returnedBaseQty, "كمية الإرجاع يجب أن تكون موجبة");
+        }
+        return new WacState(decimal.Round(current.QtyOnLayer + returnedBaseQty, 6, MidpointRounding.AwayFromZero), current.AvgUnitCost);
+    }
 }
 
 /// <summary>قواعد توزيع السداد على الفواتير (§13) — مرآة حارسي V004/V017 بتقديم أوضح.</summary>

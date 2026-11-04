@@ -242,4 +242,5 @@ public sealed record ApiProblem(
     string Detail,
     string? CorrelationId,
     DateTimeOffset OccurredAtUtc,
-    IReadOnlyDictionary<string, string[]>? Errors = null);
+    IReadOnlyDictionary<string, string[]>? Errors = null,
+    string? Code = null);   // رمز خطأ G7 — اختياري متوافق مع الاستجابات السابقة

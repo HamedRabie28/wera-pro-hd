@@ -118,6 +118,29 @@ public static class PermissionPolicy
                 options.AddPolicy(code,
                     p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
             }
+
+            // ── صلاحيات POS والمبيعات والطباعة G7 (V009 seed — التحقق من إسناداتها في V018) ──
+            foreach (var code in new[]
+            {
+                PermissionCodes.PosUse,
+                PermissionCodes.SalesHeldCartUse,
+                PermissionCodes.SalesInvoiceVoid,
+                PermissionCodes.SalesDiscountUpto5,
+                PermissionCodes.SalesDiscountUpto15,
+                PermissionCodes.SalesDiscountOver15,
+                PermissionCodes.SalesPriceOverride,
+                PermissionCodes.SalesReturnApprove,
+                PermissionCodes.SalesRefundCashForCard,
+                PermissionCodes.SalesCreditSell,
+                PermissionCodes.SalesDrawerOpen,
+                PermissionCodes.PrintingReprint,
+                PermissionCodes.PrintingQueueManage,
+                PermissionCodes.PrintingA4Detailed,
+            })
+            {
+                options.AddPolicy(code,
+                    p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
+            }
         });
     }
 }

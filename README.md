@@ -3,7 +3,7 @@
 > **المنتج:** WERA PRO HD — Retail Operations Workbench
 > **المرجع التنفيذي:** مواصفة البناء الرئيسية GFM-CSharp 2.1 (Greenfield Master Build Specification) + ملحق وسائط الطباعة 58/80/A4 (Rev.2)
 > **التقنية المعتمدة:** C# / .NET 10 LTS / WinUI 3 (XAML + MVVM) / ASP.NET Core 10 / PostgreSQL
-> **التاريخ:** 4 نوفمبر 2026 · **حالة البوابات:** G0 = `APPROVED_BY_OWNER` · **G1 = `APPROVED` + حسم D-01/D-07/D-16 (V011)** · **G2 = `APPROVED_BY_OWNER` (2026-11-02) + حسم D-02/D-03 (V012)** · **G3 = `APPROVED_BY_OWNER_WITH_B05_CONDITION` (أمر «اعتمد G3» — 2026-11-03 · 10:37 بتوقيت القاهرة)** · **G4 = `APPROVED_BY_OWNER_WITH_B05_CONDITION` (أمر «اعتمد G4» — 2026-11-03 · 14:28 بتوقيت القاهرة)** · **G5 = `APPROVED_BY_OWNER_WITH_B05_CONDITION` (أمر «اعتمد G5» — 2026-11-03 · 23:10 بتوقيت القاهرة)** · **G6 = `APPROVED_BY_OWNER_WITH_B05_CONDITION` (أمر المالك المدموج «اعتمد G6 ثم كمل G7» — 2026-11-04 · 11:25 بتوقيت القاهرة — خادم مبنى Release · مجال 162/162 · بنية تحتية 29/29 · API 82/82 × 3 دورات · قيود V017: 71 PASS + 1 ENV من 72 · السيناريو الكامل من السلة إلى كشف الحساب يثبت بوابة القبول حرفياً · لقطات G2..G6 التزام مكفول عند أول بيئة Windows — B-05) · G7 = `ACTIVE_IN_PROGRESS` (POS/المبيعات/الوزن/الدفع/المرتجعات — بدأت فور اعتماد G6 بأمر «كمل G7» المدموج في الوصلة نفسها)**
+> **التاريخ:** 4 نوفمبر 2026 · **حالة البوابات:** G0 = `APPROVED_BY_OWNER` · **G1 = `APPROVED` + حسم D-01/D-07/D-16 (V011)** · **G2 = `APPROVED_BY_OWNER` (2026-11-02) + حسم D-02/D-03 (V012)** · **G3 = `APPROVED_BY_OWNER_WITH_B05_CONDITION` (أمر «اعتمد G3» — 2026-11-03 · 10:37 بتوقيت القاهرة)** · **G4 = `APPROVED_BY_OWNER_WITH_B05_CONDITION` (أمر «اعتمد G4» — 2026-11-03 · 14:28 بتوقيت القاهرة)** · **G5 = `APPROVED_BY_OWNER_WITH_B05_CONDITION` (أمر «اعتمد G5» — 2026-11-03 · 23:10 بتوقيت القاهرة)** · **G6 = `APPROVED_BY_OWNER_WITH_B05_CONDITION` (أمر المالك المدموج «اعتمد G6 ثم كمل G7» — 2026-11-04 · 11:25 بتوقيت القاهرة — خادم مبنى Release · مجال 162/162 · بنية تحتية 29/29 · API 82/82 × 3 دورات · قيود V017: 71 PASS + 1 ENV من 72 · السيناريو الكامل من السلة إلى كشف الحساب يثبت بوابة القبول حرفياً · لقطات G2..G6 التزام مكفول عند أول بيئة Windows — B-05) · G7 = `READY_FOR_OWNER_REVIEW_WITH_B05_CONDITION` (POS/المبيعات/الوزن/الدفع/المرتجعات — مكتملة البناء والاختبار بأمر «كمل G7» المدموج: خادم Release · مجال 196/196 · بنية تحتية 36/36 · API 100/100 × 3 دورات · قيود V018: 85+1ENV من 86 — بانتظار أمر المالك · اللقطات شرط إقفال نصي معلق على B-05)**
 
 ---
 
@@ -74,6 +74,20 @@
 | `prototype/` | نموذج WinUI 3: csproj + Shell بشريط علوي فقط + 6 شاشات مطلوبة ببيانات DEV | §22 G2 · B-05 |
 | `docs/PHASE_REPORT_G2.md` | تقرير المرحلة وقرار البوابة وطلب الاعتماد | §25 |
 | `WERA_PRO_HD_G2_Report.pdf` (في جذر download/) | تقرير المراجعة الرئيسي — القسم 1: سجل اعتماد G1 وحسم القرارات | §25 |
+
+## محتويات G7 — POS / المبيعات / الوزن / الدفع / المرتجعات (بدأت بأمر المالك المدموج «اعتمد G6 ثم كمل G7» 2026-11-04)
+
+| العنصر | الوصف | المرجع |
+|---|---|---|
+| `database/migrations/V018__g7_pos_sales.sql` | Idempotency للمرتجعات + note_ar للمعلقات + استكمال آلة حالة المرتجع المتعدد + التسلسلات + قالبا إيصال G2 + تحقق مصفوفة V009 | §22 G7 · §9 · §29 |
+| `src/WeraPro.Domain/Sales/SalesTypes.cs` | SalesMath (ضريبة D-01 وتوزيع خصم حتمي) · آلات الحالة · PaymentMath · CreditRules · WeightSaleRules (الطرق الست) · ReceiptRouting (§29.4) | §9/§5/§15.4 |
+| `src/WeraPro.Application/Sales/` | حالات الاستخدام الكاملة: التقاط/معاينة خادمية/بيع (خطوات §9.7)/تعليق/مرتجع (D-04)/ورديات/درج/طباعة + بوابة بطاقة قابلة للمزود | §9 |
+| `src/WeraPro.Infrastructure/Persistence/Repositories/SalesRepository.cs` | الترحيل الذري: فاتورة+لقطات+مدفوعات+خزينة+حركات SALE على المحتوى+WAC+درج+مهمة إيصال تلقائية | §9.7 · §4.3 |
+| `src/WeraPro.Api/Endpoints/SalesEndpoints.cs` | 20 نقطة `/api/v1/pos/*` بصلاحيات ذرية خادمية | §18 |
+| `src/WeraPro.Desktop/` (PosWindow + PosDialogs + PosViewModel + عميل POS) | شاشة الكاشير الكاملة وفق POS_VISUAL_SPEC + نوافذ الوزن/الدفع/المرتجع/المعلقات/العميل/الوردية — البناء على Windows (B-05) | §9 · §7 |
+| `tests/…/SalesPosUnitTests.cs` (34) + `G7MigrationShapeTests.cs` (7) + `G7EndpointTests.cs` (18) | الاختبارات الإلزامية 1-13 حرفياً بأرقام مرجعية مستقلة — على PG حقيقي | §21 · §22 G7 |
+| `database/tests/CONSTRAINT_TEST_RESULTS_G7_V018.md` | 85 PASS · 0 FAIL · 1 ENV من 86 (منها 14 T-G7) | بوابة G7 |
+| `docs/PHASE_REPORT_G7.md` | تقرير المرحلة الكامل بالأدلة وقرار البوابة | §25 |
 
 ## محتويات G6 — Inventory / Purchasing / Suppliers / Warehouses (بدأت بأمر المالك «كمل G6» 2026-11-03/04 عقب اعتماد G5 · **اعتُمدت 2026-11-04 · 11:25 بتوقيت القاهرة** بأمر «اعتمد G6 ثم كمل G7»)
 

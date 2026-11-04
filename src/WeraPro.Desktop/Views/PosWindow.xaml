@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Views/PosWindow.xaml — POS نافذة مستقلة بلا أي قائمة إدارية (§9.0 / LF-P) · G3 قشرة:
-     شريط جلسة حقيقي + إعدادات وزن من الخادم (D-07) والسلة DEV موسومة بصدق حتى G7.
-     الحد الأدنى 1280×720: لوحة المجاميع 300px عند 1366. -->
+<!-- Views/PosWindow.xaml — WERA PRO HD Desktop (G7 · §9)
+     محطة الكاشير الكاملة وفق POS_VISUAL_SPEC المعتمد من G2:
+     A. شريط الجلسة 56px (وردية/محطة/كاشير/اتصال) · B. الالتقاط 72px (باركود دائم التركيز)
+     C. السلة المركزية (المنطقة الغالبة) · E. المجاميع 300px (من الخادم فقط §9.0 ق10)
+     F. شريط F-keys 40px — لا قائمة إدارية ولا شبكة منتجات إطلاقاً (§9.0 ق1/ق2). -->
 <Window
     x:Class="WeraPro.Desktop.Views.PosWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -9,19 +11,20 @@
 
     <Grid Background="{StaticResource WeraSurfaceBackgroundBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="56"/>   <!-- شريط الجلسة -->
-            <RowDefinition Height="Auto"/> <!-- الالتقاط -->
-            <RowDefinition Height="*"/>    <!-- السلة + المجاميع -->
-            <RowDefinition Height="40"/>   <!-- F-keys -->
+            <RowDefinition Height="56"/>   <!-- A. شريط الجلسة -->
+            <RowDefinition Height="Auto"/> <!-- B. الالتقاط -->
+            <RowDefinition Height="*"/>    <!-- C. السلة + E. المجاميع -->
+            <RowDefinition Height="40"/>   <!-- F. الوظائف -->
         </Grid.RowDefinitions>
 
-        <!-- شريط الجلسة: بيانات حقيقية من الجلسة الموثقة -->
+        <!-- A. شريط الجلسة: وردية · محطة · كاشير · اتصال حقيقي (POS_VISUAL_SPEC §1) -->
         <Grid Grid.Row="0" Background="{StaticResource WeraBrandNavyDeepBrush}" Padding="14,0">
             <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Right">
                 <Border Background="{StaticResource WeraActionPrimaryBrush}" CornerRadius="6" Padding="8,2">
                     <TextBlock Text="POS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource WeraShellTealGlowBrush}"/>
                 </Border>
                 <TextBlock x:Name="SessionText" Text="—" FontSize="12.5" Foreground="{StaticResource WeraShellTextSecondaryBrush}"/>
+                <TextBlock x:Name="ShiftText" Text="لا وردية" FontSize="12" Foreground="{StaticResource WeraShellTealGlowBrush}"/>
                 <StackPanel Orientation="Horizontal" Spacing="6" BorderBrush="{StaticResource WeraShellBorderBrush}" BorderThickness="1,0,0,0" Padding="12,0">
                     <Ellipse Width="8" Height="8" Fill="{StaticResource WeraActionPrimaryInkBrush}" x:Name="ConnDot"/>
                     <TextBlock x:Name="ConnText" Text="جارٍ التحقق…" FontSize="12" Foreground="{StaticResource WeraShellTealGlowBrush}"/>
@@ -29,75 +32,152 @@
             </StackPanel>
         </Grid>
 
-        <!-- منطقة الالتقاط: باركود دائم التركيز (يعمل فعلياً من G7 — G3 قشرة) -->
+        <!-- B. الالتقاط: الباركود بؤرة التركيز الدائمة (Exact Match ≤200ms خادمياً) -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Padding="14,10"
                     Background="{StaticResource WeraSurfaceBaseBrush}"
                     BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,0,0,1">
-            <TextBox x:Name="BarcodeField" PlaceholderText="امسح الباركود أو اكتب للبحث… (تفعيل كامل في G7)"
+            <TextBox x:Name="BarcodeField" PlaceholderText="امسح الباركود أو اكتب كوداً/PLU ثم Enter…"
                      FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"
-                     Height="48" CornerRadius="10" HorizontalAlignment="Stretch" IsEnabled="False"/>
-            <Button Content="⚖️ وزن  F2" Style="{StaticResource PosTouchButtonStyle}" IsEnabled="False"
-                    ToolTipService.ToolTip="نافذة الوزن تعمل كاملة في G7 (D-07: 1g/5g/Banker's)"/>
-            <Button Content="↩ مرتجع  F12" Style="{StaticResource PosTouchButtonStyle}" IsEnabled="False"
-                    ToolTipService.ToolTip="المرتجع يعمل في G7"/>
-            <Button Content="⏸ تعليق  F8" Style="{StaticResource PosTouchButtonStyle}" IsEnabled="False"
-                    ToolTipService.ToolTip="التعليق والاسترجاع يعملان في G7"/>
+                     Height="48" CornerRadius="10" HorizontalAlignment="Stretch" KeyDown="OnBarcodeKeyDown"/>
+            <Button x:Name="SearchButton" Content="بحث F2" Style="{StaticResource PosTouchButtonStyle}" Click="OnSearchClick"
+                    ToolTipService.ToolTip="بحث نصي محدود مرقم خادمياً (§9.2)"/>
+            <Button x:Name="CustomerButton" Content="عميل F3" Style="{StaticResource PosTouchButtonStyle}" Click="OnCustomerClick"
+                    ToolTipService.ToolTip="اختيار عميل لا يفقد السلة (§9.4) — إلزامي للآجل (D-05)"/>
+            <Button x:Name="WeightButton" Content="وزن F6" Style="{StaticResource PosTouchButtonStyle}" Click="OnWeightClick"
+                    ToolTipService.ToolTip="نافذة الوزن بالطرق الست (D-07: دقة 1g · خطوة 5g · Banker's)"/>
+            <Button x:Name="DrawerButton" Content="درج F11" Style="{StaticResource PosTouchButtonStyle}" Click="OnDrawerClick"
+                    ToolTipService.ToolTip="فتح الدرج بغير حركة بيع — بسبب مسجل وUNKNOWN صادقة حتى G10 (§9.9)"/>
+            <Button x:Name="ShiftButton" Content="وردية" Style="{StaticResource PosTouchButtonStyle}" Click="OnShiftClick"
+                    ToolTipService.ToolTip="فتح الوردية وملخص المتوقع في الدرج (§9.9) — الإغلاق التام في G8"/>
         </StackPanel>
 
-        <!-- السلة + المجاميع: DEV DATA موسومة بصدق -->
+        <!-- C. السلة المركزية + E. المجاميع (300px) -->
         <Grid Grid.Row="2" Padding="14,12" ColumnSpacing="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="300"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}"
-                    BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="14">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Padding="20">
-                    <Border Background="{StaticResource WeraStatusWarningSoftBrush}" CornerRadius="10" Padding="14,8">
-                        <TextBlock Text="DEV DATA — سلة عرض فقط · البيع الفعلي في G7" FontSize="13"
-                                   Foreground="{StaticResource WeraStatusWarningBrush}" FontWeight="SemiBold"/>
-                    </Border>
-                    <TextBlock Text="نافذة POS المستقلة تعمل (G3): إقلاع واتصال وجلسة حقيقية؛ الأدوات الكاملة (وزن/دفع/مرتجع/خصومات) تبني في G7."
-                               FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"
-                               HorizontalAlignment="Center" TextAlignment="Center" MaxWidth="560"/>
-                    <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="10" Padding="12,10" MaxWidth="560">
-                        <TextBlock x:Name="WeighingText" Text="إعدادات الوزن (D-07): تُجلب من الخادم…"
-                                   FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
-                    </Border>
-                </StackPanel>
-            </Border>
+            <!-- السلة: DataGrid افتراضية — تحديث السطر المتأثر لا إعادة بناء (§9.1C) -->
+            <Grid Grid.Column="0" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- لوحة المجاميع: معطلة في G3 — لا أرقام مالية وهمية كأنها حقيقية -->
+                <Border Grid.Row="0" Background="{StaticResource WeraSurfaceBaseBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="14" Padding="10">
+                    <ListView x:Name="CartList" ItemsSource="{x:Bind ViewModel.Cart, Mode=OneWay}"
+                              SelectionMode="Single" SelectionChanged="OnCartSelectionChanged"
+                              IsItemClickEnabled="False" DoubleTapped="OnCartDoubleTapped">
+                        <ListView.Header>
+                            <Grid Padding="8,6" ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="130"/>
+                                    <ColumnDefinition Width="110"/><ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="110"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="الصنف" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="كمية/وزن (المصدر)" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="2" Text="سعر الوحدة" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="3" Text="خصم" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="4" Text="إجمالي السطر" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}" TextAlignment="Left"/>
+                            </Grid>
+                        </ListView.Header>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="viewModel:CartLineViewModel"
+                                          xmlns:viewModel="using:WeraPro.Desktop.ViewModels">
+                                <Grid Padding="8,8" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/><ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="110"/><ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="110"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{x:Bind ProductNameAr}" FontSize="13.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{x:Bind SkuCode}" FontSize="11" FontFamily="{StaticResource WeraFontMono}"
+                                                   FlowDirection="LeftToRight" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{x:Bind DisplayQty}" FontSize="12.5" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{x:Bind UnitPrice, Mode=OneWay}" FontSize="12.5" VerticalAlignment="Center"
+                                               FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"/>
+                                    <TextBlock Grid.Column="3" Text="{x:Bind LineDiscount, Mode=OneWay, FallbackValue=—}" FontSize="12.5" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="{x:Bind ServerLineTotal, Mode=OneWay}" FontSize="13.5" FontWeight="SemiBold"
+                                               VerticalAlignment="Center" FontFamily="{StaticResource WeraFontMono}" FlowDirection="LeftToRight"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Border>
+
+                <!-- D. تفاصيل الصنف المحدد + حالة السلة (لا شبكة منتجات §9.0 ق2) -->
+                <Border Grid.Row="1" Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="10" Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="14">
+                        <TextBlock x:Name="SelectedDetailsText" Text="الصنف المحدد: —" FontSize="12" VerticalAlignment="Center"
+                                   Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        <TextBlock x:Name="StatusText" Text="جاهز" FontSize="12" VerticalAlignment="Center"
+                                   Foreground="{StaticResource WeraBrandNavyBrush}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- E. لوحة المجاميع: كل قيمة من الخادم فقط (§9.1F) + الفكة متميزة عن المستحق -->
             <StackPanel Grid.Column="1" Spacing="10">
                 <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
                         BorderThickness="1" CornerRadius="14" Padding="16">
                     <StackPanel Spacing="7">
-                        <TextBlock Text="المستحق" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14"
+                        <TextBlock Text="ملخص الفاتورة (من الخادم)" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14"
                                    FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
-                        <TextBlock Text="—" Style="{StaticResource PosMoneyStyle}"/>
-                        <TextBlock Text="تُحسب خادمياً من G7 — لا إجمالي من العميل دون إعادة حساب (§9.0)"
-                                   FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
+                        <TextBlock Text="الإجمالي قبل الخصم" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        <TextBlock x:Name="GrossText" Text="—" Style="{StaticResource PosMoneyStyle}"/>
+                        <TextBlock Text="الضريبة المضمّنة (مفصولة)" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        <TextBlock x:Name="TaxText" Text="—" Style="{StaticResource PosMoneyStyle}"/>
+                        <TextBlock Text="خصم السطور + خصم الفاتورة" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        <TextBlock x:Name="DiscountText" Text="—" Style="{StaticResource PosMoneyStyle}"/>
+                        <Border Background="{StaticResource WeraStatusWarningSoftBrush}" CornerRadius="8" Padding="10,6" Margin="0,4">
+                            <StackPanel>
+                                <TextBlock Text="المستحق" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource WeraStatusWarningBrush}"/>
+                                <TextBlock x:Name="DueText" Text="—" Style="{StaticResource PosMoneyStyle}"/>
+                                <TextBlock x:Name="ChangeText" Text="الفكة للعميل: —" FontSize="12"
+                                           Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
 
-                <Button Content="💳 الدفع وترحيل الفاتورة  F4" Style="{StaticResource PosTouchButtonStyle}"
-                        Background="{StaticResource WeraSurfaceSubtleBrush}" BorderThickness="0" IsEnabled="False"
-                        HorizontalAlignment="Stretch" ToolTipService.ToolTip="الدفع يعمل في G7"/>
+                <Button x:Name="PayButton" Content="الدفع وترحيل الفاتورة  F4" Style="{StaticResource PosTouchButtonStyle}"
+                        Background="{StaticResource WeraActionPrimaryBrush}" Foreground="{StaticResource WeraActionPrimaryInkBrush}"
+                        BorderThickness="0" Click="OnPayClick" HorizontalAlignment="Stretch" FontWeight="SemiBold"
+                        ToolTipService.ToolTip="نقد/بطاقة/مختلط/آجل (§9.6) — Idempotency يمنع الازدواج (§15.4)"/>
+
+                <StackPanel Spacing="8">
+                    <Button Content="تعليق الفاتورة  F9" Style="{StaticResource PosTouchButtonStyle}" Click="OnHoldClick"
+                            HorizontalAlignment="Stretch" ToolTipService.ToolTip="تعلق بلقطة كاملة — الاستعادة لا تنشئ شيئاً (§9.5)"/>
+                    <Button Content="استعادة معلق  F10" Style="{StaticResource PosTouchButtonStyle}" Click="OnRestoreClick"
+                            HorizontalAlignment="Stretch"/>
+                    <Button Content="مرتجع / استبدال  F12" Style="{StaticResource PosTouchButtonStyle}" Click="OnReturnClick"
+                            HorizontalAlignment="Stretch" ToolTipService.ToolTip="باعتماد مشرف ورد بوسيلة الدفع الأصلية (D-04)"/>
+                    <Button Content="حذف السطر  Del" Style="{StaticResource PosTouchButtonStyle}" Click="OnRemoveLineClick"
+                            HorizontalAlignment="Stretch"/>
+                </StackPanel>
 
                 <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="10" Padding="12,10">
-                    <TextBlock Text="الإيصال يطبع تلقائياً بعد الترحيل على طابعة المحطة المعتمدة (80/58mm المستقل) من G10 · نسخة الإدارة إلكترونية (D-16)"
-                               FontSize="11" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Name="PrinterText" Text="الإيصال في قائمة الطباعة — طابعة المحطة غير معتمدة (G10)"
+                                   FontSize="11" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                        <TextBlock x:Name="CardText" Text="البطاقة معطلة حتى اعتماد مزود (B-02/D-11)"
+                                   FontSize="11" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </Grid>
 
-        <!-- شريط الوظائف الثابت F1..F12 -->
+        <!-- F. شريط الوظائف الثابت (§9.10) -->
         <Border Grid.Row="3" Background="{StaticResource WeraBrandNavyBrush}" Padding="16,0">
             <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                <TextBlock Text="F1 بحث · F2 وزن · F3 عميل · F4 دفع · F8 تعليق · F12 مرتجع (تفعيل G7)"
+                <TextBlock Text="F1 مساعدة · F2 بحث · F3 عميل · F4 دفع · F6 وزن · F8/↑↓ تعديل · F9 تعليق · F10 استعادة · F11 درج · F12 مرتجع · Del حذف"
                            FontSize="12" Foreground="{StaticResource WeraShellTextSecondaryBrush}"/>
-                <TextBlock Text="G3 — POS SHELL متصلة بالخادم" FontSize="11.5"
+                <TextBlock Text="G7 — POS كاملة" FontSize="11.5"
                            Foreground="{StaticResource WeraShellTextMutedBrush}" HorizontalAlignment="Left"/>
             </StackPanel>
         </Border>

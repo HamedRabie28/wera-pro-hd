@@ -75,6 +75,20 @@ public sealed class WeraDbContext : DbContext
     public DbSet<CostLayerRow> CostLayers => Set<CostLayerRow>();
     public DbSet<CustomerRow> Customers => Set<CustomerRow>();
 
+    // ── G7: المبيعات ونقطة البيع والطباعة (V005/V007/V018) ──
+    public DbSet<SalesInvoiceRow> SalesInvoices => Set<SalesInvoiceRow>();
+    public DbSet<SalesInvoiceLineRow> SalesInvoiceLines => Set<SalesInvoiceLineRow>();
+    public DbSet<SalesPaymentRow> SalesPayments => Set<SalesPaymentRow>();
+    public DbSet<SalesRefundRow> SalesRefunds => Set<SalesRefundRow>();
+    public DbSet<SalesRefundLineRow> SalesRefundLines => Set<SalesRefundLineRow>();
+    public DbSet<HeldCartRow> HeldCarts => Set<HeldCartRow>();
+    public DbSet<SalesShiftRow> SalesShifts => Set<SalesShiftRow>();
+    public DbSet<DrawerEventRow> DrawerEvents => Set<DrawerEventRow>();
+    public DbSet<PrinterProfileRow> PrinterProfiles => Set<PrinterProfileRow>();
+    public DbSet<PrinterDocumentRoleRow> PrinterDocumentRoles => Set<PrinterDocumentRoleRow>();
+    public DbSet<DocumentTemplateRow> DocumentTemplates => Set<DocumentTemplateRow>();
+    public DbSet<PrintJobRow> PrintJobs => Set<PrintJobRow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("core");

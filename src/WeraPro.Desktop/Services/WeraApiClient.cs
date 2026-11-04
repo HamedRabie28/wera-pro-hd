@@ -772,6 +772,82 @@ public sealed class WeraApiClient(
         }
     }
 
+
+    // ── POS (G7 — §9) ────────────────────────────────────────────────────
+
+    private static string Pos(string path) => Contracts.V1.SalesApi.Prefix + path;
+
+    /// <summary>سياق المحطة (§9.1A): الشريط الأعلى يعرضه عند فتح POS.</summary>
+    public Task<ApiCallResult<PosContextResponse>> GetPosContextAsync(CancellationToken ct = default)
+        => GetAsync<PosContextResponse>(Pos("/context"), ct);
+
+    /// <summary>الالتقاط: باركود/SKU/PLU + باركود الوزن المتغير (Exact Match §3.1/§5.3).</summary>
+    public Task<ApiCallResult<PosLookupResponse>> PosLookupAsync(string code, CancellationToken ct = default)
+        => PostAsync<object, PosLookupResponse>(Pos("/lookup"), new { code }, allowAnonymous: false, ct);
+
+    /// <summary>البحث النصي المحدود المرقم خادمياً (§9.2).</summary>
+    public Task<ApiCallResult<PosSearchResponse>> PosSearchAsync(string query, int page = 1, int pageSize = 20, CancellationToken ct = default)
+        => GetAsync<PosSearchResponse>(Pos($"/search?query={Uri.EscapeDataString(query)}&page={page}&pageSize={pageSize}"), ct);
+
+    /// <summary>معاينة التسعير الخادمية (§9.0 ق10 — المجاميع من الخادم فقط، لا حساب في العميل).</summary>
+    public Task<ApiCallResult<PosPreviewResponse>> PosPreviewAsync(PosPreviewRequest request, CancellationToken ct = default)
+        => PostAsync<PosPreviewRequest, PosPreviewResponse>(Pos("/preview"), request, allowAnonymous: false, ct);
+
+    /// <summary>معاينة الوزن خادمياً — الطرق الست (§9.3) تُحسب في خدمة المجال لا في العميل.</summary>
+    public Task<ApiCallResult<WeightPreviewResponse>> PosWeightPreviewAsync(WeightPreviewRequest request, CancellationToken ct = default)
+        => PostAsync<WeightPreviewRequest, WeightPreviewResponse>(Pos("/weight/preview"), request, allowAnonymous: false, ct);
+
+    /// <summary>إتمام البيع (§9.7) — مفتاح Idempotency يمنع الازدواج عند timeout (§15.4).</summary>
+    public Task<ApiCallResult<PostedSaleResponse>> PostSaleAsync(PostSaleRequest request, CancellationToken ct = default)
+        => PostAsync<PostSaleRequest, PostedSaleResponse>(Pos("/sales"), request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<PosSaleDetailResponse>> GetSaleAsync(long invoiceId, CancellationToken ct = default)
+        => GetAsync<PosSaleDetailResponse>(Pos("/sales/" + invoiceId.ToString(System.Globalization.CultureInfo.InvariantCulture)), ct);
+
+    public Task<ApiCallResult<PosSaleListResponse>> ListRecentSalesAsync(int limit = 10, long? shiftId = null, CancellationToken ct = default)
+        => GetAsync<PosSaleListResponse>(Pos($"/sales?limit={limit}" + (shiftId is { } sid ? $"&shiftId={sid}" : string.Empty)), ct);
+
+    public Task<ApiCallResult<JsonElement>> VoidSaleAsync(long invoiceId, string reasonAr, CancellationToken ct = default)
+        => PostAsync<object, JsonElement>(Pos("/sales/" + invoiceId.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/void"),
+            new { reasonAr }, allowAnonymous: false, ct);
+
+    /// <summary>تعليق سلة (§9.5) — لقطة JSON للسلة الحالية؛ الاستعادة قراءة لا تنشئ شيئاً.</summary>
+    public Task<ApiCallResult<JsonElement>> HoldCartAsync(string cartJson, string? noteAr, long? customerId, CancellationToken ct = default)
+        => PostAsync<object, JsonElement>(Pos("/carts/hold"), new { cartJson, noteAr, customerId }, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<HeldCartDto[]>> ListHeldCartsAsync(CancellationToken ct = default)
+        => GetAsync<HeldCartDto[]>(Pos("/carts/held"), ct);
+
+    public Task<ApiCallResult<RestoreCartResponse>> RestoreCartAsync(long cartId, CancellationToken ct = default)
+        => PostWithResponseAsync<RestoreCartResponse>(Pos("/carts/" + cartId.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/restore"), ct);
+
+    /// <summary>مرتجع/استبدال (§9.8 · D-04) — اعتماد مشرف إلزامي ورد بوسيلة الدفع الأصلية.</summary>
+    public Task<ApiCallResult<PostedRefundResponse>> PostRefundAsync(PostRefundRequest request, CancellationToken ct = default)
+        => PostAsync<PostRefundRequest, PostedRefundResponse>(Pos("/refunds"), request, allowAnonymous: false, ct);
+
+    /// <summary>الوردية (§9.9): فتح وربط الفواتير وملخص المتوقع في الدرج.</summary>
+    public Task<ApiCallResult<ShiftDto>> OpenShiftAsync(decimal openingFloat, CancellationToken ct = default)
+        => PostAsync<object, ShiftDto>(Pos("/shifts"), new { openingFloat }, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<ShiftDto>> GetCurrentShiftAsync(CancellationToken ct = default)
+        => GetAsync<ShiftDto>(Pos("/shifts/current"), ct);
+
+    public Task<ApiCallResult<ShiftSummaryDto>> GetShiftSummaryAsync(long shiftId, CancellationToken ct = default)
+        => GetAsync<ShiftSummaryDto>(Pos("/shifts/" + shiftId.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/summary"), ct);
+
+    /// <summary>فتح الدرج بغير حركة بيع — سبب مسجل وUNKNOWN صادقة حتى تكامل الأجهزة (§9.9/B-01).</summary>
+    public Task<ApiCallResult<DrawerEventResponse>> OpenDrawerAsync(string reasonAr, CancellationToken ct = default)
+        => PostAsync<object, DrawerEventResponse>(Pos("/drawer/open"), new { reasonAr }, allowAnonymous: false, ct);
+
+    /// <summary>مهمة إيصال (§29.4/§29.9): توجيه تلقائي بقالب المحطة أو HOLD موثق — لا فشل صامت.</summary>
+    public Task<ApiCallResult<PrintJobDto>> PrintReceiptAsync(long invoiceId, string copyType, CancellationToken ct = default)
+        => PostAsync<object, PrintJobDto>(
+            Pos("/sales/" + invoiceId.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/print"),
+            new { copyType }, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<PrintJobDto[]>> ListPrintJobsAsync(long invoiceId, CancellationToken ct = default)
+        => GetAsync<PrintJobDto[]>(Pos("/sales/" + invoiceId.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/print-jobs"), ct);
+
     private async Task<ApiCallResult<T>> GetAsync<T>(string url, CancellationToken ct)
     {
         try

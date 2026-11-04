@@ -111,4 +111,48 @@ public static class PermissionCodes
 
     /// <summary>قراءة حسابات الخزينة (إنشاؤها وإدارتها في G8) — OWNER/MANAGER/ACCOUNTANT (V017).</summary>
     public const string FinanceTreasuryRead = "finance.treasury.read";
+
+    // ── صلاحيات G7 (V009 seed — POS والمبيعات والطباعة؛ التحقق من إسناداتها في V018) ──
+
+    /// <summary>استخدام نقطة البيع وإتمام البيع — OWNER/MANAGER/SUPERVISOR/CASHIER (V009).</summary>
+    public const string PosUse = "pos.use";
+
+    /// <summary>تعليق السلال واستعادتها — OWNER/MANAGER/SUPERVISOR/CASHIER (V009).</summary>
+    public const string SalesHeldCartUse = "sales.held_cart.use";
+
+    /// <summary>إلغاء فاتورة مرحلة بسبب موثق — OWNER/MANAGER (V009).</summary>
+    public const string SalesInvoiceVoid = "sales.invoice.void";
+
+    /// <summary>خصم حتى 5% (الكاشير) — OWNER/MANAGER/CASHIER (V009 · D-06).</summary>
+    public const string SalesDiscountUpto5 = "sales.discount.upto_5";
+
+    /// <summary>خصم حتى 15% (المشرف) — OWNER/SUPERVISOR (V009 · D-06).</summary>
+    public const string SalesDiscountUpto15 = "sales.discount.upto_15";
+
+    /// <summary>خصم فوق 15% (مدير/مالك فقط) — OWNER (V009 · D-06).</summary>
+    public const string SalesDiscountOver15 = "sales.discount.over_15";
+
+    /// <summary>تعديل سعر سطر بصلاحية موثقة — OWNER (V009 · §9.4).</summary>
+    public const string SalesPriceOverride = "sales.price.override";
+
+    /// <summary>اعتماد مرتجع ورد الأموال — OWNER/MANAGER/SUPERVISOR (V009 · D-04).</summary>
+    public const string SalesReturnApprove = "sales.return.approve";
+
+    /// <summary>رد نقدي لقيمة بطاقة (قرار استثنائي موثق) — OWNER (V009 · D-04).</summary>
+    public const string SalesRefundCashForCard = "sales.refund.cash_for_card";
+
+    /// <summary>بيع آجل ضمن حد ائتمان العميل — OWNER (V009 · D-05).</summary>
+    public const string SalesCreditSell = "sales.credit.sell";
+
+    /// <summary>فتح درج النقد بغير حركة بيع بسبب مسجل — OWNER/MANAGER/SUPERVISOR/CASHIER (V009 · §9.9).</summary>
+    public const string SalesDrawerOpen = "sales.drawer.open";
+
+    /// <summary>إعادة طباعة موثقة بعلامة نسخة — OWNER/MANAGER/SUPERVISOR/CASHIER (V009 · §29.9).</summary>
+    public const string PrintingReprint = "printing.reprint";
+
+    /// <summary>إدارة قائمة الطباعة وإعادة المحاولة — OWNER (V009 · §29.9).</summary>
+    public const string PrintingQueueManage = "printing.queue.manage";
+
+    /// <summary>طباعة تفصيلية كاملة A4 بإجراء صريح — OWNER/ACCOUNTANT (V009 · §29.11).</summary>
+    public const string PrintingA4Detailed = "printing.a4_detailed";
 }

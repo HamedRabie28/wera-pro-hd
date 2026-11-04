@@ -150,6 +150,26 @@ try
     builder.Services.AddScoped<WeraPro.Application.Purchasing.ManageSupplierPaymentsUseCase>();
     builder.Services.AddScoped<WeraPro.Application.Purchasing.ManageSupplierReturnsUseCase>();
 
+    // ── نقطة البيع والمبيعات والطباعة (G7) ──
+    builder.Services.AddScoped<WeraPro.Application.Sales.ISalesRepository, WeraPro.Infrastructure.Persistence.Repositories.SalesRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.ICardPaymentGateway, WeraPro.Infrastructure.Payment.SandboxCardGateway>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.PosSettingsReader>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.PosScopeResolver>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.SaleLineResolver>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.GetPosContextUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.LookupPosItemUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.SearchPosItemsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.PreviewSaleUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.WeightPreviewUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.PostSaleUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.VoidSaleUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.ManageHeldCartsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.PostRefundUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.ManageShiftsUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.OpenDrawerUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.ManageReceiptPrintingUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Sales.GetSaleUseCase>();
+
     // ── التحقق الموحد (ADR-007) ──
     builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -312,7 +332,8 @@ try
        .MapCatalogEndpoints()
        .MapMediaEndpoints()
        .MapInventoryEndpoints()
-       .MapPurchasingEndpoints();
+       .MapPurchasingEndpoints()
+       .MapSalesEndpoints();
 
     app.Run();
     return 0;

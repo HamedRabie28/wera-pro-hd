@@ -64,44 +64,5 @@ public sealed partial class ShellViewModel : ObservableObject
 }
 
 /// <summary>
-/// POS المستقلة (قشرة G3): شريط جلسة حقيقي + إعدادات الوزن من الخادم (D-07)
-/// والسلة بيانات DEV موسومة بصدق حتى G7 — لا مطالبة بيع حقيقية في هذه البوابة.
-/// </summary>
-public sealed partial class PosViewModel : ObservableObject
-{
-    private readonly SessionService _session;
-    private readonly WeraApiClient _api;
+/// POS الكاملة انتقلت إلى PosViewModel.cs المستقل في G7 (§9 كاملة) — هذه القشرة أزيلت.
 
-    public PosViewModel(SessionService session, WeraApiClient api)
-    {
-        _session = session;
-        _api = api;
-    }
-
-    public string CashierDisplayAr => _session.User?.DisplayNameAr ?? "—";
-    public string StationDisplayAr => _session.StationNameAr ?? "محطة غير محددة";
-    public string ScopeDisplayAr => _session.BranchNameAr ?? "كل الفروع";
-
-    [ObservableProperty]
-    private string _weighingInfoAr = "إعدادات الوزن تُجلب من الخادم…";
-
-    /// <summary>سلة DEV موسومة — تُستبدل بسلة حقيقية في G7.</summary>
-    public ObservableCollection<string> DevCartNotice { get; } =
-        ["سلة عرض DEV — لا بيع فعلي في G3", "بيانات حقيقية من G7 (POS كاملة)"];
-
-    public async Task LoadFoundationAsync(CancellationToken ct)
-    {
-        var settings = await _api.GetSettingsAsync("WEIGHT", ct);
-        if (!settings.Ok || settings.Value is null)
-        {
-            WeighingInfoAr = "تعذر جلب إعدادات الوزن — " + (settings.ErrorAr ?? "سبب غير معروف");
-            return;
-        }
-
-        var byKey = settings.Value.ToDictionary(s => s.SettingKey, s => s.ValueText);
-        string Get(string key) => byKey.TryGetValue(key, out var v) ? v : "؟";
-        WeighingInfoAr =
-            $"الوزن: دقة {Get("weighing.precision_g")}g · خطوة {Get("weighing.step_g")}g · " +
-            $"تقريب المبلغ {Get("weighing.amount_rounding")} · {Get("weighing.weight_rounding")}";
-    }
-}

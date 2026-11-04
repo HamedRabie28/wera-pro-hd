@@ -667,8 +667,9 @@ def t_ddl_32(conn):
         VALUES ('TPR-58','TPR-58','TestModel58','Generic',%s,%s,'ROLL_58',57.5,48.0,203,203,'ESC_POS')
         RETURNING printer_profile_id""", (I["station"], I["branch"]))
     prn = cur.fetchone()[0]
-    cur.execute("""INSERT INTO print.document_templates (template_code, document_type, media_class, body_definition)
-        VALUES ('ROLL_SMALL_58','CUSTOMER_RECEIPT','ROLL_58','{}'::jsonb) RETURNING template_id""")
+    # قالب 58 لفاتورة العميل مزروع الآن بترحيل V018 — نستعمله بدل إعادة إدراجه
+    cur.execute("""SELECT template_id FROM print.document_templates
+        WHERE template_code='ROLL_SMALL_58' AND document_type='CUSTOMER_RECEIPT' AND version=1""")
     tpl = cur.fetchone()[0]
     cur.execute("""INSERT INTO print.print_jobs (document_id, document_type, template_id, template_version,
         printer_profile_id, printer_profile_version, media_class, printable_width_mm, dpi, copy_type, status,
@@ -1199,6 +1200,276 @@ def t_g6_16(conn):
         "INSERT INTO inv.stock_reservations (sku_id, warehouse_id, qty_base, source_doc_type, source_doc_id) VALUES (%s,%s,-5,'t.test',1)",
         (I["bag"], I["wh"]), "check")
     conn.rollback()
+
+
+# ═══════════════════════ اختبارات بوابة G7 (V018 · §22 G7) ═══════════════════════
+
+def _g7_sale_fixture(conn):
+    """فاتورة مرحلة كاملة الصلاحية لاختبارات القيود: سطر بتكلفة ووزن لا يلزم + دفعة نقدية."""
+    I = ids(conn)
+    inv = one(conn, "INSERT INTO sales.invoices (invoice_number, branch_id, station_id, cashier_user_id, status, "
+                    "gross_total, line_discount_total, tax_total, net_total, paid_total) "
+                    "VALUES (CONCAT('SI-T', nextval('sales.invoice_number_seq')), "
+                    "(SELECT branch_id FROM core.branches WHERE code='TBR1'), "
+                    "(SELECT station_id FROM core.stations WHERE code='TST1'), "
+                    "(SELECT user_id FROM core.users WHERE username='t_cash'), "
+                    "'DRAFT', 11.40, 0, 1.40, 10.00, 11.40) RETURNING invoice_id")[0]
+    line = one(conn, "INSERT INTO sales.invoice_lines (invoice_id, line_no, sku_id, sale_mode, qty, uom_id, "
+                     "conversion_factor, unit_price, tax_rate_snapshot, net_amount, tax_amount, cost_snapshot, cost_method_snapshot) "
+                     f"VALUES ({inv}, 1, %s, 'COUNT', 2, 1, 1, 5.70, 0.1400, 10.00, 1.40, 4.00, 'WAC') RETURNING line_id",
+               (I["bag"],))[0]
+    pay = one(conn, "INSERT INTO sales.payments (invoice_id, payment_method, amount, status, created_by) "
+                    f"VALUES ({inv}, 'CASH', 11.40, 'CAPTURED', (SELECT user_id FROM core.users WHERE username='t_cash')) "
+                    "RETURNING payment_id")[0]
+    run_sql(conn, f"UPDATE sales.invoices SET status='POSTED' WHERE invoice_id={inv}")
+    return {"invoice": inv, "line": line, "payment": pay}
+
+
+@test("T-G7-01", "Sales", "لا تكرار مرتجع: مفتاح Idempotency فريد جزئياً (V018) — NULLs متعددة مقبولة")
+def t_g7_01(conn):
+    I = ids(conn)
+    f = _g7_sale_fixture(conn)
+    appr = one(conn, "INSERT INTO core.approvals (entity_type, entity_id, requested_by, decided_by, decision, reason, decided_at) "
+                     "VALUES ('sales.refund', %s, (SELECT user_id FROM core.users WHERE username='t_cash'), "
+                     "(SELECT user_id FROM core.users WHERE username='t_sup'), 'APPROVED', 'فحص', now()) RETURNING approval_id",
+               (f["invoice"],))[0]
+    r1 = one(conn, "INSERT INTO sales.refunds (refund_number, original_invoice_id, branch_id, approval_id, status, "
+                   "refund_method, total, reason, created_by, idempotency_key) "
+                   "VALUES (CONCAT('SR-T', nextval('sales.refund_number_seq')), %s, "
+                   "(SELECT branch_id FROM core.branches WHERE code='TBR1'), %s, 'DRAFT', 'CASH', 5.70, 'فحص', "
+                   "(SELECT user_id FROM core.users WHERE username='t_cash'), 'g7-idem-key') RETURNING refund_id",
+             (f["invoice"], appr))[0]
+    # مفتاح مكرر → 23505
+    expect_error(conn,
+        "INSERT INTO sales.refunds (refund_number, original_invoice_id, branch_id, approval_id, status, refund_method, "
+        "total, reason, created_by, idempotency_key) "
+        "VALUES (CONCAT('SR-T', nextval('sales.refund_number_seq')), %s, "
+        "(SELECT branch_id FROM core.branches WHERE code='TBR1'), %s, 'DRAFT', 'CASH', 1.00, 'فحص', "
+        "(SELECT user_id FROM core.users WHERE username='t_cash'), 'g7-idem-key')",
+        (f["invoice"], appr), "uq_refunds_idempotency")
+    conn.commit()
+
+
+@test("T-G7-02", "Sales", "تسلسل أرقام فواتير/مرتجعات V018 ينتج أرقاماً فريدة متصلة")
+def t_g7_02(conn):
+    a = one(conn, "SELECT nextval('sales.invoice_number_seq'), nextval('sales.invoice_number_seq')")
+    assert a[0] != a[1], "تسلسل الفواتير يكرر القيم"
+    b = one(conn, "SELECT nextval('sales.refund_number_seq'), nextval('sales.refund_number_seq')")
+    assert b[0] != b[1], "تسلسل المرتجعات يكرر القيم"
+    conn.rollback()
+
+
+@test("T-G7-03", "Printing", "قالبا إيصال العميل المعتمدان من G2 مسجلان في سجل القوالب (V018 · §29.3)")
+def t_g7_03(conn):
+    rows = all_rows(conn, "SELECT template_code, media_class, version, is_active FROM print.document_templates "
+                          "WHERE document_type='CUSTOMER_RECEIPT' ORDER BY media_class")
+    codes = {(r[0], r[1], r[2], r[3]) for r in rows}
+    assert ("ROLL_MEDIUM_80", "ROLL_80", 1, True) in codes, f"قالب 80 مفقود: {codes}"
+    assert ("ROLL_SMALL_58", "ROLL_58", 1, True) in codes, f"قالب 58 مفقود: {codes}"
+    conn.rollback()
+
+
+@test("T-G7-04", "Security", "مصفوفة صلاحيات POS (V009 كما تتحقق V018): الكاشير يبيع ولا يتجاوز")
+def t_g7_04(conn):
+    def has_role(perm, role):
+        return one(conn, "SELECT COUNT(*) FROM core.role_permissions rp "
+                         "JOIN core.roles r ON r.role_id=rp.role_id "
+                         "JOIN core.permissions p ON p.permission_id=rp.permission_id "
+                         "WHERE p.code=%s AND r.code=%s", (perm, role))[0] == 1
+    assert has_role("pos.use", "CASHIER"), "الكاشير بلا pos.use"
+    assert has_role("sales.discount.upto_5", "CASHIER"), "الكاشير بلا خصم 5%"
+    assert has_role("sales.return.approve", "SUPERVISOR"), "المشرف بلا اعتماد مرتجع"
+    assert has_role("sales.credit.sell", "OWNER"), "المالك بلا بيع آجل"
+    assert not has_role("sales.price.override", "CASHIER"), "الكاشير يملك تعديل السعر!"
+    assert not has_role("sales.credit.sell", "CASHIER"), "الكاشير يملك البيع الآجل!"
+    assert not has_role("sales.return.approve", "CASHIER"), "الكاشير يملك اعتماد المرتجع!"
+    assert not has_role("pos.use", "STOREKEEPER"), "أمين المخزن يملك pos.use!"
+    conn.rollback()
+
+
+@test("T-G7-05", "Sales", "بيع يجعل الرصيد سالباً بلا اعتماد يرفضه مشغل V003 (D-03 على SALE)")
+def t_g7_05(conn):
+    I = ids(conn)
+    f = _g7_sale_fixture(conn)
+    # سطر يخصم 999999 من الكيس بلا approval_id → رفض
+    expect_error(conn,
+        "INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, "
+        "conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id) "
+        "VALUES (%s, %s, 'SALE', -1, 999999, 1, 1, 'sales.invoice', %s, 'بيع سالب بلا اعتماد', "
+        "(SELECT branch_id FROM core.branches WHERE code='TBR1'), (SELECT user_id FROM core.users WHERE username='t_cash'))",
+        (I["bag"], I["wh"], f["invoice"]), "NEGATIVE_STOCK")
+    conn.rollback()
+
+
+@test("T-G7-06", "Sales", "الفاتورة المرحلة مجمّدة: تعديل حقل مالي مرفوض (INVOICE_IMMUTABLE)")
+def t_g7_06(conn):
+    f = _g7_sale_fixture(conn)
+    expect_error(conn, f"UPDATE sales.invoices SET net_total=1.00 WHERE invoice_id={f['invoice']}", (), "INVOICE_IMMUTABLE")
+    conn.rollback()
+
+
+@test("T-G7-07", "Sales", "آلة حالة V018: مرتجع لاحق PARTIAL_RETURN→FULL_RETURN يمر والأرقام مجمدة")
+def t_g7_07(conn):
+    I = ids(conn)
+    f = _g7_sale_fixture(conn)
+    appr = one(conn, "INSERT INTO core.approvals (entity_type, entity_id, requested_by, decided_by, decision, reason, decided_at) "
+                     "VALUES ('sales.refund', %s, (SELECT user_id FROM core.users WHERE username='t_cash'), "
+                     "(SELECT user_id FROM core.users WHERE username='t_sup'), 'APPROVED', 'فحص', now()) RETURNING approval_id",
+               (f["invoice"],))[0]
+    # مرتجع جزئي 1 من 2 → PARTIAL_RETURN
+    r1 = one(conn, "INSERT INTO sales.refunds (refund_number, original_invoice_id, branch_id, approval_id, status, "
+                   "refund_method, total, reason, created_by) "
+                   "VALUES (CONCAT('SR-T', nextval('sales.refund_number_seq')), %s, "
+                   "(SELECT branch_id FROM core.branches WHERE code='TBR1'), %s, 'POSTED', 'CASH', 5.70, 'جزئي', "
+                   "(SELECT user_id FROM core.users WHERE username='t_cash')) RETURNING refund_id",
+             (f["invoice"], appr))[0]
+    run_sql(conn, f"INSERT INTO sales.refund_lines (refund_id, original_line_id, qty, unit_refund, line_total) "
+              f"VALUES ({r1}, {f['line']}, 1, 5.70, 5.70)")
+    run_sql(conn, f"UPDATE sales.invoices SET returned_total=5.70, status='PARTIAL_RETURN' WHERE invoice_id={f['invoice']}")
+    # مرتجع ثانٍ (الباقي) → FULL_RETURN — فرع V018 الجديد: كان محبوساً في V005
+    r2 = one(conn, "INSERT INTO sales.refunds (refund_number, original_invoice_id, branch_id, approval_id, status, "
+                   "refund_method, total, reason, created_by) "
+                   "VALUES (CONCAT('SR-T', nextval('sales.refund_number_seq')), %s, "
+                   "(SELECT branch_id FROM core.branches WHERE code='TBR1'), %s, 'POSTED', 'CASH', 5.70, 'كامل', "
+                   "(SELECT user_id FROM core.users WHERE username='t_cash')) RETURNING refund_id",
+             (f["invoice"], appr))[0]
+    run_sql(conn, f"INSERT INTO sales.refund_lines (refund_id, original_line_id, qty, unit_refund, line_total) "
+              f"VALUES ({r2}, {f['line']}, 1, 5.70, 5.70)")
+    run_sql(conn, f"UPDATE sales.invoices SET returned_total=11.40, status='FULL_RETURN' WHERE invoice_id={f['invoice']}")
+    status = one(conn, f"SELECT status FROM sales.invoices WHERE invoice_id={f['invoice']}")[0]
+    assert status == "FULL_RETURN", f"الانتقال PARTIAL_RETURN→FULL_RETURN محبوس: {status}"
+    conn.commit()
+
+
+@test("T-G7-08", "Sales", "تحقق الترحيل: بلا سطور مرفوض · مجاميع غير متسقة مرفوضة · مدفوع لا يطابق مرفوض")
+def t_g7_08(conn):
+    I = ids(conn)
+    inv = one(conn, "INSERT INTO sales.invoices (invoice_number, branch_id, station_id, cashier_user_id, status) "
+                    "VALUES (CONCAT('SI-T', nextval('sales.invoice_number_seq')), "
+                    "(SELECT branch_id FROM core.branches WHERE code='TBR1'), "
+                    "(SELECT station_id FROM core.stations WHERE code='TST1'), "
+                    "(SELECT user_id FROM core.users WHERE username='t_cash'), 'DRAFT') RETURNING invoice_id")[0]
+    expect_error(conn, f"UPDATE sales.invoices SET status='POSTED' WHERE invoice_id={inv}", (), "INVOICE_POST_NO_LINES")
+    run_sql(conn, "INSERT INTO sales.invoice_lines (invoice_id, line_no, sku_id, sale_mode, qty, uom_id, conversion_factor, "
+              "unit_price, tax_rate_snapshot, net_amount, cost_snapshot, cost_method_snapshot) "
+              f"VALUES ({inv}, 1, %s, 'COUNT', 1, 1, 1, 5.70, 0.14, 5.00, 2.00, 'WAC')", (I["bag"],))
+    expect_error(conn, f"UPDATE sales.invoices SET status='POSTED', net_total=9.99 WHERE invoice_id={inv}", (),
+                 "INVOICE_TOTALS_MISMATCH")
+    expect_error(conn, f"UPDATE sales.invoices SET status='POSTED', net_total=5.00, paid_total=9.99 WHERE invoice_id={inv}", (),
+                 "INVOICE_PAID_MISMATCH")
+    conn.rollback()
+
+
+@test("T-G7-09", "Sales", "المرتجع بلا اعتماد مشرف مرفوض (refund_approval_required · D-04)")
+def t_g7_09(conn):
+    f = _g7_sale_fixture(conn)
+    expect_error(conn,
+        "INSERT INTO sales.refunds (refund_number, original_invoice_id, branch_id, status, refund_method, total, reason, created_by) "
+        "VALUES (CONCAT('SR-T', nextval('sales.refund_number_seq')), %s, "
+        "(SELECT branch_id FROM core.branches WHERE code='TBR1'), 'DRAFT', 'CASH', 5.70, 'بلا اعتماد', "
+        "(SELECT user_id FROM core.users WHERE username='t_cash'))",
+        (f["invoice"],), "refund_approval_required")
+    conn.rollback()
+
+
+@test("T-G7-10", "Sales", "قيود سطر الوزن: مصدر إلزامي للوزني وممنوع على العددي (§5.1)")
+def t_g7_10(conn):
+    I = ids(conn)
+    inv = one(conn, "INSERT INTO sales.invoices (invoice_number, branch_id, station_id, cashier_user_id, status) "
+                    "VALUES (CONCAT('SI-T', nextval('sales.invoice_number_seq')), "
+                    "(SELECT branch_id FROM core.branches WHERE code='TBR1'), "
+                    "(SELECT station_id FROM core.stations WHERE code='TST1'), "
+                    "(SELECT user_id FROM core.users WHERE username='t_cash'), 'DRAFT') RETURNING invoice_id")[0]
+    # وزني بلا مصدر
+    expect_error(conn,
+        "INSERT INTO sales.invoice_lines (invoice_id, line_no, sku_id, sale_mode, qty, uom_id, conversion_factor, "
+        "unit_price, tax_rate_snapshot, net_amount, weight_kg) "
+        f"VALUES ({inv}, 1, %s, 'WEIGHT', 0.5, 2, 1000, 200, 0.14, 87.72, 0.500)", (I["wei"],), "line_weight_fields")
+    # مصدر على عددي
+    expect_error(conn,
+        "INSERT INTO sales.invoice_lines (invoice_id, line_no, sku_id, sale_mode, qty, uom_id, conversion_factor, "
+        "unit_price, tax_rate_snapshot, net_amount, weight_kg, weight_source) "
+        f"VALUES ({inv}, 2, %s, 'COUNT', 1, 1, 1, 5.70, 0.14, 5.00, 0.500, 'SCALE_READING')", (I["bag"],),
+        "line_weight_only_for_weight")
+    conn.rollback()
+
+
+@test("T-G7-11", "Printing", "مهمة طباعة بمفتاح مكرر مرفوضة — مهمة فريدة لكل مستند/نسخة (§29.9)")
+def t_g7_11(conn):
+    I = ids(conn)
+    f = _g7_sale_fixture(conn)
+    prn = one(conn, "INSERT INTO print.printer_profiles (printer_id, windows_queue_name, device_model, driver_name, "
+                    "station_id, media_class, media_width_mm, printable_width_mm, dpi_x, dpi_y, adapter_kind) "
+                    "VALUES ('T-PRN-G7', 'Q', 'M', 'D', (SELECT station_id FROM core.stations WHERE code='TST1'), "
+                    "'ROLL_80', 80, 72, 203, 203, 'ESC_POS') RETURNING printer_profile_id")[0]
+    role = one(conn, "INSERT INTO print.printer_document_roles (printer_profile_id, station_id, document_role) "
+                     f"VALUES ({prn}, (SELECT station_id FROM core.stations WHERE code='TST1'), 'CUSTOMER_RECEIPT') "
+                     "RETURNING role_assignment_id")[0]
+    tpl = one(conn, "SELECT template_id FROM print.document_templates WHERE template_code='ROLL_MEDIUM_80' "
+                    "AND document_type='CUSTOMER_RECEIPT' AND version=1")[0]
+    run_sql(conn, "INSERT INTO print.print_jobs (document_id, document_type, template_id, template_version, printer_profile_id, "
+              "printer_profile_version, media_class, printable_width_mm, dpi, copy_type, status, idempotency_key, requested_by) "
+              f"VALUES ({f['invoice']}, 'CUSTOMER_RECEIPT', {tpl}, 1, {prn}, 1, 'ROLL_80', 72, 203, 'CUSTOMER', 'QUEUED', "
+              "'t-receipt-key', (SELECT user_id FROM core.users WHERE username='t_cash'))")
+    expect_error(conn,
+        "INSERT INTO print.print_jobs (document_id, document_type, template_id, template_version, printer_profile_id, "
+        "printer_profile_version, media_class, printable_width_mm, dpi, copy_type, status, idempotency_key, requested_by) "
+        f"VALUES ({f['invoice']}, 'CUSTOMER_RECEIPT', {tpl}, 1, {prn}, 1, 'ROLL_80', 72, 203, 'CUSTOMER', 'QUEUED', "
+        "'t-receipt-key', (SELECT user_id FROM core.users WHERE username='t_cash'))", (), "print_jobs_idempotency_key_key")
+    conn.rollback()
+
+
+@test("T-G7-12", "Sales", "ملاحظة السلة المعلقة (V018 note_ar) والاستعادة لا تنشئ فاتورة")
+def t_g7_12(conn):
+    cart = one(conn, "INSERT INTO sales.held_carts (station_id, held_by, cart_snapshot, note_ar) "
+                     "VALUES ((SELECT station_id FROM core.stations WHERE code='TST1'), "
+                     "(SELECT user_id FROM core.users WHERE username='t_cash'), "
+                     "'{}'::jsonb, 'عميل نسي محفظته') RETURNING cart_id")[0]
+    note = one(conn, f"SELECT note_ar FROM sales.held_carts WHERE cart_id={cart}")[0]
+    assert note == "عميل نسي محفظته", f"ملاحظة التعليق غير محفوظة: {note}"
+    run_sql(conn, f"UPDATE sales.held_carts SET restored_at=now(), "
+                  f"restored_by=(SELECT user_id FROM core.users WHERE username='t_cash') WHERE cart_id={cart}")
+    invoices = one(conn, "SELECT COUNT(*) FROM sales.invoices WHERE status='DRAFT' AND invoice_number LIKE 'SI-T%'")[0]
+    conn.commit()
+
+
+@test("T-G7-13", "Sales", "دفعة آجل بمزود دفع مرفوضة (pay_credit_no_provider) — الآجل ذمة لا بطاقة")
+def t_g7_13(conn):
+    f = _g7_sale_fixture(conn)
+    expect_error(conn,
+        f"INSERT INTO sales.payments (invoice_id, payment_method, amount, status, created_by, provider_name, provider_reference) "
+        f"VALUES ({f['invoice']}, 'CREDIT', 5.00, 'CAPTURED', "
+        "(SELECT user_id FROM core.users WHERE username='t_cash'), 'X', 'Y')", (), "pay_credit_no_provider")
+    conn.rollback()
+
+
+@test("T-G7-14", "Sales", "حركة SALE بلا اعتماد مع رصيد كافٍ تمر — ودرج البيع يوثق UNKNOWN بلا استجابة مفترضة")
+def t_g7_14(conn):
+    I = ids(conn)
+    # رصيد كافٍ: استلام افتتاحي ثم بيع جزئي بلا اعتماد → يمر
+    run_sql(conn, "INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, "
+              "conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id) "
+              "VALUES (%s, %s, 'OPENING', 1, 100, 1, 1, 't.g7', 990, 'رصيد للفحص', "
+              "(SELECT branch_id FROM core.branches WHERE code='TBR1'), (SELECT user_id FROM core.users WHERE username='t_owner'))",
+        (I["bag"], I["wh"]))
+    inv = one(conn, "INSERT INTO sales.invoices (invoice_number, branch_id, station_id, cashier_user_id, status) "
+                    "VALUES (CONCAT('SI-T', nextval('sales.invoice_number_seq')), "
+                    "(SELECT branch_id FROM core.branches WHERE code='TBR1'), "
+                    "(SELECT station_id FROM core.stations WHERE code='TST1'), "
+                    "(SELECT user_id FROM core.users WHERE username='t_cash'), 'DRAFT') RETURNING invoice_id")[0]
+    mv = one(conn, "INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, "
+                   "conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id) "
+                   "VALUES (%s, %s, 'SALE', -1, 10, 1, 1, 'sales.invoice', %s, 'بيع برصيد كافٍ', "
+                   "(SELECT branch_id FROM core.branches WHERE code='TBR1'), "
+                   "(SELECT user_id FROM core.users WHERE username='t_cash')) RETURNING movement_id",
+             (I["bag"], I["wh"], inv))[0]
+    evt = one(conn, "INSERT INTO sales.drawer_events (station_id, shift_id, event_type, reason, requested_at, result_status, "
+                    "triggered_by) VALUES ((SELECT station_id FROM core.stations WHERE code='TST1'), NULL, 'OPENED_BY_SALE', "
+                    "'فتح بالفحص', now(), 'UNKNOWN', (SELECT user_id FROM core.users WHERE username='t_cash')) "
+                    "RETURNING event_id")[0]
+    resp = one(conn, f"SELECT responded_at, result_status FROM sales.drawer_events WHERE event_id={evt}")
+    assert resp[0] is None and resp[1] == "UNKNOWN", f"الدرج يدّعي استجابة غير موجودة: {resp}"
+    conn.commit()
 
 
 # ───────────────────────────── التشغيل ─────────────────────────────
