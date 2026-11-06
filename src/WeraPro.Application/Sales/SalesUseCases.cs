@@ -290,7 +290,7 @@ public sealed class GetPosContextUseCase
         }
         var settings = await _settings.ReadAsync(ct);
         var shift = await _sales.GetCurrentShiftAsync(stationId, ct);
-        var drawer = await _sales.GetDrawerAccountAsync(station.BranchId, ct);
+        var drawer = await _sales.GetDrawerAccountAsync(station.BranchId, stationId, ct);
         var printer = await _sales.GetStationReceiptPrinterAsync(stationId, ct);
         var routing = ReceiptRouting.Resolve(printer is null ? null
             : new StationReceiptPrinter(
@@ -820,7 +820,7 @@ public sealed partial class PostSaleUseCase
         var shift = await _sales.GetCurrentShiftAsync(stationId, ct);
 
         // ── بناء الخطة والترحيل الذري ──
-        var drawer = await _sales.GetDrawerAccountAsync(station.BranchId, ct);
+        var drawer = await _sales.GetDrawerAccountAsync(station.BranchId, stationId, ct);   // درج المحطة أولاً (G8/V019)
         var providerAccount = await _sales.GetProviderAccountAsync(ct);
 
         var linePlans = new List<SaleLinePostPlan>();
@@ -1200,12 +1200,21 @@ public sealed partial class PostRefundUseCase
             }
         }
 
+        // G8/V019: الرد النقدي يخرج من درج وردية الرد الفعلي (لا وردية البيع الأصلي) — المطابقة المالية للدرج
+        long? refundingShiftId = null;
+        if (requested == Domain.Sales.RefundMethods.Cash && _user.StationId is { } refundStationId)
+        {
+            var refundingShift = await _sales.GetCurrentShiftAsync(refundStationId, ct);
+            refundingShiftId = refundingShift?.ShiftId;
+        }
+
         var plan = new RefundPostPlan(
             OriginalInvoiceId: invoice.InvoiceId, BranchId: invoice.BranchId,
             CreatedByUserId: _user.UserId, ApprovalId: request.ApprovalId,
             RefundMethod: requested, Restock: request.Restock,
             ReasonAr: request.ReasonAr.Trim(), Total: total,
-            Lines: linePlans, IdempotencyKey: request.IdempotencyKey);
+            Lines: linePlans, IdempotencyKey: request.IdempotencyKey,
+            ShiftId: refundingShiftId, StationId: _user.StationId);
 
         try
         {
@@ -1330,10 +1339,14 @@ public sealed class OpenDrawerUseCase
         }
         var shift = await _sales.GetCurrentShiftAsync(stationId, ct);
         var evt = await _sales.RecordDrawerEventAsync(stationId, shift?.ShiftId, _user.UserId, "MANUAL_OPEN", reasonAr.Trim(), ct);
+        // إصلاح أمامي (اكتُشف باختبار G8): سجل التدقيق يوثق نتيجة الأمر الإداري (نجح التسجيل = SUCCESS)،
+        // بينما نتيجة الجهاز الفيزيائية UNKNOWN الصادقة تسكن drawer_events وحدها (B-01) —
+        // قيد V008 (result IN SUCCESS/DENIED/FAILED) لم يكن يقبل UNKNOWN.
         await _audit.WriteAsync(new AuditEntry(
             UserId: _user.UserId, RoleCode: null, StationId: stationId, BranchId: _user.BranchId,
-            EntitySchema: "sales.drawer_events", EntityId: evt.EventId, Action: "DRAWER_MANUAL_OPEN", Result: evt.ResultStatus,
-            Reason: reasonAr.Trim(), CorrelationId: correlationId), ct);
+            EntitySchema: "sales.drawer_events", EntityId: evt.EventId, Action: "DRAWER_MANUAL_OPEN", Result: "SUCCESS",
+            Reason: $"{reasonAr.Trim()} — استجابة الجهاز: {evt.ResultStatus} (لا استجابة مفترضة حتى G10/B-01)",
+            CorrelationId: correlationId), ct);
         // B-01 صادق: لا جهاز درج مختبراً بعد — الوقت المرسل موثق والحالة UNKNOWN لا استجابة مفترضة
         return Result.Ok(new Contracts.V1.DrawerEventResponse(
             evt.EventId, evt.EventType, evt.RequestedAtUtc, evt.RespondedAtUtc, evt.ResultStatus));

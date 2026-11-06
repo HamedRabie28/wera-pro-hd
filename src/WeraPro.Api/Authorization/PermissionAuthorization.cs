@@ -141,6 +141,25 @@ public static class PermissionPolicy
                 options.AddPolicy(code,
                     p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
             }
+
+            // ── صلاحيات G8: الخزائن والسندات والمصروفات ورأس المال وإغلاق الوردية (V009 seed + V019) ──
+            foreach (var code in new[]
+            {
+                PermissionCodes.FinanceTreasuryView,
+                PermissionCodes.FinanceTreasuryManage,
+                PermissionCodes.FinanceVoucherCreate,
+                PermissionCodes.FinanceVoucherPost,
+                PermissionCodes.FinanceExpenseCreate,
+                PermissionCodes.FinanceExpenseApprove,
+                PermissionCodes.FinanceExpensePost,
+                PermissionCodes.FinanceCapitalManage,
+                PermissionCodes.SalesShiftClose,
+                PermissionCodes.SalesShiftApproveVariance,
+            })
+            {
+                options.AddPolicy(code,
+                    p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
+            }
         });
     }
 }

@@ -380,6 +380,7 @@ public sealed class TreasuryAccountRowConfiguration : IEntityTypeConfiguration<T
         builder.Property(x => x.BranchId).HasColumnName("branch_id");
         builder.Property(x => x.Currency).HasColumnName("currency").HasMaxLength(8);
         builder.Property(x => x.IsActive).HasColumnName("is_active");
+        builder.Property(x => x.StationId).HasColumnName("station_id");
     }
 }
 
@@ -399,6 +400,7 @@ public sealed class TreasuryTxnRowConfiguration : IEntityTypeConfiguration<Treas
         builder.Property(x => x.OccurredAt).HasColumnName("occurred_at");
         builder.Property(x => x.CreatedBy).HasColumnName("created_by");
         builder.Property(x => x.BranchId).HasColumnName("branch_id");
+        builder.Property(x => x.ShiftId).HasColumnName("shift_id");
     }
 }
 

@@ -302,9 +302,14 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             var again = await owner.PostAsJsonAsync($"/api/v1/purchasing/supplier-payments/{payment1Id}/post", new { });
             Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
 
-            // أثر واحد على الخزينة مهما أعيد الإرسال — وصفر مصروفات
+            // أثر واحد على الخزينة مهما أعيد الإرسال — وصفر مصروفات لهذا السيناريو (§12.3 ق3):
+            // السداد ليس مصروفاً — النطاق بمستخدمي G6 (اختبارات G8 اللاحقة تنشئ مصروفاتها المشروعة)
             Assert.Equal(1, await ScalarAsync($"SELECT COUNT(*) FROM finance.treasury_transactions WHERE source_doc_type='purch.payment' AND source_doc_id={payment1Id}"));
-            Assert.Equal(0, await ScalarAsync("SELECT COUNT(*) FROM finance.expenses"));
+            Assert.Equal(0, await ScalarAsync("""
+                SELECT COUNT(*) FROM finance.expenses e
+                  JOIN core.users u ON u.user_id = e.created_by
+                 WHERE u.username LIKE 'g6.%'
+                """));
 
             var invoiceState = await owner.GetFromJsonAsync<JsonElement>($"/api/v1/purchasing/supplier-invoices/{invoiceId}");
             Assert.Equal("PARTIALLY_PAID", invoiceState.GetProperty("status").GetString());
@@ -550,6 +555,35 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             Assert.Equal(80.0000m, cheeseValuation.GetProperty("valuation").GetDecimal());
             Assert.DoesNotContain(valuation.GetProperty("lines").EnumerateArray(),
                 l => l.GetProperty("skuCode").GetString() == "G6-SCN-01-BAG");
+
+            // حتمية عبر ترتيب التنفيذ (اكتُشف بدورة G8): فحص النواقص أدناه يشترط رصيد W3 = +5
+            // الذي ينشئه اختبار CrossBranchScope — وترتيب xUnit داخل الفئة غير مضمون، فيُستكمل
+            // الشرط هنا إن لم يكن قائماً (نقل 5 عبر الفروع باعتماد D-03 ثم استلام بفرع الوجهة)
+            var w3Now = await ScalarDecimalAsync($"SELECT COALESCE((SELECT SUM(direction*base_qty) FROM inv.stock_movements WHERE sku_id={bagSku} AND warehouse_id={_fx.Warehouse3Id}),0)");
+            if (w3Now < 5m)
+            {
+                var setup = await storekeeper.PostAsJsonAsync("/api/v1/inventory/transfers", new
+                {
+                    fromWarehouseId = _fx.Warehouse2Id, toWarehouseId = _fx.Warehouse3Id,
+                    lines = new object[] { new { skuId = bagSku, qtyBase = 5m } },
+                });
+                Assert.Equal(HttpStatusCode.Created, setup.StatusCode);
+                var setupId = (await setup.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("transferId").GetInt64();
+                var setupApproval = await storekeeper.PostAsJsonAsync("/api/v1/approvals", new
+                {
+                    entityType = "inv.transfer", entityId = setupId, reasonAr = "استكمال حالة W3 لفحص النواقص",
+                });
+                var setupApprovalId = (await setupApproval.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approvalId").GetInt64();
+                using (var g6Supervisor = await ClientAsync("g6.supervisor", "Supervisor#G6-Pass", _fx.BranchId))
+                {
+                    await g6Supervisor.PostAsJsonAsync($"/api/v1/approvals/{setupApprovalId}/decision", new { decision = "APPROVED", reasonAr = "مقبول" });
+                }
+                Assert.Equal(HttpStatusCode.OK, (await storekeeper.PostAsJsonAsync($"/api/v1/inventory/transfers/{setupId}/send", new { approvalId = setupApprovalId })).StatusCode);
+                using (var branch2Receiver = await ClientAsync("g6.storekeeper", "Storekeeper#G6-Pass", _fx.Branch2Id))
+                {
+                    Assert.Equal(HttpStatusCode.OK, (await branch2Receiver.PostAsync($"/api/v1/inventory/transfers/{setupId}/receive", null)).StatusCode);
+                }
+            }
 
             // النواقص وإعادة الطلب (PAGE-22): الكيس تحت مستوى إعادة الطلب (10) في كل مخازنه الثلاثة
             var reorder = await storekeeper.GetFromJsonAsync<JsonElement>("/api/v1/inventory/reorder");

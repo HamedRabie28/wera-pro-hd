@@ -775,7 +775,98 @@ public sealed class WeraApiClient(
 
     // ── POS (G7 — §9) ────────────────────────────────────────────────────
 
+    // ═══════════════ G8: الخزائن والسندات والمصروفات ورأس المال والورديات (§14/§13) ═══════════════
+
+    // ═══════════════ G8: الخزائن والسندات والمصروفات ورأس المال والورديات (§14/§13) ═══════════════
+
+    public Task<ApiCallResult<List<TreasuryAccountBalanceDto>>> GetTreasuryAccountsAsync(bool includeInactive = false, CancellationToken ct = default)
+        => GetAsync<List<TreasuryAccountBalanceDto>>(Fin("/treasury/accounts") + (includeInactive ? "?includeInactive=true" : ""), ct);
+
+    public Task<ApiCallResult<TreasuryTxnPagedDto>> GetTreasuryTransactionsAsync(long treasuryAccountId, int page = 1, int pageSize = 50, CancellationToken ct = default)
+        => GetAsync<TreasuryTxnPagedDto>(Fin($"/treasury/transactions?treasuryAccountId={treasuryAccountId}&page={page}&pageSize={pageSize}"), ct);
+
+    public Task<ApiCallResult<TreasuryAccountBalanceDto>> CreateTreasuryAccountAsync(CreateTreasuryAccountRequest request, CancellationToken ct = default)
+        => PostAsync<CreateTreasuryAccountRequest, TreasuryAccountBalanceDto>(Fin("/treasury/accounts"), request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<VoucherDto>> CreateVoucherAsync(CreateVoucherRequest request, CancellationToken ct = default)
+        => PostAsync<CreateVoucherRequest, VoucherDto>(Fin("/vouchers"), request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<VoucherPagedDto>> GetVouchersAsync(string? type = null, string? status = null, int page = 1, int pageSize = 30, CancellationToken ct = default)
+    {
+        var qs = new List<string> { $"page={page}", $"pageSize={pageSize}" };
+        if (!string.IsNullOrWhiteSpace(type)) qs.Add("type=" + Uri.EscapeDataString(type));
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        return GetAsync<VoucherPagedDto>(Fin("/vouchers?") + string.Join("&", qs), ct);
+    }
+
+    public Task<ApiCallResult<VoucherDto>> PostVoucherAsync(long voucherId, CancellationToken ct = default)
+        => PostAsync<object, VoucherDto>(Fin($"/vouchers/{voucherId}/post"), new { }, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<IgnoreBody>> CancelVoucherAsync(long voucherId, string reasonAr, CancellationToken ct = default)
+        => PostAsync<CancelRequest, IgnoreBody>(Fin($"/vouchers/{voucherId}/cancel"), new CancelRequest(reasonAr), allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<List<CustomerReceivableDto>>> GetCustomerReceivablesAsync(long customerId, CancellationToken ct = default)
+        => GetAsync<List<CustomerReceivableDto>>(Fin($"/customers/{customerId}/receivables"), ct);
+
+    public Task<ApiCallResult<ExpenseDto>> CreateExpenseAsync(CreateExpenseRequest request, CancellationToken ct = default)
+        => PostAsync<CreateExpenseRequest, ExpenseDto>(Fin("/expenses"), request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<ExpensePagedDto>> GetExpensesAsync(string? status = null, long? shiftId = null, int page = 1, int pageSize = 30, CancellationToken ct = default)
+    {
+        var qs = new List<string> { $"page={page}", $"pageSize={pageSize}" };
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        if (shiftId is { } sid) qs.Add($"shiftId={sid}");
+        return GetAsync<ExpensePagedDto>(Fin("/expenses?") + string.Join("&", qs), ct);
+    }
+
+    public Task<ApiCallResult<ExpenseDto>> ApproveExpenseAsync(long expenseId, string reasonAr, CancellationToken ct = default)
+        => PostAsync<CancelRequest, ExpenseDto>(Fin($"/expenses/{expenseId}/approve"), new CancelRequest(reasonAr), allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<ExpensePostResponse>> PostExpenseAsync(long expenseId, CancellationToken ct = default)
+        => PostAsync<object, ExpensePostResponse>(Fin($"/expenses/{expenseId}/post"), new { }, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<ExpenseDto>> CancelExpenseAsync(long expenseId, string reasonAr, CancellationToken ct = default)
+        => PostAsync<CancelRequest, ExpenseDto>(Fin($"/expenses/{expenseId}/cancel"), new CancelRequest(reasonAr), allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<List<ExpenseCategoryDto>>> GetExpenseCategoriesAsync(CancellationToken ct = default)
+        => GetAsync<List<ExpenseCategoryDto>>(Fin("/expense-categories"), ct);
+
+    public Task<ApiCallResult<CapitalEventDto>> CreateCapitalEventAsync(CreateCapitalEventRequest request, CancellationToken ct = default)
+        => PostAsync<CreateCapitalEventRequest, CapitalEventDto>(Fin("/capital/events"), request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<CapitalPagedDto>> GetCapitalEventsAsync(string? eventType = null, string? status = null, int page = 1, int pageSize = 30, CancellationToken ct = default)
+    {
+        var qs = new List<string> { $"page={page}", $"pageSize={pageSize}" };
+        if (!string.IsNullOrWhiteSpace(eventType)) qs.Add("eventType=" + Uri.EscapeDataString(eventType));
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        return GetAsync<CapitalPagedDto>(Fin("/capital/events?") + string.Join("&", qs), ct);
+    }
+
+    public Task<ApiCallResult<CapitalEventDto>> PostCapitalEventAsync(long capitalId, CancellationToken ct = default)
+        => PostAsync<object, CapitalEventDto>(Fin($"/capital/events/{capitalId}/post"), new { }, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<ShiftPagedDto>> GetShiftsAsync(long? stationId = null, string? status = null, int page = 1, int pageSize = 30, CancellationToken ct = default)
+    {
+        var qs = new List<string> { $"page={page}", $"pageSize={pageSize}" };
+        if (stationId is { } sid) qs.Add($"stationId={sid}");
+        if (!string.IsNullOrWhiteSpace(status)) qs.Add("status=" + Uri.EscapeDataString(status));
+        return GetAsync<ShiftPagedDto>("/" + Contracts.V1.SalesApi.Prefix + "/shifts?" + string.Join("&", qs), ct);
+    }
+
+    public Task<ApiCallResult<ShiftReconciliationDto>> GetShiftReconciliationAsync(long shiftId, CancellationToken ct = default)
+        => GetAsync<ShiftReconciliationDto>("/" + Contracts.V1.SalesApi.Prefix + $"/shifts/{shiftId}/reconciliation", ct);
+
+    public Task<ApiCallResult<ShiftCloseResponse>> CloseShiftAsync(long shiftId, CloseShiftRequest request, CancellationToken ct = default)
+        => PostAsync<CloseShiftRequest, ShiftCloseResponse>("/" + Contracts.V1.SalesApi.Prefix + $"/shifts/{shiftId}/close", request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<ShiftCashMovementsDto>> GetShiftCashMovementsAsync(long shiftId, CancellationToken ct = default)
+        => GetAsync<ShiftCashMovementsDto>("/" + Contracts.V1.SalesApi.Prefix + $"/shifts/{shiftId}/cash-movements", ct);
+
+    public Task<ApiCallResult<FinancePrintResponse>> PrintFinanceDocumentAsync(PrintFinanceDocumentRequest request, CancellationToken ct = default)
+        => PostAsync<PrintFinanceDocumentRequest, FinancePrintResponse>(Fin("/print"), request, allowAnonymous: false, ct);
+
     private static string Pos(string path) => Contracts.V1.SalesApi.Prefix + path;
+    private static string Fin(string path) => Contracts.V1.FinanceApi.Prefix + path;
 
     /// <summary>سياق المحطة (§9.1A): الشريط الأعلى يعرضه عند فتح POS.</summary>
     public Task<ApiCallResult<PosContextResponse>> GetPosContextAsync(CancellationToken ct = default)

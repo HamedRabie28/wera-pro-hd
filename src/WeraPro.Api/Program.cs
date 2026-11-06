@@ -170,6 +170,15 @@ try
     builder.Services.AddScoped<WeraPro.Application.Sales.ManageReceiptPrintingUseCase>();
     builder.Services.AddScoped<WeraPro.Application.Sales.GetSaleUseCase>();
 
+    // ── الورديات والنقد والأدراج والمصروفات ورأس المال (G8 · §14/§13) ──
+    builder.Services.AddScoped<WeraPro.Application.Finance.IFinanceRepository, WeraPro.Infrastructure.Persistence.Repositories.FinanceRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Finance.ManageTreasuryUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Finance.ManageVouchersUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Finance.ManageExpensesUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Finance.ManageCapitalUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Finance.CloseShiftUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Finance.PrintFinanceDocumentsUseCase>();
+
     // ── التحقق الموحد (ADR-007) ──
     builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -333,7 +342,8 @@ try
        .MapMediaEndpoints()
        .MapInventoryEndpoints()
        .MapPurchasingEndpoints()
-       .MapSalesEndpoints();
+       .MapSalesEndpoints()
+       .MapFinanceEndpoints();
 
     app.Run();
     return 0;

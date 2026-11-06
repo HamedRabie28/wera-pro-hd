@@ -94,7 +94,9 @@ public sealed record RefundPostPlan(
     long OriginalInvoiceId, long BranchId, long CreatedByUserId, long ApprovalId,
     string RefundMethod, bool Restock, string ReasonAr,
     decimal Total, IReadOnlyList<RefundLinePostPlan> Lines,
-    string? IdempotencyKey);
+    string? IdempotencyKey,
+    long? ShiftId = null,    // G8/V019: وردية الرد الفعلي — النقد خرج من درجها (مطابقة الإقفال)
+    long? StationId = null); // G8/V019: محطة الرد — درج المحطة أولاً
 
 public sealed record PostedRefundResult(
     long RefundId, string RefundNumber, long[] MovementIds, long[] TreasuryTxnIds,
@@ -153,7 +155,7 @@ public interface ISalesRepository
 {
     // القراءات
     Task<PosStationData?> GetStationAsync(long stationId, CancellationToken ct = default);
-    Task<DrawerAccountData?> GetDrawerAccountAsync(long branchId, CancellationToken ct = default);
+    Task<DrawerAccountData?> GetDrawerAccountAsync(long branchId, long? stationId = null, CancellationToken ct = default);   // G8: درج المحطة أولاً
     Task<DrawerAccountData?> GetProviderAccountAsync(CancellationToken ct = default);
     Task<long?> GetPosWarehouseIdAsync(long branchId, CancellationToken ct = default);
     Task<string?> GetSettingAsync(string key, CancellationToken ct = default);

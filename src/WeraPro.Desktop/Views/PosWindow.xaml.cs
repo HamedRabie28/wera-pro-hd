@@ -212,8 +212,12 @@ public sealed partial class PosWindow : Window
         if (await dialog.ShowAsync() == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(reason.Text))
         {
             var result = await _api.OpenDrawerAsync(reason.Text.Trim());
+            // إصلاح أمامي (اكتشفه فحص معمارية G8): نمط خصائص بلا الوصول الظاهري الممنوع —
+            // الحالة الفيزيائية UNKNOWN الصادقة كما هي (B-01) ولا تجميد UI إطلاقاً
             StatusText.Text = result.Ok
-                ? $"أُرسل أمر الدرج — الحالة {result.Value!.ResultStatus} (لا استجابة جهاز مفترضة حتى G10/B-01)"
+                ? (result.Value is { ResultStatus: var drawerStatus }
+                    ? $"أُرسل أمر الدرج — الحالة {drawerStatus} (لا استجابة جهاز مفترضة حتى G10/B-01)"
+                    : "أُرسل أمر الدرج")
                 : result.ErrorAr ?? "تعذر تسجيل فتح الدرج";
         }
     }

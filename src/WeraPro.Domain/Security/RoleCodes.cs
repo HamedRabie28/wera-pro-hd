@@ -155,4 +155,38 @@ public static class PermissionCodes
 
     /// <summary>طباعة تفصيلية كاملة A4 بإجراء صريح — OWNER/ACCOUNTANT (V009 · §29.11).</summary>
     public const string PrintingA4Detailed = "printing.a4_detailed";
+
+    // ── صلاحيات G8 (V019 — الورديات والنقد والأدراج والمصروفات ورأس المال) ──
+
+    /// <summary>إغلاق الوردية بعد عدّ النقدية — OWNER/MANAGER/SUPERVISOR/CASHIER (V019 · §14.1).</summary>
+    public const string SalesShiftClose = "sales.shift.close";
+
+    /// <summary>اعتماد إغلاق وردية بفارق موثق السبب — OWNER/MANAGER/SUPERVISOR (V019 · §14.1 — الكاشير لا يعتمد فارقه).</summary>
+    public const string SalesShiftApproveVariance = "sales.shift.approve_variance";
+
+    /// <summary>إدارة حسابات الخزينة والأدراج والبنوك — OWNER/MANAGER (V019 · §14.2).</summary>
+    public const string FinanceTreasuryManage = "finance.treasury.manage";
+
+    /// <summary>تسجيل مصروف (ومصروف وردية مدفوع من درج المحطة) — OWNER/MANAGER/SUPERVISOR/CASHIER/ACCOUNTANT (V019 · §14.4).</summary>
+    public const string FinanceExpenseCreate = "finance.expense.create";
+
+    // ── صلاحيات G8 من بذر V009 (مزروعة بإسناداتها منذ G1 — يستخدمها كود G8) ──
+
+    /// <summary>عرض أرصدة الخزائن وحركاتها — OWNER/ACCOUNTANT (V009 seed).</summary>
+    public const string FinanceTreasuryView = "finance.treasury.view";
+
+    /// <summary>إنشاء سند قبض/صرف/تحويل — OWNER/ACCOUNTANT (V009 seed).</summary>
+    public const string FinanceVoucherCreate = "finance.voucher.create";
+
+    /// <summary>ترحيل السند (أثر مالي) — OWNER/ACCOUNTANT (V009 seed).</summary>
+    public const string FinanceVoucherPost = "finance.voucher.post";
+
+    /// <summary>اعتماد مصروف — OWNER/ACCOUNTANT (V009 seed).</summary>
+    public const string FinanceExpenseApprove = "finance.expense.approve";
+
+    /// <summary>ترحيل مصروف مسدد — OWNER/ACCOUNTANT (V009 seed).</summary>
+    public const string FinanceExpensePost = "finance.expense.post";
+
+    /// <summary>أحداث رأس المال والمساهمات والسحوبات — OWNER (V009 seed).</summary>
+    public const string FinanceCapitalManage = "finance.capital.manage";
 }

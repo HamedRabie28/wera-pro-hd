@@ -167,6 +167,7 @@ public sealed class SalesShiftRowConfiguration : IEntityTypeConfiguration<SalesS
         builder.Property(x => x.VarianceReason).HasColumnName("variance_reason");
         builder.Property(x => x.OpenedAt).HasColumnName("opened_at");
         builder.Property(x => x.ClosedAt).HasColumnName("closed_at");
+        builder.Property(x => x.VarianceSettledByVoucherId).HasColumnName("variance_settled_by_voucher_id");
     }
 }
 

@@ -137,6 +137,7 @@ public sealed class SalesShiftRow
     public string? VarianceReason { get; set; }
     public DateTimeOffset OpenedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
+    public long? VarianceSettledByVoucherId { get; set; }   // V019 (G8): سند تسوية الفارق — يظل الفارق ظاهراً حتى التسوية
 }
 
 [Table("drawer_events", Schema = "sales")]

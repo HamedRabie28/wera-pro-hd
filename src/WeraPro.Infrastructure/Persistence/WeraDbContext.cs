@@ -89,6 +89,14 @@ public sealed class WeraDbContext : DbContext
     public DbSet<DocumentTemplateRow> DocumentTemplates => Set<DocumentTemplateRow>();
     public DbSet<PrintJobRow> PrintJobs => Set<PrintJobRow>();
 
+    // ── G8: السندات والمصروفات ورأس المال وعدّات النقدية وتوزيعات السندات (V006/V019) ──
+    public DbSet<FinanceVoucherRow> FinanceVouchers => Set<FinanceVoucherRow>();
+    public DbSet<VoucherAllocationRow> VoucherAllocations => Set<VoucherAllocationRow>();
+    public DbSet<ExpenseCategoryRow> ExpenseCategories => Set<ExpenseCategoryRow>();
+    public DbSet<ExpenseRow> Expenses => Set<ExpenseRow>();
+    public DbSet<CapitalEventRow> CapitalEvents => Set<CapitalEventRow>();
+    public DbSet<ShiftCashCountRow> ShiftCashCounts => Set<ShiftCashCountRow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("core");

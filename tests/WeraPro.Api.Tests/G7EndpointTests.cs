@@ -825,12 +825,17 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
     [Fact]
     public async Task T18_ShiftOpen_BindingAndSummary()
     {
-        // حتمية: أغلق أي وردية مفتوحة سابقة للمحطة (اختبار وحدة واحدة مفتوحة يبدأ من نظيف)
+        // حتمية: أغلق أي وردية مفتوحة سابقة للمحطة — بإغلاق كامل الشروط (V019/G8 يشترط العدّ
+        // والمتوقع والمغلق والزمن على الإغلاق المباشر كما تفعل الواجهة دائماً)
         await using (var conn = new NpgsqlConnection(WeraApiFactory.TestDbUri))
         {
             await conn.OpenAsync();
-            await using var cmd = new NpgsqlCommand(
-                $"UPDATE sales.shifts SET status='CLOSED', closed_at=now() WHERE station_id={_fx.StationId} AND status='OPEN'", conn);
+            await using var cmd = new NpgsqlCommand($"""
+                UPDATE sales.shifts s SET status='CLOSED', closed_at=now(),
+                       closed_by=(SELECT user_id FROM core.users WHERE username='g7.supervisor'),
+                       expected_cash=s.opening_float, counted_cash=s.opening_float
+                 WHERE s.station_id={_fx.StationId} AND s.status='OPEN'
+                """, conn);
             await cmd.ExecuteNonQueryAsync();
         }
         using var cashier = await ClientAsync("g7.cashier", "Cashier#G7-Pass");

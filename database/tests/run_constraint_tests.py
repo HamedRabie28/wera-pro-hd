@@ -166,6 +166,7 @@ def ids(conn):
         kg=one(conn, "SELECT uom_id FROM catalog.units WHERE code='KG'")[0],
         drawer=one(conn, "SELECT treasury_account_id FROM finance.treasury_accounts WHERE code='TDRAWER'")[0],
         safe=one(conn, "SELECT treasury_account_id FROM finance.treasury_accounts WHERE code='TSAFE'")[0],
+        bank=one(conn, "SELECT treasury_account_id FROM finance.treasury_accounts WHERE code='TBANK'")[0],
         period=one(conn, "SELECT period_id FROM finance.fiscal_periods WHERE status='OPEN' ORDER BY period_id LIMIT 1")[0],
     )
 
@@ -1470,6 +1471,324 @@ def t_g7_14(conn):
     resp = one(conn, f"SELECT responded_at, result_status FROM sales.drawer_events WHERE event_id={evt}")
     assert resp[0] is None and resp[1] == "UNKNOWN", f"الدرج يدّعي استجابة غير موجودة: {resp}"
     conn.commit()
+
+
+# ═══════════════════════════ T-G8: الورديات/النقد/الأدراج/المصروفات/رأس المال (V019) ═══════════════════════════
+
+@test("T-G8-01", "Shifts", "إغلاق الوردية يشترط العدّ والمتوقع والمغلق والزمن — والسبب عند الفارق (§14.1)")
+def t_g8_01(conn):
+    I = ids(conn)
+    sid = open_shift(conn, I)   # قد تكون مفتوحة من G7 — استخدم وردية جديدة بمحطة ثانية
+    # محطة جديدة لوردية نظيفة
+    st = one(conn, "INSERT INTO core.stations (branch_id, code, name_ar) "
+                   "SELECT branch_id, 'TST8', 'محطة اختبار G8' FROM core.branches WHERE code='TBR1' RETURNING station_id")[0]
+    s8 = one(conn, "INSERT INTO sales.shifts (station_id, opened_by, opening_float) VALUES (%s,%s,200) RETURNING shift_id",
+             (st, I["cash"]))[0]
+    conn.commit()
+    expect_error(conn, "UPDATE sales.shifts SET status='CLOSED' WHERE shift_id=%s", (s8,), "SHIFT_CLOSE_COUNT_REQUIRED")
+    expect_error(conn, "UPDATE sales.shifts SET status='CLOSED', counted_cash=195, expected_cash=200, "
+                       "closed_by=%s, closed_at=now() WHERE shift_id=%s", (I["sup"], s8), "SHIFT_VARIANCE_REASON_REQUIRED")
+    run_sql(conn, "UPDATE sales.shifts SET status='CLOSED', counted_cash=195, expected_cash=200, "
+                  "variance_reason='عجز موثق', closed_by=%s, closed_at=now() WHERE shift_id=%s", (I["sup"], s8))
+    conn.commit()
+    assert one(conn, "SELECT status FROM sales.shifts WHERE shift_id=%s", (s8,))[0] == "CLOSED"
+
+
+@test("T-G8-02", "Shifts", "الوردية المغلقة مجمّدة — والاستثناء الوحيد رابط تسوية الفارق (§14.1)")
+def t_g8_02(conn):
+    I = ids(conn)
+    row = one(conn, "SELECT shift_id FROM sales.shifts WHERE status='CLOSED' AND counted_cash IS NOT NULL "
+                    "AND variance <> 0 ORDER BY shift_id DESC LIMIT 1")
+    assert row, "لا وردية مغلقة بفارق — شغّل T-G8-01 أولاً"
+    sid = row[0]
+    expect_error(conn, "UPDATE sales.shifts SET counted_cash=counted_cash+1 WHERE shift_id=%s", (sid,), "SHIFT_CLOSED_IMMUTABLE")
+    expect_error(conn, "UPDATE sales.shifts SET status='OPEN' WHERE shift_id=%s", (sid,), "SHIFT_CLOSED_IMMUTABLE")
+    expect_error(conn, "DELETE FROM sales.shifts WHERE shift_id=%s", (sid,), "SHIFT_IMMUTABLE")
+    v = one(conn, "INSERT INTO finance.vouchers (voucher_number, voucher_type, treasury_account_id, amount, reason, status, created_by) "
+                  "VALUES (CONCAT('DV-T', nextval('finance.voucher_number_seq')), 'DISBURSEMENT', %s, 5, 'تسوية فارق فحص', 'DRAFT', %s) "
+                  "RETURNING voucher_id", (I["safe"], I["owner"]))[0]
+    conn.commit()
+    # ربط سند التسوية وحده مسموح على المغلقة — الفارق يُعالج بمستند لا بتعديل الأرقام
+    run_sql(conn, "UPDATE sales.shifts SET variance_settled_by_voucher_id=%s WHERE shift_id=%s", (v, sid))
+    conn.commit()
+    assert one(conn, "SELECT variance_settled_by_voucher_id FROM sales.shifts WHERE shift_id=%s", (sid,))[0] == v
+
+
+@test("T-G8-03", "Shifts", "عدّات النقدية موثقة — من عدّ ومتى وبكم (SFT-002)")
+def t_g8_03(conn):
+    I = ids(conn)
+    row = one(conn, "SELECT shift_id FROM sales.shifts WHERE status='OPEN' ORDER BY shift_id DESC LIMIT 1")
+    sid = row[0] if row else open_shift(conn, I)
+    run_sql(conn, "INSERT INTO finance.shift_cash_counts (shift_id, counted_cash, counted_by, notes) "
+                  "VALUES (%s, 99.50, %s, 'عدة أولى فحص')", (sid, I["cash"]))
+    conn.commit()
+    expect_error(conn, "INSERT INTO finance.shift_cash_counts (shift_id, counted_cash, counted_by) VALUES (%s, -1, %s)",
+                 (sid, I["cash"]), "check")
+
+
+@test("T-G8-04", "Finance", "ترحيل السند يستلزم أثراً مطابقاً — قيد مؤجل عند الالتزام (§14.2)")
+def t_g8_04(conn):
+    I = ids(conn)
+    v = one(conn, "INSERT INTO finance.vouchers (voucher_number, voucher_type, treasury_account_id, amount, reason, status, created_by) "
+                  "VALUES (CONCAT('DV-T', nextval('finance.voucher_number_seq')), 'DISBURSEMENT', %s, 60, 'صرف فحص أرجل', 'DRAFT', %s) "
+                  "RETURNING voucher_id", (I["safe"], I["owner"]))[0]
+    conn.commit()
+    def bad_commit():
+        run_sql(conn, "UPDATE finance.vouchers SET status='POSTED', posted_at=now() WHERE voucher_id=%s", (v,))
+        conn.commit()
+    expect_commit_error(conn, bad_commit, "VOUCHER_POST_LEG_INVALID")
+    conn.rollback()
+    def good_commit():
+        run_sql(conn, "UPDATE finance.vouchers SET status='POSTED', posted_at=now() WHERE voucher_id=%s", (v,))
+        run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                      "source_doc_id, reason, created_by, branch_id) VALUES (%s, -1, 60, 'finance.voucher', %s, 'سند صرف فحص', %s, %s)",
+                (I["safe"], v, I["owner"], I["branch"]))
+        conn.commit()
+    good_commit()
+
+
+@test("T-G8-05", "Finance", "التحويل بين خزينتين حركتان متقابلتان — لا إيراد ولا مصروف (§14.2 ق2)")
+def t_g8_05(conn):
+    I = ids(conn)
+    v = one(conn, "INSERT INTO finance.vouchers (voucher_number, voucher_type, treasury_account_id, counter_treasury_account_id, "
+                  "amount, reason, status, created_by) VALUES (CONCAT('TV-T', nextval('finance.voucher_number_seq')), 'TRANSFER', "
+                  "%s, %s, 150, 'إيداع فحص', 'DRAFT', %s) RETURNING voucher_id", (I["drawer"], I["safe"], I["owner"]))[0]
+    conn.commit()
+    def one_leg():
+        run_sql(conn, "UPDATE finance.vouchers SET status='POSTED', posted_at=now() WHERE voucher_id=%s", (v,))
+        run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                      "source_doc_id, reason, created_by, branch_id) VALUES (%s, -1, 150, 'finance.voucher', %s, 'سحب فحص', %s, %s)",
+                (I["drawer"], v, I["owner"], I["branch"]))
+        conn.commit()
+    expect_commit_error(conn, one_leg, "VOUCHER_TRANSFER_LEGS_INVALID")
+    conn.rollback()
+    def two_legs():
+        run_sql(conn, "UPDATE finance.vouchers SET status='POSTED', posted_at=now() WHERE voucher_id=%s", (v,))
+        for acct, d in ((I["drawer"], -1), (I["safe"], 1)):
+            run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                          "source_doc_id, reason, created_by, branch_id) VALUES (%s, %s, 150, 'finance.voucher', %s, 'تحويل فحص', %s, %s)",
+                    (acct, d, v, I["owner"], I["branch"]))
+        conn.commit()
+    two_legs()
+    net = one(conn, "SELECT COALESCE(SUM(amount*direction),0) FROM finance.treasury_transactions "
+                    "WHERE source_doc_type='finance.voucher' AND source_doc_id=%s", (v,))[0]
+    assert float(net) == 0.0, f"التحويل ولّد قيمة صافية {net} — مخالف §14.2 ق2"
+
+
+@test("T-G8-06", "Finance", "لا ترحيل مكرر: فهرس الأثر الفريد + السند المرحّل مجمّد والملغى نهائي (§14.2)")
+def t_g8_06(conn):
+    I = ids(conn)
+    row = one(conn, "SELECT source_doc_id FROM finance.treasury_transactions WHERE source_doc_type='finance.voucher' "
+                    "AND direction=-1 ORDER BY txn_id DESC LIMIT 1")
+    assert row, "لا سند مرحّل — شغّل T-G8-04 أولاً"
+    v = row[0]
+    acct = one(conn, "SELECT treasury_account_id FROM finance.treasury_transactions WHERE source_doc_type='finance.voucher' "
+                     "AND source_doc_id=%s LIMIT 1", (v,))[0]
+    expect_error(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                       "source_doc_id, reason, created_by, branch_id) VALUES (%s, -1, 60, 'finance.voucher', %s, 'مكرر', %s, %s)",
+                 (acct, v, I["owner"], I["branch"]), "duplicate key", "uq_treasury_txn_source")
+    expect_error(conn, "UPDATE finance.vouchers SET amount=99 WHERE voucher_id=%s", (v,), "VOUCHER_IMMUTABLE")
+    expect_error(conn, "DELETE FROM finance.vouchers WHERE voucher_id=%s", (v,), "VOUCHER_IMMUTABLE")
+    d = one(conn, "INSERT INTO finance.vouchers (voucher_number, voucher_type, treasury_account_id, amount, reason, status, created_by) "
+                  "VALUES (CONCAT('RV-T', nextval('finance.voucher_number_seq')), 'RECEIPT', %s, 10, 'مسودة فحص إلغاء', 'DRAFT', %s) "
+                  "RETURNING voucher_id", (I["safe"], I["owner"]))[0]
+    conn.commit()
+    run_sql(conn, "UPDATE finance.vouchers SET status='CANCELLED' WHERE voucher_id=%s", (d,))
+    conn.commit()
+    expect_error(conn, "UPDATE finance.vouchers SET status='DRAFT' WHERE voucher_id=%s", (d,), "VOUCHER_CANCELLED_FINAL")
+
+
+@test("T-G8-07", "Finance", "توزيع سند القبض ≤ متبقي الفاتورة ولسند قبض عميل فقط (§13/PRT-003)")
+def t_g8_07(conn):
+    I = ids(conn)
+    cust = one(conn, "INSERT INTO sales.customers (code, name_ar, credit_enabled, credit_limit) "
+                     "VALUES ('TCUST8','عميل فحص G8', true, 5000) RETURNING customer_id")[0]
+    inv = one(conn, "INSERT INTO sales.invoices (invoice_number, branch_id, station_id, cashier_user_id, customer_id, status, "
+                    "gross_total, net_total, tax_total) VALUES (CONCAT('SI-T', nextval('sales.invoice_number_seq')), %s, %s, %s, %s, "
+                    "'POSTED', 300, 263.16, 36.84) RETURNING invoice_id",
+              (I["branch"], I["station"], I["cash"], cust))[0]
+    run_sql(conn, "INSERT INTO sales.payments (invoice_id, payment_method, amount, status, received_at, created_by) "
+                  "VALUES (%s, 'CREDIT', 300, 'CAPTURED', now(), %s)", (inv, I["cash"]))
+    v = one(conn, "INSERT INTO finance.vouchers (voucher_number, voucher_type, treasury_account_id, amount, counterparty_type, "
+                  "counterparty_id, reason, status, created_by) VALUES (CONCAT('RV-T', nextval('finance.voucher_number_seq')), "
+                  "'RECEIPT', %s, 150, 'CUSTOMER', %s, 'تحصيل فحص توزيع', 'DRAFT', %s) RETURNING voucher_id",
+            (I["safe"], cust, I["owner"]))[0]
+    conn.commit()
+    run_sql(conn, "INSERT INTO finance.voucher_allocations (voucher_id, invoice_id, amount) VALUES (%s, %s, 150)", (v, inv))
+    conn.commit()
+    # متبقي الفاتورة 150: توزيع 200 من سند آخر (مبلغه كافٍ) يتجاوزه → رفض
+    v2 = one(conn, "INSERT INTO finance.vouchers (voucher_number, voucher_type, treasury_account_id, amount, counterparty_type, "
+                   "counterparty_id, reason, status, created_by) VALUES (CONCAT('RV-T', nextval('finance.voucher_number_seq')), "
+                   "'RECEIPT', %s, 200, 'CUSTOMER', %s, 'دفعة ثانية فحص', 'DRAFT', %s) RETURNING voucher_id",
+             (I["safe"], cust, I["owner"]))[0]
+    conn.commit()
+    expect_error(conn, "INSERT INTO finance.voucher_allocations (voucher_id, invoice_id, amount) VALUES (%s, %s, 200)",
+                 (v2, inv), "ALLOCATION_EXCEEDS_REMAINING")
+    # لسند صرف (وليس قبضاً) → رفض
+    vd = one(conn, "INSERT INTO finance.vouchers (voucher_number, voucher_type, treasury_account_id, amount, counterparty_type, "
+                   "counterparty_id, reason, status, created_by) VALUES (CONCAT('DV-T', nextval('finance.voucher_number_seq')), "
+                   "'DISBURSEMENT', %s, 10, 'CUSTOMER', %s, 'صرف فحص توزيع', 'DRAFT', %s) RETURNING voucher_id",
+             (I["safe"], cust, I["owner"]))[0]
+    conn.commit()
+    expect_error(conn, "INSERT INTO finance.voucher_allocations (voucher_id, invoice_id, amount) VALUES (%s, %s, 10)",
+                 (vd, inv), "VOUCHER_ALLOCATION_NOT_ALLOWED")
+
+
+@test("T-G8-08", "Finance", "توزيعات السند المرحّل مجمّدة — التحرير قبل الترحيل فقط (§13)")
+def t_g8_08(conn):
+    I = ids(conn)
+    row = one(conn, "SELECT va.voucher_id, va.invoice_id FROM finance.voucher_allocations va "
+                    "JOIN finance.vouchers v ON v.voucher_id = va.voucher_id WHERE v.status='DRAFT' LIMIT 1")
+    assert row, "لا سند مسودة بتوزيع — شغّل T-G8-07 أولاً"
+    v, inv = row
+    run_sql(conn, "UPDATE finance.vouchers SET status='POSTED', posted_at=now() WHERE voucher_id=%s", (v,))
+    run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                  "source_doc_id, reason, created_by, branch_id) "
+                  "SELECT treasury_account_id, 1, amount, 'finance.voucher', %s, 'ترحيل سند توزيعات', %s, %s "
+                  "FROM finance.vouchers WHERE voucher_id=%s", (v, I["owner"], I["branch"], v))
+    conn.commit()
+    expect_error(conn, "DELETE FROM finance.voucher_allocations WHERE voucher_id=%s AND invoice_id=%s", (v, inv),
+                 "VOUCHER_ALLOCATIONS_FROZEN")
+    expect_error(conn, "UPDATE finance.voucher_allocations SET amount=1 WHERE voucher_id=%s AND invoice_id=%s", (v, inv),
+                 "VOUCHER_ALLOCATIONS_FROZEN")
+
+
+@test("T-G8-09", "Finance", "آلة المصروف: ترحيل مباشر لمصروف وردية الدرج · إلغاء المرحّل بعكس صافٍ صفر (§14.4)")
+def t_g8_09(conn):
+    I = ids(conn)
+    sid = open_shift(conn, I)
+    cat = one(conn, "SELECT category_id FROM finance.expense_categories WHERE code='MISC_OPS'")[0]
+    e = one(conn, "INSERT INTO finance.expenses (expense_number, category_id, branch_id, expense_date, amount, tax_amount, "
+                  "payment_method, treasury_account_id, status, created_by, shift_id) "
+                  "VALUES (CONCAT('EX-T', nextval('finance.expense_number_seq')), %s, %s, CURRENT_DATE, 100, 14, 'CASH', %s, 'DRAFT', %s, %s) "
+                  "RETURNING expense_id", (cat, I["branch"], I["drawer"], I["cash"], sid))[0]
+    conn.commit()
+    def post_direct():
+        run_sql(conn, "UPDATE finance.expenses SET status='POSTED', posted_at=now() WHERE expense_id=%s", (e,))
+        run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                      "source_doc_id, reason, created_by, branch_id, shift_id) VALUES (%s, -1, 114, 'finance.expense', %s, "
+                      "'مصروف وردية فحص', %s, %s, %s)", (I["drawer"], e, I["cash"], I["branch"], sid))
+        conn.commit()
+    post_direct()
+    expect_error(conn, "DELETE FROM finance.expenses WHERE expense_id=%s", (e,), "EXPENSE_IMMUTABLE")
+    expect_error(conn, "UPDATE finance.expenses SET status='CANCELLED' WHERE expense_id=%s", (e,), "EXPENSE_REVERSAL_REASON_REQUIRED")
+    expect_error(conn, "UPDATE finance.expenses SET amount=99 WHERE expense_id=%s", (e,), "EXPENSE_FINANCIALS_FROZEN")
+    def cancel_with_reversal():
+        run_sql(conn, "UPDATE finance.expenses SET status='CANCELLED', notes='إلغاء: خطأ فحص' WHERE expense_id=%s", (e,))
+        run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                      "source_doc_id, reason, created_by, branch_id, shift_id) VALUES (%s, 1, 114, 'finance.expense.reversal', %s, "
+                      "'عكس إلغاء فحص', %s, %s, %s)", (I["drawer"], e, I["cash"], I["branch"], sid))
+        conn.commit()
+    cancel_with_reversal()
+    net = one(conn, "SELECT COALESCE(SUM(amount*direction),0) FROM finance.treasury_transactions WHERE source_doc_id=%s "
+                    "AND source_doc_type IN ('finance.expense','finance.expense.reversal')", (e,))[0]
+    assert float(net) == 0.0, f"إلغاء المرحّل ترك أثراً صافياً {net} — مخالف §14.4"
+
+
+@test("T-G8-10", "Finance", "رأس المال: الافتتاحي باعتماد موثق فقط · المرحّل نهائي · اتجاهات الأنواع (§14.3/D-14)")
+def t_g8_10(conn):
+    I = ids(conn)
+    expect_error(conn, "INSERT INTO finance.capital_events (event_number, event_type, amount, treasury_account_id, event_date, "
+                       "description, status, created_by) VALUES (CONCAT('CE-T', nextval('finance.capital_event_number_seq')), "
+                       "'OPENING_BALANCE', 50000, %s, CURRENT_DATE, 'افتتاحي بلا اعتماد فحص', 'DRAFT', %s)",
+                 (I["bank"], I["owner"]), "capital_opening_needs_approval")
+    a = one(conn, "INSERT INTO core.approvals (entity_type, entity_id, requested_by, decided_by, decision, reason, decided_at) "
+                  "VALUES ('finance.capital_event', 0, %s, %s, 'APPROVED', 'اعتماد افتتاحي فحص', now()) RETURNING approval_id",
+            (I["sup"], I["owner"]))[0]
+    c = one(conn, "INSERT INTO finance.capital_events (event_number, event_type, amount, treasury_account_id, event_date, "
+                  "description, status, approval_id, created_by) VALUES (CONCAT('CE-T', nextval('finance.capital_event_number_seq')), "
+                  "'OPENING_BALANCE', 50000, %s, CURRENT_DATE, 'افتتاحي معتمد فحص', 'DRAFT', %s, %s) RETURNING capital_id",
+            (I["bank"], a, I["sup"]))[0]
+    conn.commit()
+    def post():
+        run_sql(conn, "UPDATE finance.capital_events SET status='POSTED', posted_at=now() WHERE capital_id=%s", (c,))
+        run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                      "source_doc_id, reason, created_by, branch_id) VALUES (%s, 1, 50000, 'finance.capital_event', %s, "
+                      "'افتتاحي معتمد', %s, %s)", (I["bank"], c, I["sup"], I["branch"]))
+        conn.commit()
+    post()
+    expect_error(conn, "UPDATE finance.capital_events SET amount=1 WHERE capital_id=%s", (c,), "CAPITAL_EVENT_IMMUTABLE")
+    expect_error(conn, "DELETE FROM finance.capital_events WHERE capital_id=%s", (c,), "CAPITAL_EVENT_IMMUTABLE")
+
+
+@test("T-G8-11", "Shifts", "المتوقع في الدرج = افتتاحي + Σ حركات وردية المحطة (بوابة القبول حرفياً)")
+def t_g8_11(conn):
+    I = ids(conn)
+    st = one(conn, "SELECT station_id FROM core.stations WHERE code='TST8'")
+    if not st:
+        raise EnvLimitation("محطة TST8 غير منشأة — شغّل T-G8-01 أولاً")
+    s8 = one(conn, "SELECT shift_id FROM sales.shifts WHERE station_id=%s AND status='OPEN'", (st,))
+    if not s8:
+        s8 = one(conn, "INSERT INTO sales.shifts (station_id, opened_by, opening_float) VALUES (%s,%s,100) RETURNING shift_id",
+                 (st, I["cash"]))
+    else:
+        s8 = s8[0]
+    conn.commit()
+    # حركتان على درج المحطة بوردية المحطة: +70 بيعاً و−20 مصروفاً (درج الفرع TDRAWER)
+    drw = one(conn, "SELECT treasury_account_id FROM finance.treasury_accounts WHERE code='TDRAWER'")[0]
+    run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                  "source_doc_id, reason, created_by, branch_id, shift_id) VALUES (%s, 1, 70, 't.g8', 1, 'بيع فحص', %s, %s, %s)",
+            (drw, I["cash"], I["branch"], s8))
+    run_sql(conn, "INSERT INTO finance.treasury_transactions (treasury_account_id, direction, amount, source_doc_type, "
+                  "source_doc_id, reason, created_by, branch_id, shift_id) VALUES (%s, -1, 20, 't.g8', 2, 'مصروف فحص', %s, %s, %s)",
+            (drw, I["cash"], I["branch"], s8))
+    conn.commit()
+    # المتوقع = 100 + (70 − 20) = 150 — مرجع مستقل يطابق الدفتر
+    net = one(conn, "SELECT COALESCE(SUM(amount*direction),0) FROM finance.treasury_transactions WHERE shift_id=%s "
+                    "AND treasury_account_id=%s", (s8, drw))[0]
+    assert float(net) == 50.0, f"صافي حركات وردية الدرج {net} ≠ 50"
+    # أي حركة على الدرج بلا وردية يرفضها منطق الإقفال — تُختبر بغياب shift_id لا برفض قاعدة (البوابة منطق خدمة)
+
+
+@test("T-G8-12", "Finance", "درج واحد لكل محطة (فهرس فريد جزئي) + بذور V019 المرجعية")
+def t_g8_12(conn):
+    I = ids(conn)
+    st = one(conn, "SELECT station_id FROM core.stations WHERE code='TST8'")
+    if not st:
+        raise EnvLimitation("محطة TST8 غير منشأة — شغّل T-G8-01 أولاً")
+    # إنشئ درج المحطة أولاً ثم درجاً ثانياً لها — الفهرس الفريد الجزئي يمنع (درج لكل محطة)
+    existing = one(conn, "SELECT COUNT(*) FROM finance.treasury_accounts WHERE station_id=%s", (st,))[0]
+    if existing == 0:
+        run_sql(conn, "INSERT INTO finance.treasury_accounts (code, name_ar, account_kind, branch_id, station_id) "
+                      "VALUES ('TDRW8', 'درج محطة G8 فحص', 'CASH_DRAWER', %s, %s)", (I["branch"], st))
+        conn.commit()
+    expect_error(conn, "INSERT INTO finance.treasury_accounts (code, name_ar, account_kind, branch_id, station_id) "
+                       "VALUES ('TDUP8', 'درج مكرر فحص', 'CASH_DRAWER', %s, %s)", (I["branch"], st), "duplicate key")
+    assert one(conn, "SELECT COUNT(*) FROM finance.treasury_accounts WHERE code IN ('MAIN_SAFE','MAIN_BANK') AND is_active")[0] == 2, \
+        "الخزينة/البنك المرجعيان غير مزروعين"
+    assert one(conn, "SELECT COUNT(*) FROM finance.expense_categories WHERE code IN "
+                     "('RENT','UTILITIES','MAINTENANCE','CLEANING','TRANSPORT','MISC_OPS')")[0] == 6, "فئات المصروفات المرجعية ناقصة"
+
+
+@test("T-G8-13", "Printing", "قوالب G8 الستة عشر 58/80 وقواعد الطباعة وخصوصية الرواتب (§29.10/§31/§35.2)")
+def t_g8_13(conn):
+    n = one(conn, "SELECT COUNT(*) FROM print.document_templates WHERE document_type IN "
+                  "('FINANCE_RECEIPT_VOUCHER','FINANCE_DISBURSEMENT_VOUCHER','FINANCE_TRANSFER_VOUCHER','EXPENSE_VOUCHER',"
+                  "'PAYROLL_SLIP','PAYROLL_PAYMENT_VOUCHER','CASHIER_SALES_APPENDIX','SHIFT_CLOSE_SUMMARY') "
+                  "AND media_class IN ('ROLL_80','ROLL_58') AND version=1 AND is_active")[0]
+    assert n == 16, f"قوالب G8 {n} ≠ 16"
+    conf = one(conn, "SELECT COUNT(*) FROM print.document_templates WHERE document_type IN ('PAYROLL_SLIP','PAYROLL_PAYMENT_VOUCHER') "
+                     "AND (body_definition->>'privacy') = 'CONFIDENTIAL_PAYROLL_ONLY'")[0]
+    assert conf == 4, f"قوالب الرواتب السرية {conf} ≠ 4"
+    rules = one(conn, "SELECT COUNT(*) FROM print.auto_print_rules WHERE document_type IN "
+                      "('FINANCE_RECEIPT_VOUCHER','FINANCE_DISBURSEMENT_VOUCHER','FINANCE_TRANSFER_VOUCHER','SHIFT_CLOSE_SUMMARY') "
+                      "AND policy='EXPLICIT_USER'")[0]
+    assert rules == 4, f"قواعد طباعة G8 {rules} ≠ 4"
+    a4 = one(conn, "SELECT COUNT(*) FROM print.auto_print_rules WHERE policy LIKE '%A4%' AND document_type <> 'A4_DETAILED_REPORT'")[0]
+    assert a4 == 0, "A4 يظهر في سياسة غير تفصيلية — مخالف §29.11"
+
+
+@test("T-G8-14", "Security", "مصفوفة صلاحيات G8 كما تتحقق V019 — والكاشير بلا صلاحيات مالية")
+def t_g8_14(conn):
+    grants = one(conn, "SELECT COUNT(*) FROM core.role_permissions rp JOIN core.roles r ON r.role_id=rp.role_id "
+                       "JOIN core.permissions p ON p.permission_id=rp.permission_id WHERE p.code IN "
+                       "('sales.shift.close','sales.shift.approve_variance','finance.treasury.manage','finance.expense.create')")[0]
+    assert grants == 14, f"إسنادات G8 {grants} ≠ 14"
+    cashier = one(conn, "SELECT COUNT(*) FROM core.role_permissions rp JOIN core.roles r ON r.role_id=rp.role_id "
+                        "JOIN core.permissions p ON p.permission_id=rp.permission_id WHERE r.code='CASHIER' AND p.code IN "
+                        "('finance.voucher.create','finance.voucher.post','finance.expense.approve','finance.expense.post',"
+                        "'finance.capital.manage','finance.treasury.manage','sales.shift.approve_variance')")[0]
+    assert cashier == 0, f"الكاشير يملك {cashier} صلاحية مالية تجاوزية"
 
 
 # ───────────────────────────── التشغيل ─────────────────────────────

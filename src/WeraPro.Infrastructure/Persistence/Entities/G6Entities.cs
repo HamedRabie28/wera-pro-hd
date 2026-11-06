@@ -304,6 +304,7 @@ public sealed class TreasuryAccountRow
     public long? BranchId { get; set; }
     public string Currency { get; set; } = "EGP";
     public bool IsActive { get; set; } = true;
+    public long? StationId { get; set; }   // V019 (G8): درج المحطة — الحقيقة الفيزيائية درج لكل محطة
 }
 
 [Table("treasury_transactions", Schema = "finance")]
@@ -319,6 +320,7 @@ public sealed class TreasuryTxnRow
     public DateTimeOffset OccurredAt { get; set; }
     public long CreatedBy { get; set; }
     public long BranchId { get; set; }
+    public long? ShiftId { get; set; }     // V019 (G8): سياق الوردية — المتوقع في الدرج = Σ حركات وردية المحطة
 }
 
 [Table("cost_layers", Schema = "finance")]

@@ -65,7 +65,8 @@ public sealed partial class ShellWindow : Window
         if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
             var g6 = tag is "inventory" or "purchasing" or "parties" or "warehouses";
-            HomeContent.Visibility = tag is "catalog" or "media" || g6 ? Visibility.Collapsed : Visibility.Visible;
+            var g8 = tag is "finance";
+            HomeContent.Visibility = tag is "catalog" or "media" || g6 || g8 ? Visibility.Collapsed : Visibility.Visible;
             CatalogContent.Visibility = tag == "catalog" ? Visibility.Visible : Visibility.Collapsed;
             MediaContent.Visibility = tag == "media" ? Visibility.Visible : Visibility.Collapsed;
             InventoryContent.Visibility = tag == "inventory" ? Visibility.Visible : Visibility.Collapsed;
@@ -74,6 +75,7 @@ public sealed partial class ShellWindow : Window
             WarehousesContent.Visibility = tag == "warehouses" ? Visibility.Visible : Visibility.Collapsed;
             PurchasingContent.Visibility = tag == "purchasing" ? Visibility.Visible : Visibility.Collapsed;
             PartiesContent.Visibility = tag == "parties" ? Visibility.Visible : Visibility.Collapsed;
+            FinanceContent.Visibility = tag == "finance" ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

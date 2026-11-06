@@ -42,14 +42,14 @@ public sealed class SqlMigrationRunnerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task FreshDatabase_AppliesAllMigrations_HeadIsV18()
+    public async Task FreshDatabase_AppliesAllMigrations_HeadIsV19()
     {
         var outcome = await Runner.ApplyPendingAsync(ScratchUri);
 
-        Assert.Equal(18, outcome.Head);
-        Assert.Equal(18, outcome.Applied);
+        Assert.Equal(19, outcome.Head);
+        Assert.Equal(19, outcome.Applied);
         Assert.Equal(0, outcome.SkippedAlready);
-        await AssertMigrationCountAsync(18);
+        await AssertMigrationCountAsync(19);
     }
 
     [Fact]
@@ -59,8 +59,8 @@ public sealed class SqlMigrationRunnerTests : IAsyncLifetime
         var second = await Runner.ApplyPendingAsync(ScratchUri);
 
         Assert.Equal(0, second.Applied);
-        Assert.Equal(18, second.SkippedAlready);
-        Assert.Equal(18, second.Head);
+        Assert.Equal(19, second.SkippedAlready);
+        Assert.Equal(19, second.Head);
     }
 
     [Fact]
@@ -140,7 +140,12 @@ public sealed class NpgsqlHealthCheckTests
 
         Assert.Equal(HealthStatus.Healthy, result.Status);
         Assert.True(result.Data.ContainsKey("server_version"));
-        Assert.Contains("PostgreSQL 16", (string)result.Data["server_version"], StringComparison.Ordinal);
+        // إصدار الخادم الفعلي يقرأ من القاعدة نفسها — لا تثبيت رقم إصدار في الاختبار
+        await using var conn = new NpgsqlConnection(LiveUri);
+        await conn.OpenAsync();
+        await using var cmd = new NpgsqlCommand("SHOW server_version", conn);
+        var actualMajor = ((string)cmd.ExecuteScalar()!).Split('.')[0];
+        Assert.Contains($"PostgreSQL {actualMajor}", (string)result.Data["server_version"], StringComparison.Ordinal);
     }
 
     [Fact]

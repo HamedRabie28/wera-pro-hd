@@ -144,7 +144,7 @@ public sealed class G7MigrationShapeTests : IAsyncLifetime
         Assert.Equal(1L, Convert.ToInt64(await note.ExecuteScalarAsync()));
 
         await using var count = new NpgsqlCommand("SELECT COUNT(*) FROM core.schema_migrations", conn);
-        Assert.Equal(18L, Convert.ToInt64(await count.ExecuteScalarAsync()));
+        Assert.Equal(19L, Convert.ToInt64(await count.ExecuteScalarAsync()));
     }
 
     [Fact]

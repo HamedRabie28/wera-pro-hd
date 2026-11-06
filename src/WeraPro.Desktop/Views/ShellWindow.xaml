@@ -52,6 +52,7 @@
                     <muxc:NavigationViewItem Content="المخزون" Tag="inventory" ToolTipService.ToolTip="G6: لوحة الأرصدة والنواقص والدفعات والتقييم + الجرد والتحويلات والمخازن"/>
                     <muxc:NavigationViewItem Content="المشتريات" Tag="purchasing" ToolTipService.ToolTip="G6: السلة والاستلامات وفواتير الموردين والسداد والمرتجعات"/>
                     <muxc:NavigationViewItem Content="الأطراف" Tag="parties" ToolTipService.ToolTip="G6: الموردون والعملاء وكشوف الحساب — التعطيل لا الحذف"/>
+                    <muxc:NavigationViewItem Content="المالية (G8)" Tag="finance" ToolTipService.ToolTip="G8: الخزائن والسندات والمصروفات ورأس المال والورديات وإقفالها (PAGE-33..38)"/>
                 </muxc:NavigationView.MenuItems>
             </muxc:NavigationView>
 
@@ -134,6 +135,9 @@
 
             <!-- إدارة المخازن (G6 · PAGE-28) -->
             <views:WarehousesPage x:Name="WarehousesContent" Visibility="Collapsed"/>
+
+            <!-- المالية (G8 · PAGE-33..38): الخزائن والسندات والمصروفات ورأس المال والورديات -->
+            <views:FinancePage x:Name="FinanceContent" Visibility="Collapsed"/>
         </Grid>
     </Grid>
 </Window>

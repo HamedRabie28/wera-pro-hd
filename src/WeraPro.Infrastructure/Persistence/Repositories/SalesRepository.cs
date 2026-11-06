@@ -38,12 +38,27 @@ public sealed class SalesRepository : ISalesRepository
             row.StationId, row.Code, row.NameAr, row.BranchId, row.BranchName);
     }
 
-    public async Task<DrawerAccountData?> GetDrawerAccountAsync(long branchId, CancellationToken ct = default) =>
-        await _db.Set<TreasuryAccountRow>().AsNoTracking()
-            .Where(t => t.IsActive && t.AccountKind == "CASH_DRAWER" && t.BranchId == branchId)
+    public async Task<DrawerAccountData?> GetDrawerAccountAsync(long branchId, long? stationId = null, CancellationToken ct = default)
+    {
+        // G8/V019: درج المحطة أولاً (الحقيقة الفيزيائية — درج لكل محطة) ثم درج الفرع (توافق خلفي G7)
+        if (stationId is { } sid)
+        {
+            var stationDrawer = await _db.Set<TreasuryAccountRow>().AsNoTracking()
+                .Where(t => t.IsActive && t.AccountKind == "CASH_DRAWER" && t.StationId == sid)
+                .OrderBy(t => t.TreasuryAccountId)
+                .Select(t => new DrawerAccountData(t.TreasuryAccountId, t.Code, t.NameAr))
+                .FirstOrDefaultAsync(ct);
+            if (stationDrawer is not null)
+            {
+                return stationDrawer;
+            }
+        }
+        return await _db.Set<TreasuryAccountRow>().AsNoTracking()
+            .Where(t => t.IsActive && t.AccountKind == "CASH_DRAWER" && t.StationId == null && t.BranchId == branchId)
             .OrderBy(t => t.TreasuryAccountId)
             .Select(t => new DrawerAccountData(t.TreasuryAccountId, t.Code, t.NameAr))
             .FirstOrDefaultAsync(ct);
+    }
 
     public async Task<DrawerAccountData?> GetProviderAccountAsync(CancellationToken ct = default) =>
         await _db.Set<TreasuryAccountRow>().AsNoTracking()
@@ -480,6 +495,7 @@ public sealed class SalesRepository : ISalesRepository
                             OccurredAt = now,
                             CreatedBy = plan.CashierUserId,
                             BranchId = plan.BranchId,
+                            ShiftId = plan.ShiftId,   // G8/V019: سياق الوردية — مطابقة الدرج من الدفتر
                         };
                         _db.TreasuryTransactions.Add(txn);
                         await _db.SaveChangesAsync(ct);
@@ -709,7 +725,7 @@ public sealed class SalesRepository : ISalesRepository
                 // 5) أثر الخزينة: رد نقدي بفتح درج الفرع — البطاقة للبطاقة بلا نقد (D-04)
                 if (plan.RefundMethod == Domain.Sales.RefundMethods.Cash)
                 {
-                    var drawer = await GetDrawerAccountAsync(plan.BranchId, ct);
+                    var drawer = await GetDrawerAccountAsync(plan.BranchId, plan.StationId, ct);
                     if (drawer is null)
                     {
                         throw new SalesPolicyException("DRAWER_ACCOUNT_NOT_FOUND", "لا حساب درج نقد للفرع — لا رد نقدي بلا خزينة موثقة");
@@ -725,6 +741,7 @@ public sealed class SalesRepository : ISalesRepository
                         OccurredAt = now,
                         CreatedBy = plan.CreatedByUserId,
                         BranchId = plan.BranchId,
+                        ShiftId = plan.ShiftId,   // G8/V019: وردية الرد الفعلي — النقد خرج من درجها
                     };
                     _db.TreasuryTransactions.Add(txn);
                     await _db.SaveChangesAsync(ct);

@@ -87,6 +87,7 @@ public sealed partial class App : Application
                 services.AddTransient<ViewModels.WarehousesViewModel>();
                 services.AddTransient<ViewModels.PurchasingViewModel>();
                 services.AddTransient<ViewModels.PartiesViewModel>();
+                services.AddTransient<ViewModels.FinanceViewModel>();
             })
             .Build();
 
