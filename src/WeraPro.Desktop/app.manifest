@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  app.manifest — WERA PRO HD Desktop (تحديث 2026-11-07)
+  * الهوية: WeraPro.Desktop (كانت بالخطأ WeraPrototype.app — من النموذج الأولي).
+  * supportedOS: Windows 10 و Windows 11 (معرّف Win10 يشمل Win11 رسميًا).
+  * PerMonitorV2: وضوح تام على شاشات DPI العالية بلا ضبابية.
+  * activeCodePage UTF-8: عرض النصوص العربية سليمًا على كل إصدارات Win10 1809+.
+-->
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="1.0.0.0" name="WeraPrototype.app"/>
+  <assemblyIdentity version="0.3.0.0" name="WeraPro.Desktop.app" type="win32"/>
+
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
+      <!-- Windows 10 (1809+) و Windows 11 -->
       <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
     </application>
   </compatibility>
+
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+      <activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>
+    </windowsSettings>
+  </application>
 </assembly>

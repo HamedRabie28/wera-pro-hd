@@ -16,6 +16,7 @@ public sealed partial class ShellWindow : Window
         InitializeComponent();
         Title = "WERA PRO HD — Shell الإداري";
         App.ActiveWindow = this;
+        App.MainWindow = this; // حارس النافذة الواحدة (2026-11-07)
 
         _vm = App.Host.Services.GetRequiredService<ShellViewModel>();
         _vm.LoggedOut += OnLoggedOut;

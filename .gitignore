@@ -13,3 +13,8 @@ coverage/
 .vs/
 .idea/
 *.swp
+
+# حزمة التثبيت (2026-11-07): مخرجات النشر والحزمة والتشغيليات المؤقتة
+installer/publish/
+installer/output/
+installer/redist/

@@ -18,6 +18,10 @@ public sealed partial class LoginWindow : Window
         InitializeComponent();
         Title = "WERA PRO HD — تسجيل الدخول";
 
+        // حارس النافذة الواحدة (2026-11-07): تسجيل نفسها كنافذة رئيسية/نشطة
+        App.MainWindow = this;
+        App.ActiveWindow = this;
+
         _vm = App.Host.Services.GetRequiredService<LoginViewModel>();
         _vm.LoginSucceeded += OnLoginSucceeded;
 
@@ -86,6 +90,7 @@ public sealed partial class LoginWindow : Window
         _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
         {
             var shell = ActivatorUtilities.CreateInstance<ShellWindow>(App.Host.Services);
+            App.MainWindow = shell; // تسليم عصا النافذة الرئيسية لحارس التكرار
             shell.Activate();
             Close();
         });
