@@ -70,13 +70,11 @@ SetupIconFile=Assets\setup.ico
 WizardImageFile=Assets\wizard_large.bmp
 WizardSmallImageFile=Assets\wizard_small.bmp
 WizardStyle=modern
-RightToLeft=yes
 
 ; ── معلومات الإصدار في خصائص الملف ──
 VersionInfoVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} — Retail Operations Workbench (Installer)
-VersionInfoProductName={#AppName}
 VersionInfoProductVersion={#AppVersion}
 
 ; ── ضغط احترافي أقصى ──
@@ -90,6 +88,12 @@ OutputBaseFilename=WeraProSetup-{#AppVersion}-{#ArchSuffix}
 ; إغلاق التطبيق بأمان قبل الترقية/الإزالة ثم إعادة فتحه بعد الترقية
 CloseApplications=yes
 RestartApplications=yes
+
+[LangOptions]
+; دعم الاتجاه من اليمين لليسار — التوجيه الصحيح في هذا القسم
+; ([Setup] لا يعرف RightToLeft — رفضه ISCC 6.7.1 أثناء التجميع)
+LanguageName=العربية
+RightToLeft=yes
 
 [Languages]
 Name: "ar"; MessagesFile: "compiler:Default.isl"
