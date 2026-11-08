@@ -77,8 +77,12 @@ public sealed class FinanceRepository(WeraDbContext db, TimeProvider clock) : IF
         {
             var row = new TreasuryAccountRow
             {
-                Code = code, NameAr = nameAr, AccountKind = accountKind,
-                BranchId = branchId, StationId = stationId, IsActive = true,
+                Code = code,
+                NameAr = nameAr,
+                AccountKind = accountKind,
+                BranchId = branchId,
+                StationId = stationId,
+                IsActive = true,
             };
             _db.TreasuryAccounts.Add(row);
             await _db.SaveChangesAsync(ct);
@@ -123,48 +127,50 @@ public sealed class FinanceRepository(WeraDbContext db, TimeProvider clock) : IF
         var strategy = _db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
-        try
-        {
-            var row = new FinanceVoucherRow
+            await using var tx = await _db.Database.BeginTransactionAsync(ct);
+            try
             {
-                VoucherNumber = plan.VoucherNumber,
-                VoucherType = plan.VoucherType,
-                TreasuryAccountId = plan.TreasuryAccountId,
-                CounterTreasuryAccountId = plan.CounterTreasuryAccountId,
-                Amount = plan.Amount,
-                CounterpartyType = plan.CounterpartyType,
-                CounterpartyId = plan.CounterpartyId,
-                Reason = plan.Reason,
-                Status = "DRAFT",
-                CreatedBy = plan.CreatedByUserId,
-                CreatedAt = _clock.GetUtcNow(),
-                ShiftId = plan.ShiftId,
-            };
-            _db.FinanceVouchers.Add(row);
-            await _db.SaveChangesAsync(ct);
-
-            foreach (var allocation in plan.Allocations)
-            {
-                _db.VoucherAllocations.Add(new VoucherAllocationRow
+                var row = new FinanceVoucherRow
                 {
-                    VoucherId = row.VoucherId, InvoiceId = allocation.InvoiceId,
-                    Amount = allocation.Amount, CreatedAt = _clock.GetUtcNow(),
-                });
-            }
-            if (plan.Allocations.Count > 0)
-            {
+                    VoucherNumber = plan.VoucherNumber,
+                    VoucherType = plan.VoucherType,
+                    TreasuryAccountId = plan.TreasuryAccountId,
+                    CounterTreasuryAccountId = plan.CounterTreasuryAccountId,
+                    Amount = plan.Amount,
+                    CounterpartyType = plan.CounterpartyType,
+                    CounterpartyId = plan.CounterpartyId,
+                    Reason = plan.Reason,
+                    Status = "DRAFT",
+                    CreatedBy = plan.CreatedByUserId,
+                    CreatedAt = _clock.GetUtcNow(),
+                    ShiftId = plan.ShiftId,
+                };
+                _db.FinanceVouchers.Add(row);
                 await _db.SaveChangesAsync(ct);
+
+                foreach (var allocation in plan.Allocations)
+                {
+                    _db.VoucherAllocations.Add(new VoucherAllocationRow
+                    {
+                        VoucherId = row.VoucherId,
+                        InvoiceId = allocation.InvoiceId,
+                        Amount = allocation.Amount,
+                        CreatedAt = _clock.GetUtcNow(),
+                    });
+                }
+                if (plan.Allocations.Count > 0)
+                {
+                    await _db.SaveChangesAsync(ct);
+                }
+                await tx.CommitAsync(ct);
+                var data = await GetVoucherAsync(row.VoucherId, ct);
+                return Result.Ok(data!);
             }
-            await tx.CommitAsync(ct);
-            var data = await GetVoucherAsync(row.VoucherId, ct);
-            return Result.Ok(data!);
-        }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg)
-        {
-            await tx.RollbackAsync(ct);
-            throw Map(pg, $"VOUCHER_{pg.SqlState}");
-        }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg)
+            {
+                await tx.RollbackAsync(ct);
+                throw Map(pg, $"VOUCHER_{pg.SqlState}");
+            }
         });
     }
 
@@ -799,11 +805,22 @@ public sealed class FinanceRepository(WeraDbContext db, TimeProvider clock) : IF
                       orderby s.OpenedAt descending
                       select new
                       {
-                          s.ShiftId, Number = _db.SalesShifts.Where(x => x.StationId == s.StationId && x.OpenedAt <= s.OpenedAt).Count(),
-                          s.StationId, st.BranchId, st.Code, st.NameAr,
-                          OpenedBy = ob.DisplayNameAr, s.OpenedAt, s.OpeningFloat, s.Status,
-                          s.ClosedAt, ClosedBy = cb == null ? null : cb.DisplayNameAr,
-                          s.ExpectedCash, s.CountedCash, s.VarianceReason, s.VarianceSettledByVoucherId,
+                          s.ShiftId,
+                          Number = _db.SalesShifts.Where(x => x.StationId == s.StationId && x.OpenedAt <= s.OpenedAt).Count(),
+                          s.StationId,
+                          st.BranchId,
+                          st.Code,
+                          st.NameAr,
+                          OpenedBy = ob.DisplayNameAr,
+                          s.OpenedAt,
+                          s.OpeningFloat,
+                          s.Status,
+                          s.ClosedAt,
+                          ClosedBy = cb == null ? null : cb.DisplayNameAr,
+                          s.ExpectedCash,
+                          s.CountedCash,
+                          s.VarianceReason,
+                          s.VarianceSettledByVoucherId,
                       })
                       .Select(x => new ShiftListData(
                           x.ShiftId, x.Number, x.StationId, x.BranchId, x.Code, x.NameAr,

@@ -590,23 +590,23 @@ public sealed class SalesRepository : ISalesRepository
         long sourceUomId, decimal conversionFactor, string sourceDocType, long sourceDocId,
         string? sourceLineRef, long? approvalId, string? reason, long branchId, long userId,
         DateTimeOffset? occurredAt = null) => new()
-    {
-        SkuId = skuId,
-        WarehouseId = warehouseId,
-        MovementType = movementType,
-        Direction = (short)direction,
-        BaseQty = decimal.Round(baseQty, 6),
-        SourceUomId = sourceUomId,
-        ConversionFactor = conversionFactor,
-        SourceDocType = sourceDocType,
-        SourceDocId = sourceDocId,
-        SourceLineRef = sourceLineRef,
-        ApprovalId = approvalId,
-        Reason = reason,
-        BranchId = branchId,
-        UserId = userId,
-        OccurredAt = occurredAt ?? _clock.GetUtcNow(),
-    };
+        {
+            SkuId = skuId,
+            WarehouseId = warehouseId,
+            MovementType = movementType,
+            Direction = (short)direction,
+            BaseQty = decimal.Round(baseQty, 6),
+            SourceUomId = sourceUomId,
+            ConversionFactor = conversionFactor,
+            SourceDocType = sourceDocType,
+            SourceDocId = sourceDocId,
+            SourceLineRef = sourceLineRef,
+            ApprovalId = approvalId,
+            Reason = reason,
+            BranchId = branchId,
+            UserId = userId,
+            OccurredAt = occurredAt ?? _clock.GetUtcNow(),
+        };
 
     // ═══════════════ المرتجع — اعتماد إلزامي وأثر واحد مرتبط بالأصل (§9.8/D-04) ═
 
@@ -1076,11 +1076,22 @@ public sealed class SalesRepository : ISalesRepository
                             where i.InvoiceId == invoiceId
                             select new
                             {
-                                i.InvoiceId, i.InvoiceNumber, i.Status, i.PostedAt, i.BranchId,
-                                i.CustomerId, CustomerName = c != null ? c.NameAr : null,
-                                i.ShiftId, Cashier = u.DisplayNameAr,
-                                i.GrossTotal, i.LineDiscountTotal, i.InvoiceDiscount,
-                                i.TaxTotal, i.NetTotal, i.PaidTotal, i.ReturnedTotal,
+                                i.InvoiceId,
+                                i.InvoiceNumber,
+                                i.Status,
+                                i.PostedAt,
+                                i.BranchId,
+                                i.CustomerId,
+                                CustomerName = c != null ? c.NameAr : null,
+                                i.ShiftId,
+                                Cashier = u.DisplayNameAr,
+                                i.GrossTotal,
+                                i.LineDiscountTotal,
+                                i.InvoiceDiscount,
+                                i.TaxTotal,
+                                i.NetTotal,
+                                i.PaidTotal,
+                                i.ReturnedTotal,
                             }).FirstOrDefaultAsync(ct);
         if (header is null)
         {

@@ -306,8 +306,12 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         // مستقرة + حديثة → مقبولة 1.275
         var stable = await Preview(new
         {
-            skuId = _fx.CheeseSkuId, mode = "SCALE_READING",
-            scaleReadingKg = 1.275m, scaleStable = true, scaleConnected = true, scaleReadAtUtc = now,
+            skuId = _fx.CheeseSkuId,
+            mode = "SCALE_READING",
+            scaleReadingKg = 1.275m,
+            scaleStable = true,
+            scaleConnected = true,
+            scaleReadAtUtc = now,
         });
         Assert.True(stable.GetProperty("accepted").GetBoolean());
         Assert.Equal(1.275m, stable.GetProperty("weightKg").GetDecimal());
@@ -316,8 +320,12 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         // غير مستقرة → SCALE_UNSTABLE
         var unstable = await Preview(new
         {
-            skuId = _fx.CheeseSkuId, mode = "SCALE_READING",
-            scaleReadingKg = 1.275m, scaleStable = false, scaleConnected = true, scaleReadAtUtc = now,
+            skuId = _fx.CheeseSkuId,
+            mode = "SCALE_READING",
+            scaleReadingKg = 1.275m,
+            scaleStable = false,
+            scaleConnected = true,
+            scaleReadAtUtc = now,
         });
         Assert.False(unstable.GetProperty("accepted").GetBoolean());
         Assert.Equal("SCALE_UNSTABLE", unstable.GetProperty("errorCode").GetString());
@@ -325,8 +333,12 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         // قديمة → SCALE_READING_STALE
         var stale = await Preview(new
         {
-            skuId = _fx.CheeseSkuId, mode = "SCALE_READING",
-            scaleReadingKg = 1.275m, scaleStable = true, scaleConnected = true, scaleReadAtUtc = now.AddSeconds(-60),
+            skuId = _fx.CheeseSkuId,
+            mode = "SCALE_READING",
+            scaleReadingKg = 1.275m,
+            scaleStable = true,
+            scaleConnected = true,
+            scaleReadAtUtc = now.AddSeconds(-60),
         });
         Assert.False(stale.GetProperty("accepted").GetBoolean());
         Assert.Equal("SCALE_READING_STALE", stale.GetProperty("errorCode").GetString());
@@ -334,8 +346,12 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         // منقطعة → SCALE_DISCONNECTED
         var disconnected = await Preview(new
         {
-            skuId = _fx.CheeseSkuId, mode = "SCALE_READING",
-            scaleReadingKg = 1.275m, scaleStable = true, scaleConnected = false, scaleReadAtUtc = now,
+            skuId = _fx.CheeseSkuId,
+            mode = "SCALE_READING",
+            scaleReadingKg = 1.275m,
+            scaleStable = true,
+            scaleConnected = false,
+            scaleReadAtUtc = now,
         });
         Assert.False(disconnected.GetProperty("accepted").GetBoolean());
         Assert.Equal("SCALE_DISCONNECTED", disconnected.GetProperty("errorCode").GetString());
@@ -515,13 +531,16 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         // طلب اعتماد من الكاشير (الطالب) وقرار من المشرف (≠ الطالب — فصل واجبات)
         var approval = await cashier.PostAsJsonAsync("/api/v1/approvals", new
         {
-            entityType = "sales.refund", entityId = invoiceId, reasonAr = "عميل أعاد كيساً تالفاً",
+            entityType = "sales.refund",
+            entityId = invoiceId,
+            reasonAr = "عميل أعاد كيساً تالفاً",
         });
         Assert.Equal(HttpStatusCode.Created, approval.StatusCode);
         var approvalId = (await approval.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approvalId").GetInt64();
         var decision = await supervisor.PostAsJsonAsync($"/api/v1/approvals/{approvalId}/decision", new
         {
-            decision = "APPROVED", reasonAr = "موافقة على المرتجع الجزئي",
+            decision = "APPROVED",
+            reasonAr = "موافقة على المرتجع الجزئي",
         });
         Assert.Equal(HttpStatusCode.OK, decision.StatusCode);
 
@@ -530,9 +549,11 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         {
             originalInvoiceId = invoiceId,
             lines = new[] { new { originalLineId = lineId, qty = 1m } },
-            refundMethod = "CASH", restock = true,
+            refundMethod = "CASH",
+            restock = true,
             reasonAr = "كيس تالف — إعادة للمخزون",
-            approvalId, idempotencyKey = $"g7-t12r-{Guid.NewGuid():N}",
+            approvalId,
+            idempotencyKey = $"g7-t12r-{Guid.NewGuid():N}",
         });
         var partialBody = await CreatedAsync(partial);
         Assert.Equal(5.00m, partialBody.GetProperty("total").GetDecimal());
@@ -549,9 +570,11 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         {
             originalInvoiceId = invoiceId,
             lines = new[] { new { originalLineId = lineId, qty = 3m } },
-            refundMethod = "CASH", restock = true,
+            refundMethod = "CASH",
+            restock = true,
             reasonAr = "محاولة تجاوز",
-            approvalId, idempotencyKey = $"g7-t12o-{Guid.NewGuid():N}",
+            approvalId,
+            idempotencyKey = $"g7-t12o-{Guid.NewGuid():N}",
         });
         Assert.Equal(HttpStatusCode.Conflict, over.StatusCode);
 
@@ -560,9 +583,11 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         {
             originalInvoiceId = invoiceId,
             lines = new[] { new { originalLineId = lineId, qty = 1m } },
-            refundMethod = "CARD", restock = true,
+            refundMethod = "CARD",
+            restock = true,
             reasonAr = "محاولة رد بطاقة",
-            approvalId, idempotencyKey = $"g7-t12c-{Guid.NewGuid():N}",
+            approvalId,
+            idempotencyKey = $"g7-t12c-{Guid.NewGuid():N}",
         });
         Assert.Equal(HttpStatusCode.Conflict, cardMismatch.StatusCode);
         Assert.Equal("REFUND_METHOD_MISMATCH", (await cardMismatch.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString());
@@ -570,20 +595,25 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         // مرتجع كامل للباقي → FULL_RETURN
         var approval2 = await cashier.PostAsJsonAsync("/api/v1/approvals", new
         {
-            entityType = "sales.refund", entityId = invoiceId, reasonAr = "استرجاع كامل",
+            entityType = "sales.refund",
+            entityId = invoiceId,
+            reasonAr = "استرجاع كامل",
         });
         var approval2Id = (await approval2.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approvalId").GetInt64();
         await supervisor.PostAsJsonAsync($"/api/v1/approvals/{approval2Id}/decision", new
         {
-            decision = "APPROVED", reasonAr = "موافقة الاسترجاع الكامل",
+            decision = "APPROVED",
+            reasonAr = "موافقة الاسترجاع الكامل",
         });
         var full = await supervisor.PostAsJsonAsync("/api/v1/pos/refunds", new
         {
             originalInvoiceId = invoiceId,
             lines = new[] { new { originalLineId = lineId, qty = 2m } },
-            refundMethod = "CASH", restock = true,
+            refundMethod = "CASH",
+            restock = true,
             reasonAr = "استرجاع الكمية المتبقية",
-            approvalId = approval2Id, idempotencyKey = $"g7-t12f-{Guid.NewGuid():N}",
+            approvalId = approval2Id,
+            idempotencyKey = $"g7-t12f-{Guid.NewGuid():N}",
         });
         var fullBody = await full.Content.ReadAsStringAsync();
         Assert.True(full.StatusCode == HttpStatusCode.Created, $"FULL-BODY={fullBody}");
@@ -678,8 +708,12 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
 
             var refund = await cashier.PostAsJsonAsync("/api/v1/pos/refunds", new
             {
-                originalInvoiceId = 1, lines = new[] { new { originalLineId = 1, qty = 1m } },
-                refundMethod = "CASH", restock = true, reasonAr = "بدون صلاحية", approvalId = 1,
+                originalInvoiceId = 1,
+                lines = new[] { new { originalLineId = 1, qty = 1m } },
+                refundMethod = "CASH",
+                restock = true,
+                reasonAr = "بدون صلاحية",
+                approvalId = 1,
             });
             Assert.Equal(HttpStatusCode.Forbidden, refund.StatusCode);
 
@@ -748,12 +782,15 @@ public sealed class G7EndpointTests : IClassFixture<G7ApiFixture>
         // اعتماد مشرف (الطالب كاشير والمعتمد مشرف — فصل واجبات)
         var approval = await cashier.PostAsJsonAsync("/api/v1/approvals", new
         {
-            entityType = "sales.invoice", entityId = 0, reasonAr = "بيع بمخزون سالب بموافقة مشرف (D-03)",
+            entityType = "sales.invoice",
+            entityId = 0,
+            reasonAr = "بيع بمخزون سالب بموافقة مشرف (D-03)",
         });
         var approvalId = (await approval.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approvalId").GetInt64();
         await supervisor.PostAsJsonAsync($"/api/v1/approvals/{approvalId}/decision", new
         {
-            decision = "APPROVED", reasonAr = "موافق على البيع السالب",
+            decision = "APPROVED",
+            reasonAr = "موافق على البيع السالب",
         });
 
         var withApproval = await cashier.PostAsJsonAsync("/api/v1/pos/sales", new
@@ -971,50 +1008,50 @@ public sealed class G7ApiFixture : IAsyncLifetime
 
         if (!alreadySeeded)
         {
-        var milk = CatalogEndpointTests.BagAndBoxPayload(
-            "G7-SCN", "G7-SCN-BAG", "G7-SCN-BOX",
-            BagBarcode, "6221031497780", categoryId, priceListId);
-        var milkCreated = await authed.PostAsJsonAsync("/api/v1/catalog/products", milk);
-        Assert.True(milkCreated.IsSuccessStatusCode, "بذر منتج الأكياس فشل: " + await milkCreated.Content.ReadAsStringAsync());
+            var milk = CatalogEndpointTests.BagAndBoxPayload(
+                "G7-SCN", "G7-SCN-BAG", "G7-SCN-BOX",
+                BagBarcode, "6221031497780", categoryId, priceListId);
+            var milkCreated = await authed.PostAsJsonAsync("/api/v1/catalog/products", milk);
+            Assert.True(milkCreated.IsSuccessStatusCode, "بذر منتج الأكياس فشل: " + await milkCreated.Content.ReadAsStringAsync());
 
-        var cheese = new
-        {
-            code = "G7-CHEESE",
-            nameAr = "جبنة G7 بالكيلو",
-            categoryId,
-            trackLots = false,
-            trackSerials = false,
-            skus = new object[]
+            var cheese = new
             {
+                code = "G7-CHEESE",
+                nameAr = "جبنة G7 بالكيلو",
+                categoryId,
+                trackLots = false,
+                trackSerials = false,
+                skus = new object[]
+                {
                 new
                 {
                     skuCode = "G7-CHEESE-KG", saleMode = "WEIGHT", baseUomId = 2, saleUomId = 2, nameAr = "بالكيلو", reorderLevel = 0,
                     weight = new { weightPrecisionG = 1, weightStepG = 5, allowManualWeight = true, allowAmountTarget = true, minWeightKg = (decimal?)0.05m, maxWeightKg = (decimal?)50m, defaultTareKg = 0m },
                 },
-            },
-            barcodes = new object[] { new { barcodeValue = "6291041500770", barcodeType = "EAN13", isPrintedLabel = false, skuOrdinal = 0 } },
-            plus = new object[] { new { pluCode = "4071", skuOrdinal = 0 } },
-            prices = new object[] { new { skuOrdinal = 0, priceListId, unitId = 2, unitPrice = 200m, taxTreatment = "TAXABLE" } },  // 200 ج.م/كجم — المثال الملزم
-            packages = Array.Empty<object>(),
-        };
-        var cheeseCreated = await authed.PostAsJsonAsync("/api/v1/catalog/products", cheese);
-        Assert.True(cheeseCreated.IsSuccessStatusCode, "بذر الجبن فشل: " + await cheeseCreated.Content.ReadAsStringAsync());
+                },
+                barcodes = new object[] { new { barcodeValue = "6291041500770", barcodeType = "EAN13", isPrintedLabel = false, skuOrdinal = 0 } },
+                plus = new object[] { new { pluCode = "4071", skuOrdinal = 0 } },
+                prices = new object[] { new { skuOrdinal = 0, priceListId, unitId = 2, unitPrice = 200m, taxTreatment = "TAXABLE" } },  // 200 ج.م/كجم — المثال الملزم
+                packages = Array.Empty<object>(),
+            };
+            var cheeseCreated = await authed.PostAsJsonAsync("/api/v1/catalog/products", cheese);
+            Assert.True(cheeseCreated.IsSuccessStatusCode, "بذر الجبن فشل: " + await cheeseCreated.Content.ReadAsStringAsync());
 
-        var low = new
-        {
-            code = "G7-LOW",
-            nameAr = "صنف محدود المخزون G7",
-            categoryId,
-            trackLots = false,
-            trackSerials = false,
-            skus = new object[] { new { skuCode = "G7-LOW-1", saleMode = "COUNT", baseUomId = 1, saleUomId = 1, nameAr = "وحدة", reorderLevel = 0, weight = (object?)null } },
-            barcodes = new object[] { new { barcodeValue = "6221031497797", barcodeType = "EAN13", isPrintedLabel = false, skuOrdinal = 0 } },
-            plus = Array.Empty<object>(),
-            prices = new object[] { new { skuOrdinal = 0, priceListId, unitId = 1, unitPrice = 5.00m, taxTreatment = "TAXABLE" } },
-            packages = Array.Empty<object>(),
-        };
-        var lowCreated = await authed.PostAsJsonAsync("/api/v1/catalog/products", low);
-        Assert.True(lowCreated.IsSuccessStatusCode, "بذر الصنف المحدود فشل: " + await lowCreated.Content.ReadAsStringAsync());
+            var low = new
+            {
+                code = "G7-LOW",
+                nameAr = "صنف محدود المخزون G7",
+                categoryId,
+                trackLots = false,
+                trackSerials = false,
+                skus = new object[] { new { skuCode = "G7-LOW-1", saleMode = "COUNT", baseUomId = 1, saleUomId = 1, nameAr = "وحدة", reorderLevel = 0, weight = (object?)null } },
+                barcodes = new object[] { new { barcodeValue = "6221031497797", barcodeType = "EAN13", isPrintedLabel = false, skuOrdinal = 0 } },
+                plus = Array.Empty<object>(),
+                prices = new object[] { new { skuOrdinal = 0, priceListId, unitId = 1, unitPrice = 5.00m, taxTreatment = "TAXABLE" } },
+                packages = Array.Empty<object>(),
+            };
+            var lowCreated = await authed.PostAsJsonAsync("/api/v1/catalog/products", low);
+            Assert.True(lowCreated.IsSuccessStatusCode, "بذر الصنف المحدود فشل: " + await lowCreated.Content.ReadAsStringAsync());
 
         } // نهاية بذر المنتجات لمرة واحدة
 
@@ -1039,21 +1076,21 @@ public sealed class G7ApiFixture : IAsyncLifetime
         var stockSeeded = Scalar("SELECT COUNT(*) FROM inv.stock_movements WHERE source_doc_type='g7.seed'") > 0;
         if (!stockSeeded)
         {
-        // مخزون افتتاحي + طبقات WAC: 100000 كيس (ميزانية ضغط 1000 سطر) + صنف محدود 5 + 10 كجم جبن
-        Scalar($@"INSERT INTO finance.cost_layers (sku_id, warehouse_id, costing_method, avg_unit_cost, qty_on_layer)
+            // مخزون افتتاحي + طبقات WAC: 100000 كيس (ميزانية ضغط 1000 سطر) + صنف محدود 5 + 10 كجم جبن
+            Scalar($@"INSERT INTO finance.cost_layers (sku_id, warehouse_id, costing_method, avg_unit_cost, qty_on_layer)
                   VALUES ({BagSkuId}, {WarehouseId}, 'WAC', 2.0000, 100000)
                   ON CONFLICT (sku_id, warehouse_id) DO UPDATE SET avg_unit_cost = 2.0000, qty_on_layer = 100000");
-        Scalar($@"INSERT INTO finance.cost_layers (sku_id, warehouse_id, costing_method, avg_unit_cost, qty_on_layer)
+            Scalar($@"INSERT INTO finance.cost_layers (sku_id, warehouse_id, costing_method, avg_unit_cost, qty_on_layer)
                   VALUES ({LowSkuId}, {WarehouseId}, 'WAC', 2.0000, 5)
                   ON CONFLICT (sku_id, warehouse_id) DO UPDATE SET avg_unit_cost = 2.0000, qty_on_layer = 5");
-        Scalar($@"INSERT INTO finance.cost_layers (sku_id, warehouse_id, costing_method, avg_unit_cost, qty_on_layer)
+            Scalar($@"INSERT INTO finance.cost_layers (sku_id, warehouse_id, costing_method, avg_unit_cost, qty_on_layer)
                   VALUES ({CheeseSkuId}, {WarehouseId}, 'WAC', 120.0000, 10)
                   ON CONFLICT (sku_id, warehouse_id) DO UPDATE SET avg_unit_cost = 120.0000, qty_on_layer = 10");
-        Scalar($@"INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id)
+            Scalar($@"INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id)
                   VALUES ({BagSkuId}, {WarehouseId}, 'OPENING', 1, 100000, 1, 1, 'g7.seed', 1, 'بذر مخزون G7', {BranchId}, {ownerId})");
-        Scalar($@"INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id)
+            Scalar($@"INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id)
                   VALUES ({LowSkuId}, {WarehouseId}, 'OPENING', 1, 5, 1, 1, 'g7.seed', 3, 'بذر الصنف المحدود G7', {BranchId}, {ownerId})");
-        Scalar($@"INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id)
+            Scalar($@"INSERT INTO inv.stock_movements (sku_id, warehouse_id, movement_type, direction, base_qty, source_uom_id, conversion_factor, source_doc_type, source_doc_id, reason, branch_id, user_id)
                   VALUES ({CheeseSkuId}, {WarehouseId}, 'OPENING', 1, 10000, 2, 1, 'g7.seed', 2, 'بذر جبن G7 (جرام)', {BranchId}, {ownerId})");
         } // نهاية بذر المخزون لمرة واحدة
 

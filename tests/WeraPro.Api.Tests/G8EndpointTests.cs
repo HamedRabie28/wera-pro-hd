@@ -135,7 +135,9 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         var refundLines = new[] { new { originalLineId = cashLineId, qty = 5m } };
         var approval = await OkAsync(await owner.PostAsJsonAsync("/api/v1/approvals", new
         {
-            entityType = "sales.refund", entityId = cashInvoiceId, reasonAr = "اعتماد مرتجع سيناريو G8",
+            entityType = "sales.refund",
+            entityId = cashInvoiceId,
+            reasonAr = "اعتماد مرتجع سيناريو G8",
         }));
         using var decider = await ClientAsync("g8.manager", "Manager#G8-Pass");
         await OkAsync(await decider.PostAsJsonAsync($"/api/v1/approvals/{approval.GetProperty("approvalId").GetInt64()}/decision",
@@ -254,8 +256,11 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // مبلغ لا يطابق الفارق → رفض
         var badVoucher = await OkAsync(await owner.PostAsJsonAsync("/api/v1/finance/vouchers", new
         {
-            voucherType = "DISBURSEMENT", treasuryAccountId = _fx.SafeAccountId, amount = 99m,
-            counterpartyType = "OWNER", reasonAr = "سند تسوية بمبلغ خاطئ",
+            voucherType = "DISBURSEMENT",
+            treasuryAccountId = _fx.SafeAccountId,
+            amount = 99m,
+            counterpartyType = "OWNER",
+            reasonAr = "سند تسوية بمبلغ خاطئ",
         }));
         await OkAsync(await owner.PostAsJsonAsync($"/api/v1/finance/vouchers/{badVoucher.GetProperty("voucherId").GetInt64()}/post", new { }));
         await ProblemAsync(await owner.PostAsJsonAsync($"/api/v1/pos/shifts/{shiftId}/settle-variance",
@@ -281,7 +286,9 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (أ) تحويل بلا وجهة → رفض (قيد V006)
         await ProblemAsync(await owner.PostAsJsonAsync("/api/v1/finance/vouchers", new
         {
-            voucherType = "TRANSFER", treasuryAccountId = _fx.DrawerAccountId, amount = 100m,
+            voucherType = "TRANSFER",
+            treasuryAccountId = _fx.DrawerAccountId,
+            amount = 100m,
             reasonAr = "تحويل بلا وجهة مرفوض",
         }), HttpStatusCode.Conflict, "VOUCHER_TRANSFER_ACCOUNTS_INVALID");
 
@@ -327,8 +334,11 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (و) إلغاء مسودة سند آخر يعمل (سبب موثق)
         var draft = await OkAsync(await owner.PostAsJsonAsync("/api/v1/finance/vouchers", new
         {
-            voucherType = "RECEIPT", treasuryAccountId = _fx.SafeAccountId, amount = 10m,
-            counterpartyType = "OTHER", reasonAr = "مسودة ستلغى للاختبار",
+            voucherType = "RECEIPT",
+            treasuryAccountId = _fx.SafeAccountId,
+            amount = 10m,
+            counterpartyType = "OTHER",
+            reasonAr = "مسودة ستلغى للاختبار",
         }));
         await OkAsync(await owner.PostAsJsonAsync($"/api/v1/finance/vouchers/{draft.GetProperty("voucherId").GetInt64()}/cancel",
             new { reasonAr = "إلغاء للاختبار" }));
@@ -380,16 +390,23 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (هـ) توزيع فوق المتبقي → رفض موثق (منع تخصيص أكبر من المتبقي — §13): المتبقي 50 والتوزيع 60
         await ProblemAsync(await accountant.PostAsJsonAsync("/api/v1/finance/vouchers", new
         {
-            voucherType = "RECEIPT", treasuryAccountId = _fx.SafeAccountId, amount = 60m,
-            counterpartyType = "CUSTOMER", counterpartyId = _fx.CreditCustomerId,
-            reasonAr = "دفعة فوق المتبقي", allocations = new[] { new { invoiceId, amount = 60m } },
+            voucherType = "RECEIPT",
+            treasuryAccountId = _fx.SafeAccountId,
+            amount = 60m,
+            counterpartyType = "CUSTOMER",
+            counterpartyId = _fx.CreditCustomerId,
+            reasonAr = "دفعة فوق المتبقي",
+            allocations = new[] { new { invoiceId, amount = 60m } },
         }), HttpStatusCode.Conflict, "ALLOCATION_EXCEEDS_REMAINING");
 
         // (و) مجموع توزيعات السند فوق مبلغه → رفض (سند 40 وتوزيعان 30+20 — كلٌّ ضمن المتبقي ومجموعهما يتجاوز السند)
         await ProblemAsync(await accountant.PostAsJsonAsync("/api/v1/finance/vouchers", new
         {
-            voucherType = "RECEIPT", treasuryAccountId = _fx.SafeAccountId, amount = 40m,
-            counterpartyType = "CUSTOMER", counterpartyId = _fx.CreditCustomerId,
+            voucherType = "RECEIPT",
+            treasuryAccountId = _fx.SafeAccountId,
+            amount = 40m,
+            counterpartyType = "CUSTOMER",
+            counterpartyId = _fx.CreditCustomerId,
             reasonAr = "توزيع فوق مبلغ السند",
             allocations = new[] { new { invoiceId, amount = 30m }, new { invoiceId, amount = 20m } },
         }), HttpStatusCode.Conflict, "VOUCHER_OVER_ALLOCATED");
@@ -397,9 +414,13 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (ز) التوزيع ليس لغير سند قبض عميل → رفض
         await ProblemAsync(await accountant.PostAsJsonAsync("/api/v1/finance/vouchers", new
         {
-            voucherType = "DISBURSEMENT", treasuryAccountId = _fx.SafeAccountId, amount = 10m,
-            counterpartyType = "CUSTOMER", counterpartyId = _fx.CreditCustomerId,
-            reasonAr = "توزيع على سند صرف", allocations = new[] { new { invoiceId, amount = 10m } },
+            voucherType = "DISBURSEMENT",
+            treasuryAccountId = _fx.SafeAccountId,
+            amount = 10m,
+            counterpartyType = "CUSTOMER",
+            counterpartyId = _fx.CreditCustomerId,
+            reasonAr = "توزيع على سند صرف",
+            allocations = new[] { new { invoiceId, amount = 10m } },
         }), HttpStatusCode.Conflict, "VOUCHER_ALLOCATION_NOT_ALLOWED");
     }
 
@@ -492,8 +513,11 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (ب) الكاشير لا يرحّل مصروفاً على غير درج محطته (الخزينة): اعتمادٌ ثم ترحيل — §14.4)
         var safeExpense = await OkAsync(await cashier.PostAsJsonAsync("/api/v1/finance/expenses", new
         {
-            categoryId = _fx.TransportCategoryId, amount = 30m, taxAmount = 0m,
-            paymentMethod = "CASH", treasuryAccountId = _fx.SafeAccountId,
+            categoryId = _fx.TransportCategoryId,
+            amount = 30m,
+            taxAmount = 0m,
+            paymentMethod = "CASH",
+            treasuryAccountId = _fx.SafeAccountId,
             notesAr = "محاولة صرف من الخزينة ككاشير",
         }));
         await ProblemAsync(await cashier.PostAsJsonAsync($"/api/v1/finance/expenses/{safeExpense.GetProperty("expenseId").GetInt64()}/post", new { }),
@@ -516,7 +540,9 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (أ) مساهمة مالك 10000 على الخزينة → ترحيل بأثر قبض واحد
         var contribution = await OkAsync(await owner.PostAsJsonAsync("/api/v1/finance/capital/events", new
         {
-            eventType = "OWNER_CONTRIBUTION", amount = 10000m, treasuryAccountId = _fx.SafeAccountId,
+            eventType = "OWNER_CONTRIBUTION",
+            amount = 10000m,
+            treasuryAccountId = _fx.SafeAccountId,
             descriptionAr = "مساهمة رأس مال إضافية سيناريو G8",
         }));
         await OkAsync(await owner.PostAsJsonAsync($"/api/v1/finance/capital/events/{contribution.GetProperty("capitalId").GetInt64()}/post", new { }));
@@ -525,7 +551,9 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (ب) سحب مالك 1500 → أثر صرف واحد
         var withdrawal = await OkAsync(await owner.PostAsJsonAsync("/api/v1/finance/capital/events", new
         {
-            eventType = "OWNER_WITHDRAWAL", amount = 1500m, treasuryAccountId = _fx.SafeAccountId,
+            eventType = "OWNER_WITHDRAWAL",
+            amount = 1500m,
+            treasuryAccountId = _fx.SafeAccountId,
             descriptionAr = "سحب مالك موثق سيناريو G8",
         }));
         await OkAsync(await owner.PostAsJsonAsync($"/api/v1/finance/capital/events/{withdrawal.GetProperty("capitalId").GetInt64()}/post", new { }));
@@ -534,14 +562,18 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (ج) الرصيد الافتتاحي بلا اعتماد → رفض (D-14/B-04: الأرصدة بمستندات معتمدة فقط)
         await ProblemAsync(await owner.PostAsJsonAsync("/api/v1/finance/capital/events", new
         {
-            eventType = "OPENING_BALANCE", amount = 50000m, treasuryAccountId = _fx.SafeAccountId,
+            eventType = "OPENING_BALANCE",
+            amount = 50000m,
+            treasuryAccountId = _fx.SafeAccountId,
             descriptionAr = "افتتاحي بلا اعتماد",
         }), HttpStatusCode.Conflict, "CAPITAL_OPENING_APPROVAL_REQUIRED");
 
         // (د) الافتتاحي باعتماد ثنائي موثق (مدير يطلب، مالك يعتمد — no_self) ثم يُرحَّل
         var request = await OkAsync(await manager.PostAsJsonAsync("/api/v1/approvals", new
         {
-            entityType = "finance.capital_event", entityId = 0, reasonAr = "طلب اعتماد الرصيد الافتتاحي سيناريو G8",
+            entityType = "finance.capital_event",
+            entityId = 0,
+            reasonAr = "طلب اعتماد الرصيد الافتتاحي سيناريو G8",
         }));
         var decision = await OkAsync(await owner.PostAsJsonAsync($"/api/v1/approvals/{request.GetProperty("approvalId").GetInt64()}/decision",
             new { decision = "APPROVED", reasonAr = "اعتماد الأرصدة الافتتاحية بعد المراجعة" }));
@@ -549,8 +581,11 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
 
         var opening = await OkAsync(await owner.PostAsJsonAsync("/api/v1/finance/capital/events", new
         {
-            eventType = "OPENING_BALANCE", amount = 50000m, treasuryAccountId = _fx.BankAccountId,
-            descriptionAr = CapitalPendingNoteForTest(), approvalId = request.GetProperty("approvalId").GetInt64(),
+            eventType = "OPENING_BALANCE",
+            amount = 50000m,
+            treasuryAccountId = _fx.BankAccountId,
+            descriptionAr = CapitalPendingNoteForTest(),
+            approvalId = request.GetProperty("approvalId").GetInt64(),
         }));
         await OkAsync(await owner.PostAsJsonAsync($"/api/v1/finance/capital/events/{opening.GetProperty("capitalId").GetInt64()}/post", new { }));
         Assert.Equal(50000m, await ScalarDecimalAsync($"SELECT COALESCE(SUM(amount*direction),0) FROM finance.treasury_transactions WHERE treasury_account_id={_fx.BankAccountId} AND source_doc_type='finance.capital_event' AND source_doc_id={opening.GetProperty("capitalId").GetInt64()}"));
@@ -605,7 +640,8 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         using var ownerOnPublicStation = await ClientAsync("g8.owner", "Owner#G8-Pass", stationId: _fx.PublicStationId);
         var denied = await ProblemAsync(await ownerOnPublicStation.PostAsJsonAsync("/api/v1/finance/print", new
         {
-            documentType = "PAYROLL_SLIP", documentId = 1,
+            documentType = "PAYROLL_SLIP",
+            documentId = 1,
         }), HttpStatusCode.Conflict, "PAYROLL_PRINTER_CONFIDENTIAL_REQUIRED");
         Assert.Contains("طابعة مؤمنة", denied.GetProperty("detail").GetString());
         Assert.Equal(0L, await ScalarAsync("""
@@ -617,14 +653,16 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // سند سداد راتب كذلك (§29.10: طابعة مؤمنة فقط)
         await ProblemAsync(await ownerOnPublicStation.PostAsJsonAsync("/api/v1/finance/print", new
         {
-            documentType = "PAYROLL_PAYMENT_VOUCHER", documentId = 1,
+            documentType = "PAYROLL_PAYMENT_VOUCHER",
+            documentId = 1,
         }), HttpStatusCode.Conflict, "PAYROLL_PRINTER_CONFIDENTIAL_REQUIRED");
 
         // (ب) المحطة الرئيسية فيها الطابعة المؤمنة (58mm): كشف الراتب يُوجَّه إليها حصراً
         using var owner = await ClientAsync("g8.owner", "Owner#G8-Pass");
         var slip = await OkAsync(await owner.PostAsJsonAsync("/api/v1/finance/print", new
         {
-            documentType = "PAYROLL_SLIP", documentId = 1,
+            documentType = "PAYROLL_SLIP",
+            documentId = 1,
         }));
         Assert.True(slip.GetProperty("jobCreated").GetBoolean());
         Assert.Equal("CONFIDENTIAL_PAYROLL", slip.GetProperty("targetPrinterRole").GetString());
@@ -636,7 +674,8 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (ج) السند المالي على طابعة المالية (EXPLICIT_USER §29.10) — قالب 80 المستقل
         var voucherPrint = await OkAsync(await owner.PostAsJsonAsync("/api/v1/finance/print", new
         {
-            documentType = "FINANCE_RECEIPT_VOUCHER", documentId = 1,
+            documentType = "FINANCE_RECEIPT_VOUCHER",
+            documentId = 1,
         }));
         Assert.True(voucherPrint.GetProperty("jobCreated").GetBoolean());
         Assert.Equal("FINANCE_VOUCHERS", voucherPrint.GetProperty("targetPrinterRole").GetString());
@@ -645,7 +684,9 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         // (د) إعادة الطباعة مهمة جديدة REPRINT مرتبطة بالأصل (§29.9) — لا نسخة مالية جديدة
         var reprint = await OkAsync(await owner.PostAsJsonAsync("/api/v1/finance/print", new
         {
-            documentType = "FINANCE_RECEIPT_VOUCHER", documentId = 1, reprintOfJobId = voucherPrint.GetProperty("jobId").GetInt64(),
+            documentType = "FINANCE_RECEIPT_VOUCHER",
+            documentId = 1,
+            reprintOfJobId = voucherPrint.GetProperty("jobId").GetInt64(),
         }));
         var reprintJobId = reprint.GetProperty("jobId").GetInt64();
         var originalJobId = voucherPrint.GetProperty("jobId").GetInt64();
@@ -695,7 +736,9 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         using var cashier = await ClientAsync("g8.cashier", "Cashier#G8-Pass");
         Assert.Equal(HttpStatusCode.Forbidden, (await cashier.PostAsJsonAsync("/api/v1/finance/vouchers", new
         {
-            voucherType = "RECEIPT", treasuryAccountId = _fx.SafeAccountId, amount = 5m,
+            voucherType = "RECEIPT",
+            treasuryAccountId = _fx.SafeAccountId,
+            amount = 5m,
             reasonAr = "محاولة كاشير لإنشاء سند",
         })).StatusCode);
 
@@ -708,7 +751,9 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         Assert.Equal(HttpStatusCode.Forbidden, (await auditor.GetAsync("/api/v1/finance/treasury/accounts")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await auditor.PostAsJsonAsync("/api/v1/finance/vouchers", new
         {
-            voucherType = "RECEIPT", treasuryAccountId = _fx.SafeAccountId, amount = 5m,
+            voucherType = "RECEIPT",
+            treasuryAccountId = _fx.SafeAccountId,
+            amount = 5m,
             reasonAr = "محاولة مراجع لإنشاء سند",
         })).StatusCode);
 
@@ -717,13 +762,17 @@ public sealed class G8EndpointTests : IClassFixture<G8ApiFixture>
         Assert.Equal(HttpStatusCode.OK, (await accountant.GetAsync("/api/v1/finance/treasury/accounts")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await accountant.PostAsJsonAsync("/api/v1/finance/treasury/accounts", new
         {
-            code = "HACK", nameAr = "حساب غير مصرح", accountKind = "SAFE",
+            code = "HACK",
+            nameAr = "حساب غير مصرح",
+            accountKind = "SAFE",
         })).StatusCode);
 
         // الكاشير لا يسجل أحداث رأس المال (403)
         Assert.Equal(HttpStatusCode.Forbidden, (await cashier.PostAsJsonAsync("/api/v1/finance/capital/events", new
         {
-            eventType = "OWNER_CONTRIBUTION", amount = 5m, descriptionAr = "محاولة كاشير",
+            eventType = "OWNER_CONTRIBUTION",
+            amount = 5m,
+            descriptionAr = "محاولة كاشير",
         })).StatusCode);
 
         // المجهول: 401

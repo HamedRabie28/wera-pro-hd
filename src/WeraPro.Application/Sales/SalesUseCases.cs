@@ -128,38 +128,38 @@ public sealed class SaleLineResolver
             switch (weightSource)
             {
                 case WeightSources.AmountDerived:
-                {
-                    if (line.AmountTarget is not { } target)
                     {
-                        return Result.Fail<ResolvedLine>(new("AMOUNT_TARGET_REQUIRED", "المبلغ المستهدف مطلوب لمصدر AMOUNT_DERIVED"));
+                        if (line.AmountTarget is not { } target)
+                        {
+                            return Result.Fail<ResolvedLine>(new("AMOUNT_TARGET_REQUIRED", "المبلغ المستهدف مطلوب لمصدر AMOUNT_DERIVED"));
+                        }
+                        var pricePerKg = UnitPriceInKg(data, graph);
+                        var calc = WeightSaleRules.AcceptAmountTarget(pricePerKg, target, policy, settings.Weighing);
+                        if (!calc.IsSuccess)
+                        {
+                            return Result.Fail<ResolvedLine>(calc.Error!);
+                        }
+                        weightKg = calc.Value!.DisplayWeightGrams / 1000m;
+                        amountTarget = target;
+                        break;
                     }
-                    var pricePerKg = UnitPriceInKg(data, graph);
-                    var calc = WeightSaleRules.AcceptAmountTarget(pricePerKg, target, policy, settings.Weighing);
-                    if (!calc.IsSuccess)
-                    {
-                        return Result.Fail<ResolvedLine>(calc.Error!);
-                    }
-                    weightKg = calc.Value!.DisplayWeightGrams / 1000m;
-                    amountTarget = target;
-                    break;
-                }
                 case WeightSources.ScaleReading or WeightSources.QuickPick
                     or WeightSources.ManualWeight or WeightSources.WeightLabel or WeightSources.PackPreweighed:
-                {
-                    if (line.WeightKg is not { } w)
                     {
-                        return Result.Fail<ResolvedLine>(new("WEIGHT_REQUIRED", "الوزن مطلوب لهذا المصدر"));
+                        if (line.WeightKg is not { } w)
+                        {
+                            return Result.Fail<ResolvedLine>(new("WEIGHT_REQUIRED", "الوزن مطلوب لهذا المصدر"));
+                        }
+                        var check = weightSource == WeightSources.ManualWeight
+                            ? WeightSaleRules.AcceptManualWeight(w, policy, policy.AllowManualWeight)
+                            : WeightSaleRules.AcceptWeightLabel(w, policy);
+                        if (!check.IsSuccess)
+                        {
+                            return Result.Fail<ResolvedLine>(check.Error!);
+                        }
+                        weightKg = check.Value!;
+                        break;
                     }
-                    var check = weightSource == WeightSources.ManualWeight
-                        ? WeightSaleRules.AcceptManualWeight(w, policy, policy.AllowManualWeight)
-                        : WeightSaleRules.AcceptWeightLabel(w, policy);
-                    if (!check.IsSuccess)
-                    {
-                        return Result.Fail<ResolvedLine>(check.Error!);
-                    }
-                    weightKg = check.Value!;
-                    break;
-                }
                 default:
                     return Result.Fail<ResolvedLine>(new("WEIGHT_SOURCE_UNKNOWN", "مصدر وزن غير معروف"));
             }
@@ -1455,59 +1455,59 @@ public sealed class WeightPreviewUseCase
         switch (request.Mode)
         {
             case WeightSources.ScaleReading:
-            {
-                if (request.ScaleReadingKg is not { } reading)
                 {
-                    return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("SCALE_READING_REQUIRED", "قراءة الميزان مطلوبة"));
+                    if (request.ScaleReadingKg is not { } reading)
+                    {
+                        return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("SCALE_READING_REQUIRED", "قراءة الميزان مطلوبة"));
+                    }
+                    var check = WeightSaleRules.AcceptScaleReading(
+                        new ScaleReading(
+                            reading, request.ScaleStable ?? false, request.ScaleConnected ?? false,
+                            request.ScaleReadAtUtc ?? DateTimeOffset.MinValue, request.TareKg),
+                        policy, DateTimeOffset.UtcNow);
+                    if (!check.IsSuccess)
+                    {
+                        return Fail(check.Error!, pricePerKg);
+                    }
+                    return Ok(check.Value!, WeightSources.ScaleReading, pricePerKg, null, null, settings);
                 }
-                var check = WeightSaleRules.AcceptScaleReading(
-                    new ScaleReading(
-                        reading, request.ScaleStable ?? false, request.ScaleConnected ?? false,
-                        request.ScaleReadAtUtc ?? DateTimeOffset.MinValue, request.TareKg),
-                    policy, DateTimeOffset.UtcNow);
-                if (!check.IsSuccess)
-                {
-                    return Fail(check.Error!, pricePerKg);
-                }
-                return Ok(check.Value!, WeightSources.ScaleReading, pricePerKg, null, null, settings);
-            }
             case WeightSources.ManualWeight:
-            {
-                if (request.WeightKg is not { } manual)
                 {
-                    return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("WEIGHT_REQUIRED", "الوزن اليدوي مطلوب"));
+                    if (request.WeightKg is not { } manual)
+                    {
+                        return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("WEIGHT_REQUIRED", "الوزن اليدوي مطلوب"));
+                    }
+                    var check = WeightSaleRules.AcceptManualWeight(manual, policy, policy.AllowManualWeight);
+                    return check.IsSuccess
+                        ? Ok(check.Value!, WeightSources.ManualWeight, pricePerKg, null, null, settings)
+                        : Fail(check.Error!, pricePerKg);
                 }
-                var check = WeightSaleRules.AcceptManualWeight(manual, policy, policy.AllowManualWeight);
-                return check.IsSuccess
-                    ? Ok(check.Value!, WeightSources.ManualWeight, pricePerKg, null, null, settings)
-                    : Fail(check.Error!, pricePerKg);
-            }
             case WeightSources.QuickPick:
-            {
-                if (request.WeightKg is not { } quick)
                 {
-                    return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("WEIGHT_REQUIRED", "الوزن السريع مطلوب"));
+                    if (request.WeightKg is not { } quick)
+                    {
+                        return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("WEIGHT_REQUIRED", "الوزن السريع مطلوب"));
+                    }
+                    var check = WeightSaleRules.AcceptWeightLabel(quick, policy);
+                    return check.IsSuccess
+                        ? Ok(check.Value!, WeightSources.QuickPick, pricePerKg, null, null, settings)
+                        : Fail(check.Error!, pricePerKg);
                 }
-                var check = WeightSaleRules.AcceptWeightLabel(quick, policy);
-                return check.IsSuccess
-                    ? Ok(check.Value!, WeightSources.QuickPick, pricePerKg, null, null, settings)
-                    : Fail(check.Error!, pricePerKg);
-            }
             case WeightSources.AmountDerived:
-            {
-                if (request.AmountTarget is not { } target)
                 {
-                    return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("AMOUNT_TARGET_REQUIRED", "المبلغ المستهدف مطلوب"));
+                    if (request.AmountTarget is not { } target)
+                    {
+                        return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("AMOUNT_TARGET_REQUIRED", "المبلغ المستهدف مطلوب"));
+                    }
+                    var calc = WeightSaleRules.AcceptAmountTarget(pricePerKg, target, policy, settings.Weighing);
+                    if (!calc.IsSuccess)
+                    {
+                        return Fail(calc.Error!, pricePerKg);
+                    }
+                    var c = calc.Value!;
+                    return Ok(c.DisplayWeightGrams / 1000m, WeightSources.AmountDerived, pricePerKg,
+                        c.ExactWeightGrams, c.DisplayWeightGrams, settings);
                 }
-                var calc = WeightSaleRules.AcceptAmountTarget(pricePerKg, target, policy, settings.Weighing);
-                if (!calc.IsSuccess)
-                {
-                    return Fail(calc.Error!, pricePerKg);
-                }
-                var c = calc.Value!;
-                return Ok(c.DisplayWeightGrams / 1000m, WeightSources.AmountDerived, pricePerKg,
-                    c.ExactWeightGrams, c.DisplayWeightGrams, settings);
-            }
             default:
                 return Result.Fail<Contracts.V1.WeightPreviewResponse>(new("WEIGHT_MODE_UNKNOWN", "طريقة وزن غير معروفة"));
         }

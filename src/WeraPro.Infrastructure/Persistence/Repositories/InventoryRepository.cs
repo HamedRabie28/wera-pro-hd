@@ -813,9 +813,15 @@ public sealed class InventoryRepository : IInventoryRepository
             where (warehouseId == null || bal.WarehouseId == warehouseId)
             select new
             {
-                sku.SkuId, sku.SkuCode, sku.SkuNameAr, prod.NameAr,
-                bal.WarehouseId, wh.Code,
-                bal.BaseQty, bal.ReservedQty, sku.ReorderLevel,
+                sku.SkuId,
+                sku.SkuCode,
+                sku.SkuNameAr,
+                prod.NameAr,
+                bal.WarehouseId,
+                wh.Code,
+                bal.BaseQty,
+                bal.ReservedQty,
+                sku.ReorderLevel,
             };
         var raw = await query.ToListAsync(ct);
         return [.. raw
@@ -886,23 +892,23 @@ public sealed class InventoryRepository : IInventoryRepository
         long skuId, long warehouseId, string movementType, int direction, decimal baseQty,
         long sourceUomId, decimal conversionFactor, string sourceDocType, long sourceDocId,
         string? sourceLineRef, long? approvalId, string? reason, long branchId, long userId) => new()
-    {
-        SkuId = skuId,
-        WarehouseId = warehouseId,
-        MovementType = movementType,
-        Direction = (short)direction,
-        BaseQty = decimal.Round(baseQty, 6),
-        SourceUomId = sourceUomId,
-        ConversionFactor = conversionFactor,
-        SourceDocType = sourceDocType,
-        SourceDocId = sourceDocId,
-        SourceLineRef = sourceLineRef,
-        ApprovalId = approvalId,
-        Reason = reason,
-        BranchId = branchId,
-        UserId = userId,
-        OccurredAt = _clock.GetUtcNow(),
-    };
+        {
+            SkuId = skuId,
+            WarehouseId = warehouseId,
+            MovementType = movementType,
+            Direction = (short)direction,
+            BaseQty = decimal.Round(baseQty, 6),
+            SourceUomId = sourceUomId,
+            ConversionFactor = conversionFactor,
+            SourceDocType = sourceDocType,
+            SourceDocId = sourceDocId,
+            SourceLineRef = sourceLineRef,
+            ApprovalId = approvalId,
+            Reason = reason,
+            BranchId = branchId,
+            UserId = userId,
+            OccurredAt = _clock.GetUtcNow(),
+        };
 
     internal static string TranslateConstraint(PostgresException pg)
     {

@@ -66,18 +66,27 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var wh = await owner.PostAsJsonAsync("/api/v1/inventory/warehouses", new
             {
-                branchId = _fx.BranchId, code = "G6WSUB", nameAr = "مخزن فرعي تجريبي", whType = "SUB",
+                branchId = _fx.BranchId,
+                code = "G6WSUB",
+                nameAr = "مخزن فرعي تجريبي",
+                whType = "SUB",
             });
             Assert.Equal(HttpStatusCode.Created, wh.StatusCode);
             var duplicate = await owner.PostAsJsonAsync("/api/v1/inventory/warehouses", new
             {
-                branchId = _fx.BranchId, code = "G6WSUB", nameAr = "مكرر", whType = "SUB",
+                branchId = _fx.BranchId,
+                code = "G6WSUB",
+                nameAr = "مكرر",
+                whType = "SUB",
             });
             Assert.Equal(HttpStatusCode.BadRequest, duplicate.StatusCode);
 
             var badType = await owner.PostAsJsonAsync("/api/v1/inventory/warehouses", new
             {
-                branchId = _fx.BranchId, code = "G6W9", nameAr = "نوع غير معروف", whType = "GALAXY",
+                branchId = _fx.BranchId,
+                code = "G6W9",
+                nameAr = "نوع غير معروف",
+                whType = "GALAXY",
             });
             Assert.Equal(HttpStatusCode.BadRequest, badType.StatusCode);
         }
@@ -89,8 +98,12 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var supplier = await owner.PostAsJsonAsync("/api/v1/purchasing/suppliers", new
             {
-                code = "G6SUP1", nameAr = "مورد الألبان التجريبي", phone = "01000000001",
-                paymentTermsDays = 15, creditLimit = 10000m, notes = "بذر G6",
+                code = "G6SUP1",
+                nameAr = "مورد الألبان التجريبي",
+                phone = "01000000001",
+                paymentTermsDays = 15,
+                creditLimit = 10000m,
+                notes = "بذر G6",
             });
             Assert.Equal(HttpStatusCode.Created, supplier.StatusCode);
             supplierId = (await supplier.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("supplierId").GetInt64();
@@ -106,7 +119,8 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var basket = await storekeeper.PostAsJsonAsync("/api/v1/purchasing/purchase-orders", new
             {
-                supplierId, warehouseId = _fx.WarehouseId,
+                supplierId,
+                warehouseId = _fx.WarehouseId,
                 expectedDate = DateOnly.FromDateTime(DateTime.UtcNow.Date).AddDays(3),
                 lines = new object[]
                 {
@@ -137,14 +151,20 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             // أمر بمخزن مختلف → رفض صريح
             var wrongWarehouse = await storekeeper.PostAsJsonAsync("/api/v1/purchasing/purchase-receipts", new
             {
-                supplierId, warehouseId = warehouse2, poId, notes = "مخزن مختلف عن الأمر",
+                supplierId,
+                warehouseId = warehouse2,
+                poId,
+                notes = "مخزن مختلف عن الأمر",
                 lines = new object[] { new { skuId = boxSku, qty = 5m, uomId = 1, unitCost = 24m } },
             });
             Assert.Equal(HttpStatusCode.BadRequest, wrongWarehouse.StatusCode);
 
             var draft = await storekeeper.PostAsJsonAsync("/api/v1/purchasing/purchase-receipts", new
             {
-                supplierId, warehouseId = _fx.WarehouseId, poId, notes = "استلام السيناريو",
+                supplierId,
+                warehouseId = _fx.WarehouseId,
+                poId,
+                notes = "استلام السيناريو",
                 lines = new object[]
                 {
                     new { skuId = boxSku, qty = 5m, uomId = 1, unitCost = 24m, lotCode = "MILK-LOT-1", lotExpiry = DateOnly.FromDateTime(DateTime.UtcNow.Date).AddDays(30) },
@@ -168,7 +188,9 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             // مفتاح Idempotency مستهلك: استلام آخر بنفس المفتاح → 409 (فهرس V017 الفريد الجزئي)
             var otherDraft = await storekeeper.PostAsJsonAsync("/api/v1/purchasing/purchase-receipts", new
             {
-                supplierId, warehouseId = _fx.WarehouseId, notes = "استلام بمفتاح مستهلك",
+                supplierId,
+                warehouseId = _fx.WarehouseId,
+                notes = "استلام بمفتاح مستهلك",
                 lines = new object[] { new { skuId = boxSku, qty = 1m, uomId = 1, unitCost = 24m } },
             });
             var otherId = (await otherDraft.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("receiptId").GetInt64();
@@ -180,7 +202,8 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             // صنف وزني فوق حده الأقصى → رفض من قواعد الوزن (§5.1)
             var tooHeavy = await storekeeper.PostAsJsonAsync("/api/v1/purchasing/purchase-receipts", new
             {
-                supplierId, warehouseId = _fx.WarehouseId,
+                supplierId,
+                warehouseId = _fx.WarehouseId,
                 lines = new object[] { new { skuId = cheeseSku, qty = 9m, uomId = 2, unitCost = 80m } },
             });
             Assert.Equal(HttpStatusCode.BadRequest, tooHeavy.StatusCode);
@@ -210,16 +233,22 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var reserved = await storekeeper.PostAsJsonAsync("/api/v1/inventory/reservations", new
             {
-                skuId = bagSku, warehouseId = _fx.WarehouseId, qtyBase = 10m,
-                sourceDocType = "purch.purchase-orders", sourceDocId = poId,
+                skuId = bagSku,
+                warehouseId = _fx.WarehouseId,
+                qtyBase = 10m,
+                sourceDocType = "purch.purchase-orders",
+                sourceDocId = poId,
             });
             Assert.Equal(HttpStatusCode.Created, reserved.StatusCode);
             var reservationId = (await reserved.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("reservationId").GetInt64();
 
             var over = await storekeeper.PostAsJsonAsync("/api/v1/inventory/reservations", new
             {
-                skuId = bagSku, warehouseId = _fx.WarehouseId, qtyBase = 100m,
-                sourceDocType = "purch.purchase-orders", sourceDocId = poId,
+                skuId = bagSku,
+                warehouseId = _fx.WarehouseId,
+                qtyBase = 100m,
+                sourceDocType = "purch.purchase-orders",
+                sourceDocId = poId,
             });
             Assert.Equal(HttpStatusCode.BadRequest, over.StatusCode);
 
@@ -242,17 +271,25 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var badReceipt = await accountant.PostAsJsonAsync("/api/v1/purchasing/supplier-invoices", new
             {
-                supplierId, receiptId = 999999, invoiceNumber = "INV-BAD-1",
-                invoiceDate = DateOnly.FromDateTime(DateTime.UtcNow.Date), subtotal = 360m, taxTotal = 40m,
+                supplierId,
+                receiptId = 999999,
+                invoiceNumber = "INV-BAD-1",
+                invoiceDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+                subtotal = 360m,
+                taxTotal = 40m,
                 lines = Array.Empty<object>(),
             });
             Assert.Equal(HttpStatusCode.NotFound, badReceipt.StatusCode);
 
             var invoice = await accountant.PostAsJsonAsync("/api/v1/purchasing/supplier-invoices", new
             {
-                supplierId, receiptId, invoiceNumber = "SUP-INV-1001",
-                invoiceDate = DateOnly.FromDateTime(DateTime.UtcNow.Date), dueDate = DateOnly.FromDateTime(DateTime.UtcNow.Date).AddDays(15),
-                subtotal = 360m, taxTotal = 40m,      // 5 علب×24 + 3كجم×80 = 360 + ضريبة 40 = إجمالي 400
+                supplierId,
+                receiptId,
+                invoiceNumber = "SUP-INV-1001",
+                invoiceDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+                dueDate = DateOnly.FromDateTime(DateTime.UtcNow.Date).AddDays(15),
+                subtotal = 360m,
+                taxTotal = 40m,      // 5 علب×24 + 3كجم×80 = 360 + ضريبة 40 = إجمالي 400
                 lines = new object[]
                 {
                     new { skuId = boxSku, qty = 5m, uomId = 1, unitCost = 24m },
@@ -279,8 +316,11 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var overInvoice = await owner.PostAsJsonAsync("/api/v1/purchasing/supplier-payments", new
             {
-                supplierId, treasuryAccountId = _fx.TreasuryId, amount = 500m,
-                paymentMethod = "CASH", paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+                supplierId,
+                treasuryAccountId = _fx.TreasuryId,
+                amount = 500m,
+                paymentMethod = "CASH",
+                paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
                 allocations = new object[] { new { invoiceId, amount = 500m } },
             });
             Assert.Equal(HttpStatusCode.BadRequest, overInvoice.StatusCode);
@@ -288,9 +328,13 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
 
             var payment1 = await owner.PostAsJsonAsync("/api/v1/purchasing/supplier-payments", new
             {
-                supplierId, treasuryAccountId = _fx.TreasuryId, amount = 250m,
-                paymentMethod = "BANK_TRANSFER", paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
-                notes = "دفعة أولى", allocations = new object[] { new { invoiceId, amount = 250m } },
+                supplierId,
+                treasuryAccountId = _fx.TreasuryId,
+                amount = 250m,
+                paymentMethod = "BANK_TRANSFER",
+                paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+                notes = "دفعة أولى",
+                allocations = new object[] { new { invoiceId, amount = 250m } },
             });
             Assert.Equal(HttpStatusCode.Created, payment1.StatusCode);
             payment1Id = (await payment1.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("paymentId").GetInt64();
@@ -321,7 +365,10 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var over = await storekeeper.PostAsJsonAsync("/api/v1/purchasing/supplier-returns", new
             {
-                supplierId, receiptId, warehouseId = _fx.WarehouseId, refundMethod = "CREDIT_NOTE",
+                supplierId,
+                receiptId,
+                warehouseId = _fx.WarehouseId,
+                refundMethod = "CREDIT_NOTE",
                 lines = new object[] { new { skuId = boxSku, qty = 50m, uomId = 1, unitCost = 24m } },   // 600 كيس > 60
             });
             Assert.Equal(HttpStatusCode.BadRequest, over.StatusCode);
@@ -329,7 +376,11 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
 
             var draft = await storekeeper.PostAsJsonAsync("/api/v1/purchasing/supplier-returns", new
             {
-                supplierId, receiptId, invoiceId, warehouseId = _fx.WarehouseId, refundMethod = "CREDIT_NOTE",
+                supplierId,
+                receiptId,
+                invoiceId,
+                warehouseId = _fx.WarehouseId,
+                refundMethod = "CREDIT_NOTE",
                 lines = new object[] { new { skuId = boxSku, qty = 1m, uomId = 1, unitCost = 24m } },   // علبة = 12 كيس
             });
             Assert.Equal(HttpStatusCode.Created, draft.StatusCode);
@@ -355,17 +406,24 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             // تخصيص يتجاوز المتبقي (150) بعد تخفيض الإشعار الدائن (المتبقي 126)
             var overRemaining = await owner.PostAsJsonAsync("/api/v1/purchasing/supplier-payments", new
             {
-                supplierId, treasuryAccountId = _fx.TreasuryId, amount = 200m,
-                paymentMethod = "CASH", paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+                supplierId,
+                treasuryAccountId = _fx.TreasuryId,
+                amount = 200m,
+                paymentMethod = "CASH",
+                paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
                 allocations = new object[] { new { invoiceId, amount = 200m } },
             });
             Assert.Equal(HttpStatusCode.BadRequest, overRemaining.StatusCode);
 
             var payment2 = await owner.PostAsJsonAsync("/api/v1/purchasing/supplier-payments", new
             {
-                supplierId, treasuryAccountId = _fx.TreasuryId, amount = 126m,
-                paymentMethod = "CASH", paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
-                notes = "دفعة ختامية", allocations = new object[] { new { invoiceId, amount = 126m } },
+                supplierId,
+                treasuryAccountId = _fx.TreasuryId,
+                amount = 126m,
+                paymentMethod = "CASH",
+                paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+                notes = "دفعة ختامية",
+                allocations = new object[] { new { invoiceId, amount = 126m } },
             });
             var payment2Id = (await payment2.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("paymentId").GetInt64();
             var posted2 = await owner.PostAsync($"/api/v1/purchasing/supplier-payments/{payment2Id}/post", null);
@@ -397,7 +455,8 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             // المدير يجرد (رصد PAGE-20: م، مش، خ) — ثم يُختبر فصل الواجبات عليه صراحة
             var opened = await manager.PostAsJsonAsync("/api/v1/inventory/stocktakes", new
             {
-                warehouseId = _fx.WarehouseId, notes = "جرد نهاية الأسبوع",
+                warehouseId = _fx.WarehouseId,
+                notes = "جرد نهاية الأسبوع",
             });
             Assert.Equal(HttpStatusCode.Created, opened.StatusCode);
             var countId = (await opened.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("countId").GetInt64();
@@ -458,15 +517,21 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             // بلا اعتماد → رفض
             var noApproval = await storekeeper.PostAsJsonAsync("/api/v1/inventory/adjustments", new
             {
-                skuId = cheeseSku, warehouseId = _fx.WarehouseId, newQty = 1m,
-                adjustmentKind = "DAMAGE", reasonAr = "تلف نقل", approvalId = 0,
+                skuId = cheeseSku,
+                warehouseId = _fx.WarehouseId,
+                newQty = 1m,
+                adjustmentKind = "DAMAGE",
+                reasonAr = "تلف نقل",
+                approvalId = 0,
             });
             Assert.Equal(HttpStatusCode.Conflict, noApproval.StatusCode);
 
             // المدير (له صلاحية البت) يطلب الاعتماد — ثم يُختبر منعه من البت في طلبه (قيد V003)
             var request = await manager.PostAsJsonAsync("/api/v1/approvals", new
             {
-                entityType = "inv.adjustment", entityId = 0, reasonAr = "هالك جبنة تالفة أثناء العرض",
+                entityType = "inv.adjustment",
+                entityId = 0,
+                reasonAr = "هالك جبنة تالفة أثناء العرض",
             });
             Assert.Equal(HttpStatusCode.Created, request.StatusCode);
             var approvalId = (await request.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approvalId").GetInt64();
@@ -480,8 +545,12 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
 
             var damage = await storekeeper.PostAsJsonAsync("/api/v1/inventory/adjustments", new
             {
-                skuId = cheeseSku, warehouseId = _fx.WarehouseId, newQty = 1m,   // الباقي 1 — الهالك = 2
-                adjustmentKind = "DAMAGE", reasonAr = "تلف نقل", approvalId,
+                skuId = cheeseSku,
+                warehouseId = _fx.WarehouseId,
+                newQty = 1m,   // الباقي 1 — الهالك = 2
+                adjustmentKind = "DAMAGE",
+                reasonAr = "تلف نقل",
+                approvalId,
             });
             Assert.Equal(HttpStatusCode.Created, damage.StatusCode);
             var damageBody = await damage.Content.ReadFromJsonAsync<JsonElement>();
@@ -499,7 +568,8 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             // تحويل 200 كيس من رصيد 45 → نقص يتطلب اعتماداً
             var transfer = await storekeeper.PostAsJsonAsync("/api/v1/inventory/transfers", new
             {
-                fromWarehouseId = _fx.WarehouseId, toWarehouseId = warehouse2,
+                fromWarehouseId = _fx.WarehouseId,
+                toWarehouseId = warehouse2,
                 lines = new object[] { new { skuId = bagSku, qtyBase = 200m } },
             });
             Assert.Equal(HttpStatusCode.Created, transfer.StatusCode);
@@ -511,7 +581,9 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
 
             var request = await storekeeper.PostAsJsonAsync("/api/v1/approvals", new
             {
-                entityType = "inv.transfer", entityId = transferId, reasonAr = "نقل طارئ لفرع ثانٍ",
+                entityType = "inv.transfer",
+                entityId = transferId,
+                reasonAr = "نقل طارئ لفرع ثانٍ",
             });
             var approvalId = (await request.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approvalId").GetInt64();
             await supervisor.PostAsJsonAsync($"/api/v1/approvals/{approvalId}/decision", new { decision = "APPROVED", reasonAr = "مقبول" });
@@ -564,14 +636,17 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             {
                 var setup = await storekeeper.PostAsJsonAsync("/api/v1/inventory/transfers", new
                 {
-                    fromWarehouseId = _fx.Warehouse2Id, toWarehouseId = _fx.Warehouse3Id,
+                    fromWarehouseId = _fx.Warehouse2Id,
+                    toWarehouseId = _fx.Warehouse3Id,
                     lines = new object[] { new { skuId = bagSku, qtyBase = 5m } },
                 });
                 Assert.Equal(HttpStatusCode.Created, setup.StatusCode);
                 var setupId = (await setup.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("transferId").GetInt64();
                 var setupApproval = await storekeeper.PostAsJsonAsync("/api/v1/approvals", new
                 {
-                    entityType = "inv.transfer", entityId = setupId, reasonAr = "استكمال حالة W3 لفحص النواقص",
+                    entityType = "inv.transfer",
+                    entityId = setupId,
+                    reasonAr = "استكمال حالة W3 لفحص النواقص",
                 });
                 var setupApprovalId = (await setupApproval.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approvalId").GetInt64();
                 using (var g6Supervisor = await ClientAsync("g6.supervisor", "Supervisor#G6-Pass", _fx.BranchId))
@@ -608,8 +683,12 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var customer = await owner.PostAsJsonAsync("/api/v1/parties/customers", new
             {
-                code = "G6CUST1", nameAr = "عميل تجريبي", phone = "01234567890",
-                creditLimit = 0m, creditEnabled = false, paymentTermsDays = 0,
+                code = "G6CUST1",
+                nameAr = "عميل تجريبي",
+                phone = "01234567890",
+                creditLimit = 0m,
+                creditEnabled = false,
+                paymentTermsDays = 0,
             });
             Assert.Equal(HttpStatusCode.Created, customer.StatusCode);
             var customerId = (await customer.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("customerId").GetInt64();
@@ -656,14 +735,19 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
 
             var adjust = await cashier.PostAsJsonAsync("/api/v1/inventory/adjustments", new
             {
-                skuId = 1, warehouseId = _fx.WarehouseId, newQty = 1m,
-                adjustmentKind = "QUICK", reasonAr = "محاولة كاشير", approvalId = 1,
+                skuId = 1,
+                warehouseId = _fx.WarehouseId,
+                newQty = 1m,
+                adjustmentKind = "QUICK",
+                reasonAr = "محاولة كاشير",
+                approvalId = 1,
             });
             Assert.Equal(HttpStatusCode.Forbidden, adjust.StatusCode);
 
             var receive = await cashier.PostAsJsonAsync("/api/v1/purchasing/purchase-receipts", new
             {
-                supplierId = 1, warehouseId = _fx.WarehouseId,
+                supplierId = 1,
+                warehouseId = _fx.WarehouseId,
                 lines = new object[] { new { skuId = 1, qty = 1m, uomId = 1, unitCost = 1m } },
             });
             Assert.Equal(HttpStatusCode.Forbidden, receive.StatusCode);
@@ -676,8 +760,11 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             Assert.Equal(HttpStatusCode.Forbidden, (await storekeeper.PostAsync("/api/v1/inventory/stocktakes/1/approve", null)).StatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, (await storekeeper.PostAsJsonAsync("/api/v1/purchasing/supplier-payments", new
             {
-                supplierId = 1, treasuryAccountId = _fx.TreasuryId, amount = 1m,
-                paymentMethod = "CASH", paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
+                supplierId = 1,
+                treasuryAccountId = _fx.TreasuryId,
+                amount = 1m,
+                paymentMethod = "CASH",
+                paymentDate = DateOnly.FromDateTime(DateTime.UtcNow.Date),
             })).StatusCode);
         }
 
@@ -687,7 +774,8 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             Assert.Equal(HttpStatusCode.OK, (await accountant.GetAsync("/api/v1/purchasing/treasury-accounts")).StatusCode);
             var receive = await accountant.PostAsJsonAsync("/api/v1/purchasing/purchase-receipts", new
             {
-                supplierId = 1, warehouseId = _fx.WarehouseId,
+                supplierId = 1,
+                warehouseId = _fx.WarehouseId,
                 lines = new object[] { new { skuId = 1, qty = 1m, uomId = 1, unitCost = 1m } },
             });
             Assert.Equal(HttpStatusCode.Forbidden, receive.StatusCode);
@@ -699,7 +787,11 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             Assert.Equal(HttpStatusCode.OK, (await auditor.GetAsync("/api/v1/parties/customers")).StatusCode);
             var create = await auditor.PostAsJsonAsync("/api/v1/parties/customers", new
             {
-                code = "G6X", nameAr = "محاولة مراجع", creditLimit = 0m, creditEnabled = false, paymentTermsDays = 0,
+                code = "G6X",
+                nameAr = "محاولة مراجع",
+                creditLimit = 0m,
+                creditEnabled = false,
+                paymentTermsDays = 0,
             });
             Assert.Equal(HttpStatusCode.Forbidden, create.StatusCode);
         }
@@ -723,7 +815,8 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
         {
             var transfer = await sender.PostAsJsonAsync("/api/v1/inventory/transfers", new
             {
-                fromWarehouseId = _fx.Warehouse2Id, toWarehouseId = _fx.Warehouse3Id,   // W3 في فرع G6B2
+                fromWarehouseId = _fx.Warehouse2Id,
+                toWarehouseId = _fx.Warehouse3Id,   // W3 في فرع G6B2
                 lines = new object[] { new { skuId = bagSku, qtyBase = 5m } },
             });
             Assert.Equal(HttpStatusCode.Created, transfer.StatusCode);
@@ -732,7 +825,9 @@ public sealed class G6EndpointTests : IClassFixture<G6ApiFixture>
             // الرصيد قد لا يكفي — اعتماد D-03 يجعل الإرسال ممكناً من أي حالة
             var request = await sender.PostAsJsonAsync("/api/v1/approvals", new
             {
-                entityType = "inv.transfer", entityId = transferId, reasonAr = "نقل عبر الفروع",
+                entityType = "inv.transfer",
+                entityId = transferId,
+                reasonAr = "نقل عبر الفروع",
             });
             var approvalId = (await request.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("approvalId").GetInt64();
             await supervisor.PostAsJsonAsync($"/api/v1/approvals/{approvalId}/decision", new { decision = "APPROVED", reasonAr = "مقبول" });
