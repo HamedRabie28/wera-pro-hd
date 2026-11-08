@@ -62,13 +62,22 @@ jobs:
           if ([string]::IsNullOrWhiteSpace($p)) { $p = 'x64' }
           "platform=$p" >> $env:GITHUB_OUTPUT
 
-      # Inno Setup 6.3+ مطلوب (RightToLeft) — مثبت عبر winget على عدّاء windows
-      - name: Install Inno Setup 6.3+
+      # Inno Setup 6.3+ مطلوب (RightToLeft) — عدّاءات windows-latest تأتي عادةً
+      # مع Inno Setup 6 مثبتاً مسبقاً؛ نتحقق أولاً ونتجاوز winget إن وُجد (في
+      # تشغيل سابق فشل تنزيل winget لمثبت موجود أصلاً — انكماش شبكة عابر).
+      - name: Install Inno Setup 6.3+ (skip if preinstalled)
         shell: pwsh
         run: |
-          winget install --id JRSoftware.InnoSetup --exact --silent --accept-package-agreements --accept-source-agreements
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) {
+            Write-Host "ISCC غير موجود — التثبيت عبر winget..."
+            winget install --id JRSoftware.InnoSetup --exact --silent --accept-package-agreements --accept-source-agreements
+            $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+            if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
+          } else {
+            Write-Host "Inno Setup موجود مسبقاً: $iscc (تخطي winget)"
+          }
           if (-not (Test-Path $iscc)) { throw 'ISCC.exe غير موجود بعد التثبيت' }
           "ISCC_PATH=$iscc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           & $iscc /? | Select-Object -First 1

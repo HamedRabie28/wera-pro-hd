@@ -246,7 +246,7 @@
                         <Button Content="ابنُد مراجعة كاملة من الأقسام" Click="BuildReview_Click"
                                 Background="{StaticResource WeraActionPrimarySoftBrush}" Foreground="{StaticResource WeraActionPrimaryInkBrush}"
                                 BorderBrush="{StaticResource WeraActionPrimarySoftBorderBrush}" BorderThickness="1" CornerRadius="10"
-                                HorizontalAlignment="Start"/>
+                                HorizontalAlignment="Left"/>
                         <ScrollViewer MaxHeight="220" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1" CornerRadius="8">
                             <ItemsControl x:Name="ReviewList" Padding="10">
                                 <ItemsControl.ItemTemplate>
