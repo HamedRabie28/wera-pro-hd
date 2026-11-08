@@ -16,7 +16,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
+    <Grid FontFamily="{StaticResource WeraFontBody}" x:Name="RootGrid" FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>

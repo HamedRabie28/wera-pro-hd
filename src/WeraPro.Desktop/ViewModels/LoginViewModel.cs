@@ -1,7 +1,14 @@
-// ViewModels/LoginViewModel.cs — WERA PRO HD Desktop (G3)
-// تسجيل الدخول: فحص خادم → قائمة فروع/محطات → دخول بجلسة موثقة.
+// ViewModels/LoginViewModel.cs — WERA PRO HD Desktop (G3 · إصدار 2026-11-09)
+// بوابة «الزجاج الكامل»: اسم مستخدم + كلمة مرور + زر دخول فقط (أمر المالك).
+// مسار الدخول عامل طورين:
+//   (1) فحص الخادم (نبضة كل 30 ثانية) — بلا تحميل فروع قبل الدخول: نقاط
+//       الفروع/المحطات تتطلب مصادقة، فكان تحميلها قبل الدخول كوداً ميتاً
+//       يفشل 401 دائماً (إصلاح 2026-11-09).
+//   (2) الدخول بنطاق مركزي ثم إثراء الجلسة بالرمز الجديد: تُجلب الفروع
+//       والمحطات ويُختار أول نشط منها تلقائياً (BranchId/StationId/الأسماء)
+//       عبر SessionService.EnrichScope — فتفتح القشرة وPOS بنطاق كامل
+//       دون أي محددات في واجهة الدخول.
 // كل العمليات AsyncRelayCommand — لا تجميد UI إطلاقاً (بوابة G3).
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -46,9 +53,7 @@ public sealed partial class LoginViewModel : ObservableObject
     [ObservableProperty]
     private bool _serverOnline;
 
-    public ObservableCollection<BranchDto> Branches { get; } = [];
-    public ObservableCollection<StationDto> Stations { get; } = [];
-
+    /// <summary>نطاق الجلسة بعد الإثراء (لا محددات في الواجهة — للاستهلاك الداخلي).</summary>
     [ObservableProperty]
     private BranchDto? _selectedBranch;
 
@@ -73,26 +78,9 @@ public sealed partial class LoginViewModel : ObservableObject
             ServerStatusAr = ServerOnline
                 ? "الخادم جاهز"
                 : "الخادم غير متاح — تحقق من العنوان";
-
-            if (ServerOnline)
-            {
-                var branches = await _api.GetBranchesAsync(ct);
-                Branches.Clear();
-                if (branches.Ok)
-                {
-                    foreach (var branch in branches.Value!)
-                    {
-                        Branches.Add(branch);
-                    }
-                    StatusAr = Branches.Count > 0
-                        ? "اختر الفرع والمحطة ثم أدخل بياناتك"
-                        : "لا فروع نشطة معرّفة على الخادم";
-                }
-                else
-                {
-                    StatusAr = branches.ErrorAr ?? "تعذر تحميل الفروع";
-                }
-            }
+            StatusAr = ServerOnline
+                ? "الخادم جاهز — أدخل اسم المستخدم وكلمة المرور"
+                : "لا يمكن الوصول إلى الخادم الآن";
         }
         finally
         {
@@ -100,29 +88,31 @@ public sealed partial class LoginViewModel : ObservableObject
         }
     }
 
-    partial void OnSelectedBranchChanged(BranchDto? value)
+    /// <summary>
+    /// إثراء النطاق بعد الدخول: أول فرع نشط ثم أول محطة له.
+    /// اختياري تماماً — فشله لا يُفشل الدخول (يُكمل بنطاق مركزي).
+    /// </summary>
+    private async Task LoadScopeAsync(CancellationToken ct)
     {
-        Stations.Clear();
-        SelectedStation = null;
-        if (value is null)
+        var branches = await _api.GetBranchesAsync(ct);
+        if (!branches.Ok)
+        {
+            _logger.LogWarning("إثراء النطاق: تعذر جلب الفروع — {Error}", branches.ErrorAr);
+            return;
+        }
+        SelectedBranch = branches.Value?.FirstOrDefault();
+        if (SelectedBranch is null)
         {
             return;
         }
-        _ = LoadStationsAsync(value.BranchId);
-    }
-
-    private async Task LoadStationsAsync(long branchId)
-    {
-        var stations = await _api.GetStationsAsync(branchId);
+        var stations = await _api.GetStationsAsync(SelectedBranch.BranchId, ct);
         if (!stations.Ok)
         {
-            StatusAr = stations.ErrorAr ?? "تعذر تحميل المحطات";
+            _logger.LogWarning("إثراء النطاق: تعذر جلب محطات {Branch} — {Error}",
+                SelectedBranch.NameAr, stations.ErrorAr);
             return;
         }
-        foreach (var station in stations.Value!)
-        {
-            Stations.Add(station);
-        }
+        SelectedStation = stations.Value?.FirstOrDefault();
     }
 
     [RelayCommand(CanExecute = nameof(CanLogin))]
@@ -132,11 +122,9 @@ public sealed partial class LoginViewModel : ObservableObject
         StatusAr = "جارٍ التحقق من البيانات…";
         try
         {
-            var request = new LoginRequest(
-                Username.Trim(),
-                Password,
-                SelectedBranch?.BranchId,
-                SelectedStation?.StationId);
+            // الطور 1: دخول بنطاق مركزي (null) — لا يمكن معرفة الفرع قبل امتلاك
+            // الرمز لأن نقاط الفروع تتطلب مصادقة (إصلاح الكود الميت السابق)
+            var request = new LoginRequest(Username.Trim(), Password, null, null);
             var result = await _api.LoginAsync(request, ct);
             if (!result.Ok || result.Value is null)
             {
@@ -145,13 +133,18 @@ public sealed partial class LoginViewModel : ObservableObject
                 return;
             }
 
-            _session.Establish(
-                result.Value,
-                SelectedBranch?.BranchId,
-                SelectedStation?.StationId,
-                SelectedBranch?.NameAr,
-                SelectedStation?.NameAr);
-            _logger.LogInformation("دخول ناجح للمستخدم {Username}", Username);
+            // الجلسة حية الآن (الرمز يرفقه المعالج تلقائياً) — الطور 2: الإثراء
+            // (LoadScopeAsync لا يرمي استثناءات: كل فشل يعود ApiCallResult.Fail)
+            _session.Establish(result.Value, null, null, null, null);
+            StatusAr = "جارٍ تهيئة نطاق العمل…";
+            await LoadScopeAsync(ct);
+            _session.EnrichScope(
+                SelectedBranch?.BranchId, SelectedStation?.StationId,
+                SelectedBranch?.NameAr, SelectedStation?.NameAr);
+
+            _logger.LogInformation(
+                "دخول ناجح للمستخدم {Username} — النطاق: {Branch} / {Station}",
+                Username, SelectedBranch?.NameAr ?? "مركزي", SelectedStation?.NameAr ?? "بدون محطة");
             LoginSucceeded?.Invoke();
         }
         finally

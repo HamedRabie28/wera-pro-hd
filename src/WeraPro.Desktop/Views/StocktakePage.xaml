@@ -12,7 +12,7 @@
     xmlns:vm="using:WeraPro.Desktop.ViewModels"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
 
-    <Grid RowSpacing="10" Padding="18,12">
+    <Grid FontFamily="{StaticResource WeraFontBody}" RowSpacing="10" Padding="18,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>

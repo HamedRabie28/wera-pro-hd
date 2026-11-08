@@ -73,15 +73,15 @@
   {
    "name": "أداء التزامن: 960 طلباً بلا أخطاء",
    "pass": true,
-   "detail": "19.5 rps"
+   "detail": "18.9 rps"
   },
   {
-   "name": "ذاكرة مستقرة بعد الحمل (RSS 264→264MB, فرق 0MB)",
+   "name": "ذاكرة مستقرة بعد الحمل (RSS 269→269MB, فرق 0MB)",
    "pass": true,
    "detail": ""
   },
   {
-   "name": "إعادة تشغيل نظيفة (2989ms)",
+   "name": "إعادة تشغيل نظيفة (2504ms)",
    "pass": true,
    "detail": ""
   },
@@ -114,68 +114,68 @@
  "perf": {
   "login (BCrypt+توكن)": {
    "n": 60,
-   "p50": 284.0,
-   "p95": 374.8,
-   "p99": 402.6,
-   "avg": 299.4
+   "p50": 287.3,
+   "p95": 375.7,
+   "p99": 380.7,
+   "avg": 300.6
   },
   "me": {
    "n": 60,
-   "p50": 1.0,
-   "p95": 2.8,
-   "p99": 24.0,
-   "avg": 1.4
+   "p50": 0.8,
+   "p95": 1.6,
+   "p99": 2.6,
+   "avg": 0.9
   },
   "catalog قراءة": {
    "n": 120,
-   "p50": 3.2,
-   "p95": 5.2,
-   "p99": 12.0,
-   "avg": 3.6
+   "p50": 2.7,
+   "p95": 6.8,
+   "p99": 19.3,
+   "avg": 3.4
   },
   "تزامن·login": {
    "n": 251,
-   "p50": 3355.3,
-   "p95": 5265.9,
-   "p99": 5529.0
+   "p50": 3796.7,
+   "p95": 5019.3,
+   "p99": 5630.0
   },
   "تزامن·me": {
    "n": 228,
-   "p50": 41.5,
-   "p95": 1328.1,
-   "p99": 1550.3
+   "p50": 36.6,
+   "p95": 1001.6,
+   "p99": 1582.3
   },
   "تزامن·cat": {
    "n": 372,
-   "p50": 84.1,
-   "p95": 1699.6,
-   "p99": 2010.0
+   "p50": 59.0,
+   "p95": 1229.7,
+   "p99": 1796.8
   },
   "تزامن·health": {
    "n": 109,
-   "p50": 58.2,
-   "p95": 1604.5,
-   "p99": 1823.0
+   "p50": 33.0,
+   "p95": 1314.1,
+   "p99": 1643.7
   },
   "_concurrent": {
    "requests": 960,
    "workers": 24,
-   "wall_s": 49.3,
-   "rps": 19.5,
+   "wall_s": 50.67,
+   "rps": 18.9,
    "non200": 0
   }
  },
  "stability": {
-  "rss_after_load_mb": 263.5,
-  "rss_settled_mb": 263.7,
-  "cold_restart_ms": 2989,
+  "rss_after_load_mb": 269.1,
+  "rss_settled_mb": 269.1,
+  "cold_restart_ms": 2504,
   "active_users": 2,
   "audit_rows": 325
  },
- "cold_boot_ms": 3093,
+ "cold_boot_ms": 4500,
  "stations_seeded": true,
  "branch_id": 1,
- "owner_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidW5pcXVlX25hbWUiOiJvd25lciIsIm5hbWVfYXIiOiLYp9mE2YXYp9mE2YMiLCJzaWQiOiIxIiwicm9sZSI6Ik9XTkVSIiwibmJmIjoxNzk0MTQ4NDA2LCJleHAiOjE3OTQxNDkzMDYsImlzcyI6IndlcmEtcHJvLWhkLWFwaSIsImF1ZCI6IndlcmEtcHJvLWhkLWNsaWVudHMifQ.lx-fdLVpMDUkl8rOVqDln2g6Dccu4LCHYmZhIzG6UuE",
+ "owner_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidW5pcXVlX25hbWUiOiJvd25lciIsIm5hbWVfYXIiOiLYp9mE2YXYp9mE2YMiLCJzaWQiOiIxIiwicm9sZSI6Ik9XTkVSIiwibmJmIjoxNzk0MTU5MjQ5LCJleHAiOjE3OTQxNjAxNDksImlzcyI6IndlcmEtcHJvLWhkLWFwaSIsImF1ZCI6IndlcmEtcHJvLWhkLWNsaWVudHMifQ.rR8zxSTsiw3BVdp36kbZd45Ki8F0D5TQLh_HmFzI0ac",
  "summary": {
   "passed": 22,
   "total": 22

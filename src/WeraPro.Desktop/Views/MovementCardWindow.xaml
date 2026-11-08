@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" xmlns:vm="using:WeraPro.Desktop.ViewModels">
 
-    <Grid FlowDirection="RightToLeft" RowSpacing="10" Padding="18,14" Background="{StaticResource WeraSurfaceBackgroundBrush}">
+    <Grid FontFamily="{StaticResource WeraFontBody}" FlowDirection="RightToLeft" RowSpacing="10" Padding="18,14" Background="{StaticResource WeraSurfaceBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

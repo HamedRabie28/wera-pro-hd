@@ -106,21 +106,66 @@ public sealed class WeraApiClient(
 
     public async Task<ApiCallResult<List<BranchDto>>> GetBranchesAsync(CancellationToken ct = default)
     {
-        var result = await GetAsync<List<BranchDto>>(ApiRoutes.Branches, ct);
-        return result.Map(v => v ?? []);
+        // الخادم يعيد {items,count} — GetListAsync يفك الغلاف (إصلاح 2026-11-09:
+        // كان العميل يقرأها كمصفوفة مباشرة ففشل التحويل دوماً)
+        return await GetListAsync<BranchDto>(ApiRoutes.Branches, ct);
     }
 
     public async Task<ApiCallResult<List<StationDto>>> GetStationsAsync(long branchId, CancellationToken ct = default)
     {
-        return await GetAsync<List<StationDto>>(
-            ApiRoutes.Stations.Replace("{branchId:long}", branchId.ToString(), StringComparison.Ordinal), ct);
+        return await GetListAsync<StationDto>(
+            ApiRoutes.Stations.Replace("{branchId:long}", branchId.ToString(System.Globalization.CultureInfo.InvariantCulture), StringComparison.Ordinal), ct);
     }
 
     public async Task<ApiCallResult<List<SettingDto>>> GetSettingsAsync(string? category, CancellationToken ct = default)
     {
         var url = ApiRoutes.Settings + (string.IsNullOrWhiteSpace(category) ? "" : "?category=" + Uri.EscapeDataString(category));
-        var result = await GetAsync<List<SettingDto>>(url, ct);
-        return result.Map(v => v ?? []);
+        return await GetListAsync<SettingDto>(url, ct);
+    }
+
+    /// <summary>
+    /// قائمة من الخادم بصيغتيها المتاحتين: مصفوفة JSON مباشرة أو غلاف {items:[…],count}
+    /// (الفروع/المحطات/الإعدادات تُغلَّف — إصلاح توافق العميل/الخادم 2026-11-09).
+    /// </summary>
+    private async Task<ApiCallResult<List<T>>> GetListAsync<T>(string url, CancellationToken ct)
+    {
+        try
+        {
+            using var client = CreateClient();
+            using var response = await client.GetAsync(url, ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorAr = await ReadErrorAsync(response, ct);
+                return ApiCallResult<List<T>>.Fail(errorAr);
+            }
+            using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+            var root = doc.RootElement;
+            JsonElement items = root.ValueKind == JsonValueKind.Array
+                ? root
+                : root.TryGetProperty("items", out var wrapped) && wrapped.ValueKind == JsonValueKind.Array
+                    ? wrapped
+                    : default;
+            if (items.ValueKind != JsonValueKind.Array)
+            {
+                return ApiCallResult<List<T>>.Fail("صيغة استجابة غير متوقعة من الخادم");
+            }
+            var list = items.Deserialize<List<T>>(Json) ?? [];
+            return ApiCallResult<List<T>>.Success(list);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiCallResult<List<T>>.Fail("انتهت مهلة الطلب — تحقق من حالة الخادم");
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "فشل اتصال بـ{Url}", url);
+            return ApiCallResult<List<T>>.Fail("تعذر الوصول إلى الخادم — تحقق من العنوان والاتصال");
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "صيغة JSON غير صالحة من {Url}", url);
+            return ApiCallResult<List<T>>.Fail("صيغة استجابة غير صالحة من الخادم");
+        }
     }
 
     // ── الكتالوج (G4) ─────────────────────────────────────────────────────

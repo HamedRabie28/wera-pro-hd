@@ -59,6 +59,20 @@ public sealed class SessionService
     }
 
     /// <summary>
+    /// إثراء نطاق الجلسة بعد الدخول (2026-11-09): تُستدعى بعد نجاح الدخول وقبل فتح
+    /// القشرة — يجلب LoginViewModel الفرع/المحطة بالرمز الجديد ويحدّث النطاق هنا،
+    /// فتعرض القشرة وPOS اسم الفرع/المحطة دون أي محددات في بوابة الدخول.
+    /// </summary>
+    public void EnrichScope(long? branchId, long? stationId, string? branchNameAr, string? stationNameAr)
+    {
+        BranchId = branchId;
+        StationId = stationId;
+        BranchNameAr = branchNameAr;
+        StationNameAr = stationNameAr;
+        SessionChanged?.Invoke();
+    }
+
+    /// <summary>
     /// تجديد شفاف لرمز الوصول عبر رمز التجديد — قفل واحد لكل المحطة،
     /// وبعد نجاح واحد يعيد بقية المنتظرين استخدام الرمز الجديد مباشرة.
     /// </summary>

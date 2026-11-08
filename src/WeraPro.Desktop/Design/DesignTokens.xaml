@@ -95,10 +95,25 @@
     <SolidColorBrush x:Key="WeraShellTealGlowBrush" Color="#8FE3D4" />
     <SolidColorBrush x:Key="WeraBorderRowBrush" Color="#EBF0F4" />
 
-    <!-- ═══════════ الخطوط (Segoe UI Variable + fallback عربي موثوق — §7) ═══════════ -->
-    <FontFamily x:Key="WeraFontBody">Segoe UI Variable Text, Segoe UI</FontFamily>
-    <FontFamily x:Key="WeraFontDisplay">Segoe UI Variable Display, Segoe UI</FontFamily>
+    <!-- ═══ زجاج بطاقة الدخول (2026-11-09): Acrylic فوق صورة السوبر ماركت ═══ -->
+    <!-- خط شعري فاتح على حافة البطاقة الزجاجية -->
+    <Color x:Key="WeraGlassHairlineColor">#3DFFFFFF</Color>
+    <SolidColorBrush x:Key="WeraGlassHairlineBrush" Color="{StaticResource WeraGlassHairlineColor}" />
+    <!-- لون التراجع حين يتعذر الضباب (وضع توفير الطاقة): كحلي شبه معتم -->
+    <Color x:Key="WeraGlassFallbackColor">#F2102238</Color>
+    <!-- طبقات تعتيم الصورة الخلفية للقراءة النصية فوقها -->
+    <Color x:Key="WeraScrimTopColor">#4D102238</Color>
+    <Color x:Key="WeraScrimMidColor">#66102238</Color>
+    <Color x:Key="WeraScrimBottomColor">#E6102238</Color>
+
+    <!-- ═══════════ الخطوط (2026-11-09: هوية عربية أنيقة — IBM Plex Sans Arabic مضمّنة داخل الحزمة،
+           تغطي العربية واللاتينية بأوزان حقيقية 400/600/700؛ البدائل نظامية موثوقة إن تعذّر التحميل) ═══════════ -->
+    <FontFamily x:Key="WeraFontBody">ms-appx:///Assets/Fonts/IBMPlexSansArabic-Regular.ttf#IBM Plex Sans Arabic, Dubai, Tahoma, Segoe UI</FontFamily>
+    <FontFamily x:Key="WeraFontDisplay">ms-appx:///Assets/Fonts/IBMPlexSansArabic-SemiBold.ttf#IBM Plex Sans Arabic SemiBold, Dubai, Tahoma, Segoe UI</FontFamily>
     <FontFamily x:Key="WeraFontMono">Cascadia Mono, Consolas</FontFamily>
+    <!-- الخط الافتراضي لعناصر التحكم غير المنسّقة صراحةً (TextBox/ComboBox/…):
+         يُدمج هذا القاموس بعد XamlControlsResources في App.xaml فيطغى على قيمة النظام -->
+    <FontFamily x:Key="ContentControlThemeFontFamily">ms-appx:///Assets/Fonts/IBMPlexSansArabic-Regular.ttf#IBM Plex Sans Arabic, Dubai, Tahoma, Segoe UI</FontFamily>
 
     <x:Double x:Key="WeraTextPageTitleSize">26</x:Double>
     <x:Double x:Key="WeraTextSectionTitleSize">18</x:Double>

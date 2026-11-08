@@ -11,7 +11,7 @@
     mc:Ignorable="d" FlowDirection="RightToLeft"
     xmlns:vm="using:WeraPro.Desktop.ViewModels">
 
-    <Grid RowSpacing="10" Padding="18,12">
+    <Grid FontFamily="{StaticResource WeraFontBody}" RowSpacing="10" Padding="18,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
