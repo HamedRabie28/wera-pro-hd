@@ -42,6 +42,10 @@ public sealed partial class LoginViewModel : ObservableObject
     [ObservableProperty]
     private string _serverStatusAr = "لم يُتحقق من الخادم بعد";
 
+    /// <summary>حالة الخادم الفعلية — تُحدّث نقطة الحالة في الواجهة (أخضر/كهرماني).</summary>
+    [ObservableProperty]
+    private bool _serverOnline;
+
     public ObservableCollection<BranchDto> Branches { get; } = [];
     public ObservableCollection<StationDto> Stations { get; } = [];
 
@@ -65,11 +69,12 @@ public sealed partial class LoginViewModel : ObservableObject
         try
         {
             await _connectivity.ProbeAsync(ct);
-            ServerStatusAr = _connectivity.State == ConnectionState.Online
+            ServerOnline = _connectivity.State == ConnectionState.Online;
+            ServerStatusAr = ServerOnline
                 ? "الخادم جاهز"
                 : "الخادم غير متاح — تحقق من العنوان";
 
-            if (_connectivity.State == ConnectionState.Online)
+            if (ServerOnline)
             {
                 var branches = await _api.GetBranchesAsync(ct);
                 Branches.Clear();

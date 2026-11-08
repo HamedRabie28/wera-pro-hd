@@ -65,6 +65,12 @@ public sealed partial class ShellWindow : Window
         // صفحة واحدة ظاهرة في كل لحظة («المخزون» مركز لسباقات G6 فتفتح اللوحة والجرد والتحويلات معاً)
         if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
+            // G7: «نقطة البيع» تفتح نافذة POS المستقلة (§9.0) — لا تُبدّل محتوى الشِل
+            if (tag == "pos")
+            {
+                OpenPosWindow();
+                return;
+            }
             var g6 = tag is "inventory" or "purchasing" or "parties" or "warehouses";
             var g8 = tag is "finance";
             HomeContent.Visibility = tag is "catalog" or "media" || g6 || g8 ? Visibility.Collapsed : Visibility.Visible;
@@ -80,7 +86,9 @@ public sealed partial class ShellWindow : Window
         }
     }
 
-    private void OpenPos_Click(object sender, RoutedEventArgs e)
+    private void OpenPos_Click(object sender, RoutedEventArgs e) => OpenPosWindow();
+
+    private static void OpenPosWindow()
     {
         // POS نافذة مستقلة بلا أي قائمة إدارية (§9.0)
         var pos = ActivatorUtilities.CreateInstance<PosWindow>(App.Host.Services);

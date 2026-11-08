@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Views/LoginWindow.xaml — بوابة الدخول (G3): عنوان الخادم محدد من appsettings،
+  Views/LoginWindow.xaml — بوابة الدخول (G3 · إصدار 2026-11-08 الاحترافي):
+  تقسيم مزدوج — لوحة الهوية (يمين RTL) فوق صورة سوبر ماركت حقيقية (يسار).
   هوية حقيقية من API، اختيار فرع/محطة، وحالة اتصال صادقة (§10.6).
-  كل القيم البصرية من DesignTokens (G2 المعتمدة).
+  كل القيم البصرية من DesignTokens (G2 المعتمدة) — لا قيم عشوائية (§7.2).
 -->
 <Window
     x:Class="WeraPro.Desktop.Views.LoginWindow"
@@ -10,70 +11,159 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Grid FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <!-- العمود 0 في RTL = اليمين: لوحة الدخول -->
+            <ColumnDefinition Width="440"/>
+            <!-- العمود 1 في RTL = اليسار: صورة السوبر ماركت الحقيقية -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- بطاقة الدخول -->
-        <Border Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"
-                Background="{StaticResource WeraSurfaceBaseBrush}"
-                BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
-                CornerRadius="16" Padding="40,32" Width="420">
-            <StackPanel Spacing="14">
-                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
-                    <Border Width="40" Height="40" CornerRadius="10" Background="{StaticResource WeraActionPrimaryBrush}">
-                        <TextBlock Text="W" Foreground="White" FontWeight="Bold" FontSize="20"
+        <!-- ═══════════ (1) لوحة الدخول — يمين ═══════════ -->
+        <Grid Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- بطاقة الدخول -->
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" Padding="44,28" Spacing="18" MaxWidth="400">
+
+                <!-- العلامة -->
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Border Width="46" Height="46" CornerRadius="{StaticResource WeraCornerRadiusControl}"
+                            Background="{StaticResource WeraActionPrimaryBrush}"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="W" Foreground="{StaticResource WeraTextOnDarkBrush}" FontWeight="Bold" FontSize="22"
+                                   FontFamily="{StaticResource WeraFontDisplay}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="WERA PRO HD" FontFamily="{StaticResource WeraFontDisplay}"
-                               FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"
+                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="WERA PRO HD" FontFamily="{StaticResource WeraFontDisplay}"
+                                   FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <TextBlock Text="منظومة إدارة السوبر ماركت المتكاملة" FontSize="12"
+                                   Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- فاصل -->
+                <Rectangle Height="1" Fill="{StaticResource WeraBorderDefaultBrush}"/>
+
+                <!-- حالة الخادم الصادقة (§10.6) — داخل اللوحة -->
+                <Border Background="{StaticResource WeraSurfaceSubtleBrush}"
+                        BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="1"
+                        CornerRadius="{StaticResource WeraCornerRadiusControl}" Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Ellipse x:Name="ServerDot" Width="9" Height="9"
+                                 Fill="{StaticResource WeraStatusWarningBrush}"
+                                 VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ServerStatusText" Text="لم يُتحقق من الخادم بعد" FontSize="12"
+                                   Foreground="{StaticResource WeraTextSecondaryBrush}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- العنوان -->
+                <StackPanel Spacing="4">
+                    <TextBlock Text="تسجيل الدخول" FontFamily="{StaticResource WeraFontDisplay}"
+                               FontSize="20" FontWeight="SemiBold"
+                               Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                    <TextBlock Text="أدخل بياناتك لبدء جلسة موثّقة" FontSize="12.5"
+                               Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- الحقول -->
+                <StackPanel Spacing="16">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="اسم المستخدم" FontSize="12.5" FontWeight="SemiBold"
+                                   Foreground="{StaticResource WeraTextPrimaryBrush}"/>
+                        <TextBox x:Name="UsernameField" Height="42" FontSize="14" PlaceholderText="مثال: owner"
+                                 CornerRadius="{StaticResource WeraCornerRadiusControl}"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="كلمة المرور" FontSize="12.5" FontWeight="SemiBold"
+                                   Foreground="{StaticResource WeraTextPrimaryBrush}"/>
+                        <PasswordBox x:Name="PasswordField" Height="42" FontSize="14" KeyDown="Password_KeyDown"
+                                     CornerRadius="{StaticResource WeraCornerRadiusControl}"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="الفرع" FontSize="12.5" FontWeight="SemiBold"
+                                   Foreground="{StaticResource WeraTextPrimaryBrush}"/>
+                        <ComboBox x:Name="BranchField" Height="42" HorizontalAlignment="Stretch"
+                                  FontSize="14" DisplayMemberPath="NameAr" SelectionChanged="BranchField_SelectionChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="المحطة" FontSize="12.5" FontWeight="SemiBold"
+                                   Foreground="{StaticResource WeraTextPrimaryBrush}"/>
+                        <ComboBox x:Name="StationField" Height="42" HorizontalAlignment="Stretch"
+                                  FontSize="14" DisplayMemberPath="NameAr" IsEnabled="False"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- زر الدخول: نمط الهوية (Hover/Pressed من Tokens) -->
+                <Button x:Name="LoginBtn" Content="دخول" Height="48" FontSize="15"
+                        Style="{StaticResource WeraPrimaryButtonStyle}"
+                        HorizontalAlignment="Stretch" Click="Login_Click"/>
+
+                <!-- رسالة الحالة -->
+                <TextBlock x:Name="StatusText" Text="أدخل بيانات الدخول" FontSize="12.5" TextAlignment="Center"
+                           TextWrapping="Wrap" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+            </StackPanel>
+
+            <!-- تذييل اللوحة: علامة + حقوق -->
+            <Border Grid.Row="1" Background="{StaticResource WeraBrandNavyDeepBrush}" Padding="20,10">
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Rectangle Width="4" Height="18" Fill="{StaticResource WeraActionPrimaryBrush}"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="WERA PRO HD © 2026 — بوابة المشغّل" FontSize="11.5"
+                               Foreground="{StaticResource WeraShellTextSecondaryBrush}"
                                VerticalAlignment="Center"/>
                 </StackPanel>
+            </Border>
+        </Grid>
 
-                <TextBlock Text="تسجيل الدخول" FontSize="14" Foreground="{StaticResource WeraTextSecondaryBrush}"
-                           HorizontalAlignment="Center"/>
+        <!-- ═══════════ (2) لوحة الصورة الحقيقية — يسار ═══════════ -->
+        <Grid Grid.Column="1">
+            <!-- صورة سوبر ماركت حقيقية (مرشّحة: نظيفة بلا علامات مائية) -->
+            <Image Source="ms-appx:///Assets/login_hero.jpg" Stretch="UniformToFill"/>
 
-                <StackPanel Spacing="4">
-                    <TextBlock Text="اسم المستخدم" FontSize="12.5"/>
-                    <TextBox x:Name="UsernameField" Height="40" FontSize="14" PlaceholderText="مثال: owner"/>
-                </StackPanel>
+            <!-- تعتيم متدرّج من جهة اللوحة (يمين الصورة) لضمان الفصل البصري -->
+            <Rectangle>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="1,0" EndPoint="0,0">
+                        <GradientStop Color="#E6102238" Offset="0"/>
+                        <GradientStop Color="#66102238" Offset="0.38"/>
+                        <GradientStop Color="#00102238" Offset="1"/>
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+            <!-- تعتيم سفلي لقراءة الشعار النصي -->
+            <Rectangle>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,1" EndPoint="0,0">
+                        <GradientStop Color="#CC102238" Offset="0"/>
+                        <GradientStop Color="#8C102238" Offset="0.5"/>
+                        <GradientStop Color="#00102238" Offset="1"/>
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
 
-                <StackPanel Spacing="4">
-                    <TextBlock Text="كلمة المرور" FontSize="12.5"/>
-                    <PasswordBox x:Name="PasswordField" Height="40" FontSize="14" KeyDown="Password_KeyDown"/>
-                </StackPanel>
-
-                <StackPanel Spacing="4">
-                    <TextBlock Text="الفرع" FontSize="12.5"/>
-                    <ComboBox x:Name="BranchField" Height="40" HorizontalAlignment="Stretch"
-                              DisplayMemberPath="NameAr" SelectionChanged="BranchField_SelectionChanged"/>
-                </StackPanel>
-
-                <StackPanel Spacing="4">
-                    <TextBlock Text="المحطة" FontSize="12.5"/>
-                    <ComboBox x:Name="StationField" Height="40" HorizontalAlignment="Stretch"
-                              DisplayMemberPath="NameAr" IsEnabled="False"/>
-                </StackPanel>
-
-                <Button x:Name="LoginBtn" Content="دخول" Height="44" FontSize="15"
-                        Background="{StaticResource WeraActionPrimaryBrush}" Foreground="White"
-                        BorderThickness="0" CornerRadius="10" HorizontalAlignment="Stretch"
-                        Click="Login_Click"/>
+            <!-- رسالة العلامة أسفل الصورة -->
+            <StackPanel VerticalAlignment="Bottom" Padding="40,0,40,38" Spacing="12">
+                <Rectangle Width="56" Height="4" CornerRadius="2" Fill="{StaticResource WeraAccentGoldBrush}"
+                           HorizontalAlignment="Right"/>
+                <TextBlock Text="إدارة احترافية متكاملة لسوبر ماركتك"
+                           FontFamily="{StaticResource WeraFontDisplay}"
+                           FontSize="27" FontWeight="SemiBold" TextWrapping="Wrap"
+                           Foreground="{StaticResource WeraTextOnDarkBrush}"
+                           HorizontalAlignment="Right"/>
+                <TextBlock Text="نقاط بيع سريعة · مخزون ومشتريات · مالية وتقارير لحظية · فروع ومستودعات"
+                           FontSize="13.5" TextWrapping="Wrap"
+                           Foreground="{StaticResource WeraTextOnDarkSecondaryBrush}"
+                           HorizontalAlignment="Right"/>
             </StackPanel>
-        </Border>
-
-        <!-- شريط الحالة الصادق -->
-        <Border Grid.Row="1" Background="{StaticResource WeraBrandNavyDeepBrush}" Padding="16,8">
-            <StackPanel Orientation="Horizontal" Spacing="14" HorizontalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <Ellipse Width="8" Height="8" Fill="{StaticResource WeraActionPrimaryInkBrush}" x:Name="ServerDot"/>
-                    <TextBlock x:Name="ServerStatusText" Text="لم يُتحقق من الخادم بعد" FontSize="12"
-                               Foreground="{StaticResource WeraShellTextSecondaryBrush}"/>
-                </StackPanel>
-                <TextBlock x:Name="StatusText" Text="أدخل بيانات الدخول" FontSize="12"
-                           Foreground="{StaticResource WeraShellTextMutedBrush}"/>
-            </StackPanel>
-        </Border>
+        </Grid>
     </Grid>
 </Window>

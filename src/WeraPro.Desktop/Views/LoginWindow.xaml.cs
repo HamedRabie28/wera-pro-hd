@@ -18,6 +18,12 @@ public sealed partial class LoginWindow : Window
         InitializeComponent();
         Title = "WERA PRO HD — تسجيل الدخول";
 
+        // حجم بوابة ثابت احترافي (لوحة هوية + صورة حقيقية) — بالبكسل الفعلي
+        if (AppWindow is not null)
+        {
+            AppWindow.Resize(new Windows.Graphics.SizeInt32(1240, 780));
+        }
+
         // حارس النافذة الواحدة (2026-11-07): تسجيل نفسها كنافذة رئيسية/نشطة
         App.MainWindow = this;
         App.ActiveWindow = this;
@@ -36,6 +42,13 @@ public sealed partial class LoginWindow : Window
                 if (e.PropertyName == nameof(LoginViewModel.StatusAr))
                 {
                     StatusText.Text = _vm.StatusAr;
+                }
+                if (e.PropertyName == nameof(LoginViewModel.ServerOnline))
+                {
+                    // نقطة الحالة تعكس الحالة الفعلية: أخضر جاهز / كهرماني غير متاح
+                    ServerDot.Fill = _vm.ServerOnline
+                        ? (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["WeraStatusSuccessBrush"]
+                        : (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["WeraStatusWarningBrush"];
                 }
                 LoginBtn.IsEnabled = _vm.CanLogin;
             });

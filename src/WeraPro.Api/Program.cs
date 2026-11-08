@@ -32,7 +32,15 @@ Log.Logger = new LoggerConfiguration()
 var isTestHost = false;
 try
 {
-    var builder = WebApplication.CreateBuilder(args);
+    var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+    {
+        Args = args,
+        // إنتاج 2026-11-08: جذر المحتوى = مجلد التجميع دائماً — يضمن قراءة
+        // appsettings.json (Tokens:Issuer/Audience وكل الإعدادات) أياً كان مجلد
+        // التشغيل (خدمة Windows/مثبّت/سكربت) — بدونه تُصدَّر جلسات بلا aud/iss
+        // فيرفضها التحقق بـ401 (اكتُشف في الاختبار الحي لهذا الإصدار).
+        ContentRootPath = AppContext.BaseDirectory,
+    });
     isTestHost = builder.Environment.IsEnvironment("Testing");
 
     // ── السجلات: Serilog (لا تُسجَّل هيئات الطلبات — حماية الأسرار §18) ──

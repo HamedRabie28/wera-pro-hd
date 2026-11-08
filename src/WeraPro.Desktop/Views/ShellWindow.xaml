@@ -46,7 +46,7 @@
                                  SelectionChanged="NavTop_SelectionChanged">
                 <muxc:NavigationView.MenuItems>
                     <muxc:NavigationViewItem Content="التشغيل" Tag="home" IsSelected="True"/>
-                    <muxc:NavigationViewItem Content="المبيعات (G7)" Tag="sales" IsEnabled="False" ToolTipService.ToolTip="يبني في بوابة G7 — غير متاح بعد"/>
+                    <muxc:NavigationViewItem Content="نقطة البيع (POS)" Tag="pos" ToolTipService.ToolTip="G7: نافذة بيع مستقلة — سلالم ومساحيق ومرتجعات وسلات معلّقة وورديات"/>
                     <muxc:NavigationViewItem Content="الكتالوج" Tag="catalog" ToolTipService.ToolTip="G4: المنتجات وصيغ البيع والعبوات والباركود — بحث Exact Match"/>
                     <muxc:NavigationViewItem Content="مكتبة الصور" Tag="media" ToolTipService.ToolTip="G5: رفع/ربط/فك ربط/رئيسية/مكررات — الحذف محمي بمراجعة"/>
                     <muxc:NavigationViewItem Content="المخزون" Tag="inventory" ToolTipService.ToolTip="G6: لوحة الأرصدة والنواقص والدفعات والتقييم + الجرد والتحويلات والمخازن"/>

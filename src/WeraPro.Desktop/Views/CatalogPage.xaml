@@ -14,7 +14,7 @@
     mc:Ignorable="d"
     xmlns:vm="using:WeraPro.Desktop.ViewModels">
 
-    <Grid Background="{StaticResource WeraSurfaceBackgroundBrush}">
+    <Grid FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>

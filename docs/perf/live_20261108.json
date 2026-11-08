@@ -1,0 +1,183 @@
+{
+ "checks": [
+  {
+   "name": "health/ready = 200",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "login كلمة مرور خاطئة → 401 + عنوان عربي",
+   "pass": true,
+   "detail": "401"
+  },
+  {
+   "name": "سجل تدقيق: صف DENIED مسجل",
+   "pass": true,
+   "detail": "1"
+  },
+  {
+   "name": "login مالك → جلسة كاملة (access+refresh+دور+صلاحيات)",
+   "pass": true,
+   "detail": "200"
+  },
+  {
+   "name": "me → هوية المالك",
+   "pass": true,
+   "detail": "200"
+  },
+  {
+   "name": "me بدون توكن → 401",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "branches → فرع الاختبار ظاهر (تغذي شاشة الدخول)",
+   "pass": true,
+   "detail": "['فرع الاختبار الحي']"
+  },
+  {
+   "name": "stations → قائمة (تغذي شاشة الدخول)",
+   "pass": true,
+   "detail": "200"
+  },
+  {
+   "name": "catalog/products → ترقيم خادمي سليم",
+   "pass": true,
+   "detail": "200"
+  },
+  {
+   "name": "catalog بدون توكن → 401",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "مسار مجهول → 404",
+   "pass": true,
+   "detail": "404"
+  },
+  {
+   "name": "login كاشير → جلسة",
+   "pass": true,
+   "detail": "200"
+  },
+  {
+   "name": "RBAC: الكاشير يقرأ الكتالوج",
+   "pass": true,
+   "detail": "200"
+  },
+  {
+   "name": "RBAC: الكاشير لا ينشئ منتجاً → 403",
+   "pass": true,
+   "detail": "403"
+  },
+  {
+   "name": "أداء التزامن: 960 طلباً بلا أخطاء",
+   "pass": true,
+   "detail": "19.5 rps"
+  },
+  {
+   "name": "ذاكرة مستقرة بعد الحمل (RSS 264→264MB, فرق 0MB)",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "إعادة تشغيل نظيفة (2989ms)",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "health/ready بعد إعادة التشغيل",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "login بعد إعادة التشغيل",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "me بعد إعادة التشغيل",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "قاعدة البيانات سليمة (مستخدمون نشطون: 2، سجل تدقيق: 325)",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "لا FATAL في سجل PostgreSQL أثناء الجلسة",
+   "pass": true,
+   "detail": "[]"
+  }
+ ],
+ "perf": {
+  "login (BCrypt+توكن)": {
+   "n": 60,
+   "p50": 284.0,
+   "p95": 374.8,
+   "p99": 402.6,
+   "avg": 299.4
+  },
+  "me": {
+   "n": 60,
+   "p50": 1.0,
+   "p95": 2.8,
+   "p99": 24.0,
+   "avg": 1.4
+  },
+  "catalog قراءة": {
+   "n": 120,
+   "p50": 3.2,
+   "p95": 5.2,
+   "p99": 12.0,
+   "avg": 3.6
+  },
+  "تزامن·login": {
+   "n": 251,
+   "p50": 3355.3,
+   "p95": 5265.9,
+   "p99": 5529.0
+  },
+  "تزامن·me": {
+   "n": 228,
+   "p50": 41.5,
+   "p95": 1328.1,
+   "p99": 1550.3
+  },
+  "تزامن·cat": {
+   "n": 372,
+   "p50": 84.1,
+   "p95": 1699.6,
+   "p99": 2010.0
+  },
+  "تزامن·health": {
+   "n": 109,
+   "p50": 58.2,
+   "p95": 1604.5,
+   "p99": 1823.0
+  },
+  "_concurrent": {
+   "requests": 960,
+   "workers": 24,
+   "wall_s": 49.3,
+   "rps": 19.5,
+   "non200": 0
+  }
+ },
+ "stability": {
+  "rss_after_load_mb": 263.5,
+  "rss_settled_mb": 263.7,
+  "cold_restart_ms": 2989,
+  "active_users": 2,
+  "audit_rows": 325
+ },
+ "cold_boot_ms": 3093,
+ "stations_seeded": true,
+ "branch_id": 1,
+ "owner_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidW5pcXVlX25hbWUiOiJvd25lciIsIm5hbWVfYXIiOiLYp9mE2YXYp9mE2YMiLCJzaWQiOiIxIiwicm9sZSI6Ik9XTkVSIiwibmJmIjoxNzk0MTQ4NDA2LCJleHAiOjE3OTQxNDkzMDYsImlzcyI6IndlcmEtcHJvLWhkLWFwaSIsImF1ZCI6IndlcmEtcHJvLWhkLWNsaWVudHMifQ.lx-fdLVpMDUkl8rOVqDln2g6Dccu4LCHYmZhIzG6UuE",
+ "summary": {
+  "passed": 22,
+  "total": 22
+ }
+}
