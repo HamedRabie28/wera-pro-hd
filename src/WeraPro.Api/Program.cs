@@ -51,7 +51,7 @@ try
     // ── الإعدادات والخيارات ──
     builder.Services.Configure<TokenOptions>(builder.Configuration.GetSection(TokenOptions.SectionName));
     builder.Services.AddOptions<TokenOptions>()
-        .Validate(o => !string.IsNullOrWhiteSpace(o.SigningKeySecret), "مفتاح التوقيع مطلوب من البيئة WERA__TOKENS__SIGNINGKEYSECRET")
+        .Validate(o => !string.IsNullOrWhiteSpace(o.SigningKeySecret), "مفتاح التوقيع مطلوب من البيئة TOKENS__SIGNINGKEYSECRET (متغيرات البيئة تُقرأ بدون بادئة)")
         .Validate(o => o.SigningKeySecret is { Length: >= 32 }, "مفتاح التوقيع لا يقل عن 32 محرفاً")
         .ValidateOnStart();
 

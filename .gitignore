@@ -18,3 +18,13 @@ coverage/
 installer/publish/
 installer/output/
 installer/redist/
+
+# مخرجات الإنتاج الثنائية (2026-11-08): تُبنى محلياً عبر installer/build-production.ps1
+production/api-server/
+production/api-server-fd/
+production/desktop-win-x86/
+production/desktop-win-x64/
+production/installers/
+
+# المستودع المحلي المتداخل (لا يرفع أبداً)
+.git/

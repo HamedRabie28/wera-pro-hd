@@ -1,12 +1,13 @@
 ; ═══════════════════════════════════════════════════════════════════════════
 ;  WERA PRO HD — Professional Windows Installer (Inno Setup 6.3+)
-;  أمر المالك 2026-11-07: حزمة تثبيت احترافية متوافقة مع كل إصدارات
-;  ويندوز المدعومة، بلا أخطاء، وبظهور النافذة دائمًا.
+;  أمر المالك 2026-11-07 (تحديث 2026-11-08: دعم 32-bit و 64-bit):
+;  حزمة تثبيت احترافية متوافقة مع كل إصدارات ويندوز المدعومة، بلا أخطاء،
+;  وبظهور النافذة دائمًا. تدعم معماريات x86 و x64 و ARM64.
 ;
 ;  البناء:  installer\build-installer.ps1  (ينشر Desktop ثم يستدعي ISCC)
 ;  المعزول: .NET 10 Self-Contained + Windows App SDK Self-Contained
 ;           ← لا حاجة لتثبيت أي متطلبات مسبقة على جهاز العميل.
-;  المدعوم: Windows 10 (1809/17763 فأحدث) و Windows 11 · x64 و ARM64.
+;  المدعوم: Windows 10 (1809/17763 فأحدث) و Windows 11 · x86 و x64 و ARM64.
 ;  صامت:    /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 ; ═══════════════════════════════════════════════════════════════════════════
 
@@ -18,6 +19,8 @@
 #endif
 #if Platform == "x64"
   #define ArchSuffix "win-x64"
+#elif Platform == "x86"
+  #define ArchSuffix "win-x86"
 #else
   #define ArchSuffix "win-arm64"
 #endif
@@ -48,6 +51,10 @@ MinVersion=10.0.17763
 #if Platform == "x64"
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#elif Platform == "x86"
+; x86 (32-bit): يُسمح بالتثبيت على أي جهاز (x86 أو x64) — حزمة 32-bit تعمل على الاثنين
+ArchitecturesAllowed=x86 x86compatible
+ArchitecturesInstallIn64BitMode=
 #else
 ArchitecturesAllowed=arm64
 #endif
@@ -153,7 +160,11 @@ Name: "vcredist"; Description: "{cm:VcRedistComponent}"; Types: full; ExtraDiskS
 ; ملفات التطبيق المنشورة (Self-Contained — تعمل دون أي متطلبات مسبقة)
 Source: "publish\{#ArchSuffix}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: app; Excludes: "*.pdb,*.lastbuild"
 ; تشغيليات Visual C++ (اختياري: يُتجاوز تلقائيًا إن غاب الملف أو كانت مثبتة مسبقًا)
+#if Platform == "x86"
+Source: "redist\vc_redist.x86.exe"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall skipifsourcedoesntexist; Components: vcredist; Check: VCRedistMissing
+#else
 Source: "redist\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall skipifsourcedoesntexist; Components: vcredist; Check: VCRedistMissing
+#endif
 
 [Dirs]
 ; مجلد السجلات داخل بيانات المستخدم — يُنشأ مسبقًا لضمان نجاح الإقلاع الأول
@@ -172,7 +183,11 @@ Root: HKCU; Subkey: "Software\WERA PRO HD"; ValueType: string; ValueName: "Insta
 
 [Run]
 ; تشغيليات C++ عند الحاجة فقط — صامت كليًا
-Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "تثبيت تشغيليات Visual C++…"; Flags: runhidden waituntilterminated skipifsilent; Components: vcredist; Check: VCRedistMissing
+#if Platform == "x86"
+Filename: "{tmp}\vc_redist.x86.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "تثبيت تشغيليات Visual C++ (x86)…"; Flags: runhidden waituntilterminated skipifsilent; Components: vcredist; Check: VCRedistMissing
+#else
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "تثبيت تشغيليات Visual C++ (x64)…"; Flags: runhidden waituntilterminated skipifsilent; Components: vcredist; Check: VCRedistMissing
+#endif
 ; تشغيل التطبيق بعد اكتمال التثبيت (خيار للمستخدم — يُتجاوز في التثبيت الصامت)
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram}"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent unchecked
 
@@ -189,8 +204,14 @@ function VCRedistMissing(): Boolean;
 var
   Installed: Cardinal;
 begin
-  // تشغيليات VC++ 2015-2022 x64 مثبتة أصلًا؟ (بصمة مايكروسوفت الرسمية)
+  // تشغيليات VC++ 2015-2022 مثبتة أصلًا؟ (بصمة مايكروسوفت الرسمية)
+  // x86 (32-bit): يبحث في مسار x86 حتى على ويندوز 64-bit
+  // x64/ARM64: يبحث في مسار x64
+  #if Platform == "x86"
+  Result := not (RegQueryDWordValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x86', 'Installed', Installed) and (Installed = 1));
+  #else
   Result := not (RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', Installed) and (Installed = 1));
+  #endif
 end;
 
 function InitializeSetup(): Boolean;
