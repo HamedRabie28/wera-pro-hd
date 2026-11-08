@@ -25,7 +25,7 @@ public sealed partial class TransfersPage : Page
         {
             if (e.PropertyName == nameof(TransfersViewModel.IsLoading))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                 {
                     LoadingRing.Visibility = _vm.IsLoading ? Visibility.Visible : Visibility.Collapsed;
                     ErrorText.Text = _vm.ErrorAr;
@@ -43,7 +43,7 @@ public sealed partial class TransfersPage : Page
         var fromBox = new ComboBox { PlaceholderText = "من مخزن", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var toBox = new ComboBox { PlaceholderText = "إلى مخزن", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var skuBox = new TextBox { PlaceholderText = "كود الصيغة" };
-        var qtyBox = new NumberBox { PlaceholderText = "الكمية بالوحدة الأساسية", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+        var qtyBox = new NumberBox { PlaceholderText = "الكمية بالوحدة الأساسية", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
         panel.Children.Add(fromBox);
         panel.Children.Add(toBox);
         panel.Children.Add(skuBox);
@@ -72,7 +72,7 @@ public sealed partial class TransfersPage : Page
             _vm.ErrorAr = "كود الصيغة غير معروف";
             return;
         }
-        await _vm.CreateAsync(from, to, lookup.Value!.SkuId, (decimal)qtyBox.Value, default);
+        await _vm.CreateAsync(from, to, lookup.Value!.Sku.SkuId, (decimal)qtyBox.Value, default);
     }
 
     private async void Send_Click(object sender, RoutedEventArgs e)
@@ -100,7 +100,7 @@ public sealed partial class TransfersPage : Page
             }
             _vm.InfoAr = $"أُنشئ طلب الاعتماد #{created.Value!.ApprovalId} — بعد موافقة المشرف أعد الإرسال بالمفتاح";
             _vm.ErrorAr = null;
-            var approvalBox = new NumberBox { Minimum = 1, Header = "رقم الاعتماد المُوافَق عليه من المشرف", SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+            var approvalBox = new NumberBox { Minimum = 1, Header = "رقم الاعتماد المُوافَق عليه من المشرف", SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
             var resend = new ContentDialog
             {
                 XamlRoot = XamlRoot, Title = "أعد الإرسال باعتماد",

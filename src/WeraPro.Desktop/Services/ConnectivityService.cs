@@ -1,6 +1,8 @@
 // Services/ConnectivityService.cs — WERA PRO HD Desktop (G3)
 // حالة الاتصال الحقيقية (D-08: Online-first افتراضياً): فحص دوري خفيف لـ
 // health/ready وتحديث الحالة المعروضة — لا تُعرض «متصل» زوراً أبداً (§10.6).
+using Microsoft.Extensions.Logging;
+
 namespace WeraPro.Desktop.Services;
 
 public enum ConnectionState { Unknown, Online, Offline }

@@ -41,7 +41,7 @@ public sealed partial class MediaLibraryPage : UserControl
                 or nameof(MediaLibraryViewModel.ErrorAr)
                 or nameof(MediaLibraryViewModel.SuccessAr))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
             }
         };
         _ = _vm.LoadAsync(default);
@@ -136,19 +136,20 @@ public sealed partial class MediaLibraryPage : UserControl
 
     private async void Upload_Click(object sender, RoutedEventArgs e)
     {
-        var picker = new Windows.Storage.Pickers.OpenFilePicker
+        // الصفحة UserControl (لا تملك مقبض نافذة) — نأخذ مقبض النافذة النشطة
+        if (App.ActiveWindow is not { } owner)
         {
-            SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary,
-            ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail,
+            return;
+        }
+        var picker = new Microsoft.Windows.Storage.Pickers.FileOpenPicker(
+            Microsoft.UI.Win32Interop.GetWindowIdFromWindow(WinRT.Interop.WindowNative.GetWindowHandle(owner)))
+        {
+            SuggestedStartLocation = Microsoft.Windows.Storage.Pickers.PickerLocationId.PicturesLibrary,
+            ViewMode = Microsoft.Windows.Storage.Pickers.PickerViewMode.Thumbnail,
         };
         picker.FileTypeFilter.Add(".jpg");
         picker.FileTypeFilter.Add(".jpeg");
         picker.FileTypeFilter.Add(".png");
-        if (App.ActiveWindow is { } window)
-        {
-            WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(window));
-        }
-
         var file = await picker.PickSingleFileAsync();
         if (file is null)
         {
@@ -162,7 +163,7 @@ public sealed partial class MediaLibraryPage : UserControl
     {
         // مركز الاستيراد الدفعي (PAGE-17) — نافذة مستقلة
         var window = ActivatorUtilities.CreateInstance<MediaImportWindow>(App.Host.Services);
-        window.FlowDirection = FlowDirection.RightToLeft;
+        // RTL مضبوط في جذر نافذة XAML (Window لا تملك FlowDirection)
         window.Activate();
     }
 
@@ -289,7 +290,7 @@ public sealed partial class MediaLibraryPage : UserControl
     private void OnPreviewRequested(long mediaId)
     {
         var preview = ActivatorUtilities.CreateInstance<MediaPreviewWindow>(App.Host.Services, mediaId);
-        preview.FlowDirection = FlowDirection.RightToLeft;
+        // RTL مضبوط في جذر نافذة XAML (Window لا تملك FlowDirection)
         preview.Activate();
     }
 

@@ -11,11 +11,12 @@
 //
 // الترتيب:
 //   1) Bootstrap.Initialize         ← يحمّل Windows App SDK runtime
+//      (الصنف Bootstrap في نطاق DynamicDependency — لا WindowsAppRuntime)
 //   2) Global exception handlers    ← قبل أي شيء قد يرمي
 //   3) Application.Start(new App)   ← يفتح مضخة رسائل WinUI
 //
 using System.Runtime.InteropServices;
-using Microsoft.Windows.ApplicationModel.WindowsAppRuntime;
+using Microsoft.Windows.ApplicationModel.DynamicDependency;
 
 namespace WeraPro.Desktop;
 
@@ -42,7 +43,8 @@ internal static class Program
         // 1) تهيئة Windows App SDK قبل أي نوع WinUI
         try
         {
-            Bootstrap.Initialize();
+            // رقم إصدار Windows App SDK 2.6 (major=2, minor=6) — إلزامي في هذا التوقيع
+            Bootstrap.Initialize(0x0002_0006);
         }
         catch (Exception ex)
         {
@@ -85,6 +87,11 @@ internal static class Program
         };
 
         // 3) بدء تطبيق WinUI — تمرير args كسلسلة (تتجاوزها واجهة WinUI لاحقًا)
-        Microsoft.UI.Xaml.Application.Start(_ => _ = new App());
+        // لا نستخدم معامل اللامدا «_» كهدف إسناد — نوعه
+        // ApplicationInitializationCallbackParams وليس App (CS0029).
+        Microsoft.UI.Xaml.Application.Start(_ =>
+        {
+            var app = new App();   // Application يحتفظ بمرجع ذاتي (App.Current)
+        });
     }
 }

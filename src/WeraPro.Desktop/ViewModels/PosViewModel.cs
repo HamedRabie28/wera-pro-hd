@@ -102,6 +102,9 @@ public sealed partial class PosViewModel : ObservableObject
     private string _cardInfoAr = "البطاقة معطلة حتى اعتماد مزود (B-02/D-11)";
 
     [ObservableProperty]
+    private string _weighingInfoAr = "إعدادات الوزن (D-07): تُجلب من الخادم…";
+
+    [ObservableProperty]
     private PosContextResponse? _context;
 
     [ObservableProperty]
@@ -130,9 +133,10 @@ public sealed partial class PosViewModel : ObservableObject
     public async Task LoadFoundationAsync(CancellationToken ct)
     {
         var settings = await _api.GetSettingsAsync("WEIGHT", ct);
-        var weighingInfo = settings.Ok && settings.Value is not null
+        WeighingInfoAr = settings.Ok && settings.Value is not null
             ? string.Join(" · ", settings.Value.Select(s => $"{s.SettingKey}={s.ValueText}"))
             : "تعذر جلب إعدادات الوزن";
+        var weighingInfo = WeighingInfoAr;
 
         var context = await _api.GetPosContextAsync(ct);
         if (context.Ok && context.Value is not null)

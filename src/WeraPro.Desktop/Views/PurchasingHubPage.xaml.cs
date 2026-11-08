@@ -29,7 +29,7 @@ public sealed partial class PurchasingHubPage : Page
         {
             if (e.PropertyName == nameof(PurchasingViewModel.IsLoading))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                 {
                     LoadingRing.Visibility = _vm.IsLoading ? Visibility.Visible : Visibility.Collapsed;
                     ErrorText.Text = _vm.ErrorAr;
@@ -55,8 +55,8 @@ public sealed partial class PurchasingHubPage : Page
         var supplierBox = new ComboBox { PlaceholderText = "المورد", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var warehouseBox = new ComboBox { PlaceholderText = "مخزن الاستلام", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var skuBox = new TextBox { PlaceholderText = "كود الصيغة" };
-        var qtyBox = new NumberBox { PlaceholderText = "الكمية بوحدة الشراء", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
-        var costBox = new NumberBox { PlaceholderText = "تكلفة الوحدة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+        var qtyBox = new NumberBox { PlaceholderText = "الكمية بوحدة الشراء", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
+        var costBox = new NumberBox { PlaceholderText = "تكلفة الوحدة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
         panel.Children.Add(supplierBox);
         panel.Children.Add(warehouseBox);
         panel.Children.Add(skuBox);
@@ -85,7 +85,7 @@ public sealed partial class PurchasingHubPage : Page
             return;
         }
         await _vm.CreateBasketAsync(supplier.SupplierId, warehouse.WarehouseId,
-            [new WeraPro.Contracts.V1.CreatePurchaseOrderLineRequest(lookup.Value!.SkuId, (decimal)qtyBox.Value, lookup.Value.BaseUomId, (decimal)costBox.Value)], default);
+            [new WeraPro.Contracts.V1.CreatePurchaseOrderLineRequest(lookup.Value!.Sku.SkuId, (decimal)qtyBox.Value, lookup.Value.Sku.BaseUomId, (decimal)costBox.Value)], default);
     }
 
     private async void SubmitOrder_Click(object sender, RoutedEventArgs e)
@@ -105,8 +105,8 @@ public sealed partial class PurchasingHubPage : Page
         var supplierBox = new ComboBox { PlaceholderText = "المورد", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var warehouseBox = new ComboBox { PlaceholderText = "المخزن", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var skuBox = new TextBox { PlaceholderText = "كود الصيغة" };
-        var qtyBox = new NumberBox { PlaceholderText = "الكمية بوحدة الاستلام", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
-        var costBox = new NumberBox { PlaceholderText = "تكلفة الوحدة المستلمة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+        var qtyBox = new NumberBox { PlaceholderText = "الكمية بوحدة الاستلام", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
+        var costBox = new NumberBox { PlaceholderText = "تكلفة الوحدة المستلمة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
         var lotBox = new TextBox { PlaceholderText = "رمز الدفعة (اختياري)" };
         panel.Children.Add(supplierBox);
         panel.Children.Add(warehouseBox);
@@ -138,7 +138,7 @@ public sealed partial class PurchasingHubPage : Page
         var receipt = await api.CreateReceiptAsync(new WeraPro.Contracts.V1.CreateReceiptRequest(
             supplier.SupplierId, warehouse.WarehouseId, null, "استلام من صفحة المشتريات",
             [new WeraPro.Contracts.V1.CreateReceiptLineRequest(
-                lookup.Value!.SkuId, (decimal)qtyBox.Value, lookup.Value.BaseUomId, (decimal)costBox.Value,
+                lookup.Value!.Sku.SkuId, (decimal)qtyBox.Value, lookup.Value.Sku.BaseUomId, (decimal)costBox.Value,
                 string.IsNullOrWhiteSpace(lotBox.Text) ? null : lotBox.Text.Trim(), null)]), default);
         if (!receipt.Ok)
         {
@@ -162,8 +162,8 @@ public sealed partial class PurchasingHubPage : Page
         var supplierBox = new ComboBox { PlaceholderText = "المورد", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var receiptBox = new ComboBox { PlaceholderText = "الاستلام المرجعي (اختياري)", DisplayMemberPath = "ReceiptNumber", HorizontalAlignment = HorizontalAlignment.Stretch };
         var numberBox = new TextBox { PlaceholderText = "رقم فاتورة المورد (كما عليها)" };
-        var subtotalBox = new NumberBox { PlaceholderText = "الإجمالي قبل الضريبة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
-        var taxBox = new NumberBox { PlaceholderText = "الضريبة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+        var subtotalBox = new NumberBox { PlaceholderText = "الإجمالي قبل الضريبة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
+        var taxBox = new NumberBox { PlaceholderText = "الضريبة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
         panel.Children.Add(supplierBox);
         panel.Children.Add(receiptBox);
         panel.Children.Add(numberBox);
@@ -197,7 +197,7 @@ public sealed partial class PurchasingHubPage : Page
         var panel = new StackPanel { Spacing = 8 };
         var supplierBox = new ComboBox { PlaceholderText = "المورد", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var treasuryBox = new ComboBox { PlaceholderText = "حساب الخزينة", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
-        var amountBox = new NumberBox { PlaceholderText = "المبلغ", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+        var amountBox = new NumberBox { PlaceholderText = "المبلغ", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
         var methodBox = new ComboBox { PlaceholderText = "الوسيلة", HorizontalAlignment = HorizontalAlignment.Stretch };
         methodBox.Items.Add("نقدي"); methodBox.Items.Add("تحويل بنكي"); methodBox.Items.Add("شيك");
         methodBox.SelectedIndex = 0;
@@ -238,8 +238,8 @@ public sealed partial class PurchasingHubPage : Page
         var supplierBox = new ComboBox { PlaceholderText = "المورد", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
         var receiptBox = new ComboBox { PlaceholderText = "الاستلام الأصلي (إلزامي)", DisplayMemberPath = "ReceiptNumber", HorizontalAlignment = HorizontalAlignment.Stretch };
         var skuBox = new TextBox { PlaceholderText = "كود الصيغة المرجَّعة" };
-        var qtyBox = new NumberBox { PlaceholderText = "الكمية بوحدة الاستلام", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
-        var costBox = new NumberBox { PlaceholderText = "تكلفة الوحدة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+        var qtyBox = new NumberBox { PlaceholderText = "الكمية بوحدة الاستلام", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
+        var costBox = new NumberBox { PlaceholderText = "تكلفة الوحدة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
         var refundBox = new ComboBox { PlaceholderText = "طريقة الرد", HorizontalAlignment = HorizontalAlignment.Stretch };
         refundBox.Items.Add("إشعار دائن (تخفيض الذمم)");
         refundBox.Items.Add("رد نقدي (خزينة)");
@@ -274,7 +274,7 @@ public sealed partial class PurchasingHubPage : Page
         var refund = refundBox.SelectedIndex == 1 ? "CASH" : "CREDIT_NOTE";
         var created = await api.CreateReturnAsync(new WeraPro.Contracts.V1.CreateSupplierReturnRequest(
             supplier.SupplierId, receipt.ReceiptId, null, receipt.WarehouseId, refund,
-            [new WeraPro.Contracts.V1.CreateSupplierReturnLineRequest(lookup.Value!.SkuId, (decimal)qtyBox.Value, lookup.Value.BaseUomId, (decimal)costBox.Value)]), default);
+            [new WeraPro.Contracts.V1.CreateSupplierReturnLineRequest(lookup.Value!.Sku.SkuId, (decimal)qtyBox.Value, lookup.Value.Sku.BaseUomId, (decimal)costBox.Value)]), default);
         if (!created.Ok)
         {
             _vm.ErrorAr = created.ErrorAr;

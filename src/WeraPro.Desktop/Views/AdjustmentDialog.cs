@@ -15,10 +15,10 @@ public sealed class AdjustmentDialog : ContentDialog
 
     private readonly TextBox _skuBox = new() { PlaceholderText = "كود الصيغة" };
     private readonly ComboBox _warehouseBox = new() { PlaceholderText = "المخزن", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly NumberBox _newQtyBox = new() { PlaceholderText = "الرصيد الصحيح بعد التسوية", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+    private readonly NumberBox _newQtyBox = new() { PlaceholderText = "الرصيد الصحيح بعد التسوية", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
     private readonly ComboBox _kindBox = new() { PlaceholderText = "نوع التسوية", HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly TextBox _reasonBox = new() { PlaceholderText = "السبب الموثق (≥ 3 محارف)" };
-    private readonly NumberBox _approvalBox = new() { Header = "رقم الاعتماد المُوافَق عليه (أنشئ الطلب أولاً ثم دع المشرف يبت)", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+    private readonly NumberBox _approvalBox = new() { Header = "رقم الاعتماد المُوافَق عليه (أنشئ الطلب أولاً ثم دع المشرف يبت)", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
     private readonly Button _requestApprovalButton = new() { Content = "1) أنشئ طلب اعتماد…" };
 
     public bool Posted { get; private set; }
@@ -101,7 +101,7 @@ public sealed class AdjustmentDialog : ContentDialog
         }
         var kind = _kindBox.SelectedIndex switch { 1 => "EXPIRY", 2 => "QUICK", _ => "DAMAGE" };
         var response = await _api.PostAdjustmentAsync(new PostAdjustmentRequest(
-            lookup.Value!.SkuId, warehouse.WarehouseId, (decimal)_newQtyBox.Value,
+            lookup.Value!.Sku.SkuId, warehouse.WarehouseId, (decimal)_newQtyBox.Value,
             kind, _reasonBox.Text.Trim(), (long)_approvalBox.Value), default);
         if (response.Ok)
         {

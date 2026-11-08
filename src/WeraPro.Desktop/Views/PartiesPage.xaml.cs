@@ -25,7 +25,7 @@ public sealed partial class PartiesPage : Page
         {
             if (e.PropertyName == nameof(PartiesViewModel.ErrorAr))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                 {
                     ErrorText.Text = _vm.ErrorAr;
                     ErrorText.Visibility = string.IsNullOrEmpty(_vm.ErrorAr) ? Visibility.Collapsed : Visibility.Visible;
@@ -62,7 +62,7 @@ public sealed partial class PartiesPage : Page
         var codeBox = new TextBox { PlaceholderText = "كود المورد" };
         var nameBox = new TextBox { PlaceholderText = "الاسم" };
         var phoneBox = new TextBox { PlaceholderText = "الهاتف" };
-        var termsBox = new NumberBox { PlaceholderText = "أيام السداد (0 = نقدي)", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+        var termsBox = new NumberBox { PlaceholderText = "أيام السداد (0 = نقدي)", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
         panel.Children.Add(codeBox);
         panel.Children.Add(nameBox);
         panel.Children.Add(phoneBox);
@@ -115,7 +115,7 @@ public sealed partial class PartiesPage : Page
             if (statement is not null)
             {
                 var window = ActivatorUtilities.CreateInstance<PartyStatementWindow>(App.Host.Services);
-                window.FlowDirection = FlowDirection.RightToLeft;
+                // RTL مضبوط في جذر نافذة XAML (Window لا تملك FlowDirection)
                 window.Show(statement, $"كشف حساب المورد — {row.NameAr}");
                 window.Activate();
             }
@@ -131,7 +131,7 @@ public sealed partial class PartiesPage : Page
             if (statement is not null)
             {
                 var window = ActivatorUtilities.CreateInstance<PartyStatementWindow>(App.Host.Services);
-                window.FlowDirection = FlowDirection.RightToLeft;
+                // RTL مضبوط في جذر نافذة XAML (Window لا تملك FlowDirection)
                 window.Show(statement, $"كشف حساب العميل — {row.NameAr}");
                 window.Activate();
             }

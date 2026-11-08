@@ -29,7 +29,7 @@ public sealed partial class ProductEditorWindow : Window
                 or nameof(ProductEditorViewModel.ErrorAr)
                 or nameof(ProductEditorViewModel.SuccessAr))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
             }
         };
         _vm.ProductCreated += OnProductCreated;
@@ -54,7 +54,7 @@ public sealed partial class ProductEditorWindow : Window
     private async Task LoadReferenceAsync()
     {
         await _vm.LoadReferenceAsync(default);
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
     }
 
     private void RefreshState()
@@ -101,14 +101,14 @@ public sealed partial class ProductEditorWindow : Window
     private async void Save_Click(object sender, RoutedEventArgs e)
     {
         await _vm.SaveCommand.ExecuteAsync(null);
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
     private void OnProductCreated(ProductDto product)
     {
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
         {
             // نجاح كامل: نغلق المحرر — جدول الكتالوج يعيد التحميل عند عودته
             StatusText.Text = _vm.SuccessAr;

@@ -23,7 +23,7 @@ public sealed partial class ShellWindow : Window
         RefreshIdentity();
         _vm.PropertyChanged += (_, e) =>
         {
-            _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshIdentity);
+            _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshIdentity);
         };
 
         // نبضة جاهزية كل 30 ثانية — كل النداءات async (لا تجميد UI)
@@ -53,7 +53,7 @@ public sealed partial class ShellWindow : Window
     {
         var pos = App.Host.Services.GetRequiredService<PosViewModel>();
         await pos.LoadFoundationAsync(default);
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
         {
             WeighingText.Text = pos.WeighingInfoAr;
         });
@@ -84,7 +84,7 @@ public sealed partial class ShellWindow : Window
     {
         // POS نافذة مستقلة بلا أي قائمة إدارية (§9.0)
         var pos = ActivatorUtilities.CreateInstance<PosWindow>(App.Host.Services);
-        pos.FlowDirection = FlowDirection.RightToLeft;
+        // RTL مضبوط في جذر نافذة XAML (Window لا تملك FlowDirection)
         pos.Activate();
     }
 
@@ -96,7 +96,7 @@ public sealed partial class ShellWindow : Window
 
     private void OnLoggedOut()
     {
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
         {
             var login = ActivatorUtilities.CreateInstance<LoginWindow>(App.Host.Services);
             login.Activate();

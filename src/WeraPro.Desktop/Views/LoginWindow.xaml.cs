@@ -27,7 +27,7 @@ public sealed partial class LoginWindow : Window
 
         _vm.PropertyChanged += (_, e) =>
         {
-            _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+            _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
             {
                 if (e.PropertyName == nameof(LoginViewModel.ServerStatusAr))
                 {
@@ -87,7 +87,7 @@ public sealed partial class LoginWindow : Window
     private void OnLoginSucceeded()
     {
         _probeTimer.Stop();
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
         {
             var shell = ActivatorUtilities.CreateInstance<ShellWindow>(App.Host.Services);
             App.MainWindow = shell; // تسليم عصا النافذة الرئيسية لحارس التكرار

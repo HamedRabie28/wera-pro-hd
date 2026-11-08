@@ -208,7 +208,7 @@ public sealed partial class App : Application
                 break; // قُطع المقبض أثناء الإغلاق
             }
 
-            var queue = DispatcherQueue;
+            var queue = MainWindow?.DispatcherQueue ?? ActiveWindow?.DispatcherQueue;
             if (queue is null)
             {
                 break;
@@ -229,7 +229,7 @@ public sealed partial class App : Application
 
             window.AppWindow?.Show();
 
-            if (window.Presenter is Microsoft.UI.Windowing.OverlappedPresenter overlapped &&
+            if (window.AppWindow?.Presenter is Microsoft.UI.Windowing.OverlappedPresenter overlapped &&
                 overlapped.State == Microsoft.UI.Windowing.OverlappedPresenterState.Minimized)
             {
                 overlapped.Restore();
@@ -257,7 +257,7 @@ public sealed partial class App : Application
         }
     }
 
-    private static void OnUnhandledDomainException(object sender, System.Runtime.ExceptionServices.UnhandledExceptionEventArgs e)
+    private static void OnUnhandledDomainException(object sender, System.UnhandledExceptionEventArgs e)
     {
         LogFatal(e.ExceptionObject as Exception ?? new InvalidOperationException(e.ExceptionObject?.ToString() ?? "غير معروف"),
             "AppDomain Unhandled");
@@ -268,6 +268,10 @@ public sealed partial class App : Application
         LogFatal(e.Exception, "Unobserved Task");
         e.SetObserved();
     }
+
+    /// <summary>فرشاة لون من مكونات ARGB — Color بنية عادية فيُبنى بتعبير with (لا ColorHelper).</summary>
+    private static Microsoft.UI.Xaml.Media.SolidColorBrush ArgbBrush(byte a, byte r, byte g, byte b)
+        => new(Microsoft.UI.ColorHelper.FromArgb(a, r, g, b));
 
     private static void LogFatal(Exception ex, string source)
     {
@@ -315,8 +319,8 @@ public sealed partial class App : Application
             root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             var surface = new SolidColorBrush(Microsoft.UI.Colors.White);
-            var header = new SolidColorBrush(Microsoft.UI.Colors.FromArgb(255, 16, 34, 56));
-            var accent = new SolidColorBrush(Microsoft.UI.Colors.FromArgb(255, 13, 131, 121));
+            var header = ArgbBrush(255, 16, 34, 56);
+            var accent = ArgbBrush(255, 13, 131, 121);
 
             var card = new StackPanel
             {
@@ -350,7 +354,7 @@ public sealed partial class App : Application
                 Text = "تعذّر إقلاع WERA PRO HD",
                 FontSize = 19,
                 FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                Foreground = new SolidColorBrush(Microsoft.UI.Colors.FromArgb(255, 23, 37, 54)),
+                Foreground = ArgbBrush(255, 23, 37, 54),
                 HorizontalAlignment = Microsoft.UI.Xaml.HorizontalAlignment.Center
             });
             card.Children.Add(new TextBlock
@@ -358,7 +362,7 @@ public sealed partial class App : Application
                 Text = message,
                 FontSize = 13.5,
                 TextWrapping = TextWrapping.Wrap,
-                Foreground = new SolidColorBrush(Microsoft.UI.Colors.FromArgb(255, 89, 106, 125)),
+                Foreground = ArgbBrush(255, 89, 106, 125),
                 HorizontalAlignment = Microsoft.UI.Xaml.HorizontalAlignment.Center
             });
             card.Children.Add(new TextBlock
@@ -366,7 +370,7 @@ public sealed partial class App : Application
                 Text = "تفاصيل الخطأ محفوظة في:" + Environment.NewLine + logPath,
                 FontSize = 12,
                 TextWrapping = TextWrapping.Wrap,
-                Foreground = new SolidColorBrush(Microsoft.UI.Colors.FromArgb(255, 130, 144, 160)),
+                Foreground = ArgbBrush(255, 130, 144, 160),
                 HorizontalAlignment = Microsoft.UI.Xaml.HorizontalAlignment.Center
             });
 
@@ -392,7 +396,7 @@ public sealed partial class App : Application
             root.Children.Add(card);
             Grid.SetRow(card, 0);
 
-            root.Background = new SolidColorBrush(Microsoft.UI.Colors.FromArgb(255, 241, 244, 247));
+            root.Background = ArgbBrush(255, 241, 244, 247);
             window.Content = root;
 
             MainWindow = window;

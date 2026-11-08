@@ -4,6 +4,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using WeraPro.Contracts.V1;
 
 namespace WeraPro.Desktop.Services;
@@ -222,7 +223,7 @@ public sealed class WeraApiClient(
                 return MediaVariantFetch.Fail(await ReadErrorAsync(response, ct));
             }
             var bytes = await response.Content.ReadAsByteArrayAsync(ct);
-            return MediaVariantFetch.Ok(bytes, response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream");
+            return MediaVariantFetch.Success(bytes, response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream");
         }
         catch (TaskCanceledException)
         {
@@ -410,7 +411,7 @@ public sealed class WeraApiClient(
             using var response = await client.DeleteAsync(url, ct);
             if (response.IsSuccessStatusCode && response.Content.Headers.ContentLength is 0 or null)
             {
-                return ApiCallResult<T>.Ok(default!);
+                return ApiCallResult<T>.Success(default!);
             }
             return await ReadAsync<T>(response, ct);
         }
@@ -528,7 +529,7 @@ public sealed class WeraApiClient(
     public async Task<ApiCallResult<List<StocktakeDto>>> GetStocktakesAsync(int page, int pageSize, CancellationToken ct = default)
     {
         var result = await GetAsync<StocktakeListResponse>(ApiRoutes.InventoryStocktakes + "?page=" + page.ToString(System.Globalization.CultureInfo.InvariantCulture) + "&pageSize=" + pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
-        return result.Map(v => v?.Items ?? []);
+        return result.Map(v => v?.Items is { } items ? items.ToList() : []);
     }
 
     public async Task<ApiCallResult<StocktakeDetailsResponse>> GetStocktakeAsync(long countId, CancellationToken ct = default)
@@ -564,13 +565,13 @@ public sealed class WeraApiClient(
     public async Task<ApiCallResult<List<ReorderSuggestionDto>>> GetReorderAsync(long? warehouseId, CancellationToken ct = default)
     {
         var result = await GetAsync<ReorderReportResponse>(ApiRoutes.InventoryReorder + (warehouseId is { } w ? "?warehouseId=" + w.ToString(System.Globalization.CultureInfo.InvariantCulture) : ""), ct);
-        return result.Map(v => v?.Items ?? []);
+        return result.Map(v => v?.Items is { } items ? items.ToList() : []);
     }
 
     public async Task<ApiCallResult<List<LotDto>>> GetLotsAsync(int? expiringInDays, CancellationToken ct = default)
     {
         var result = await GetAsync<LotsReportResponse>(ApiRoutes.InventoryLots + (expiringInDays is { } d ? "?expiringInDays=" + d.ToString(System.Globalization.CultureInfo.InvariantCulture) : ""), ct);
-        return result.Map(v => v?.Items ?? []);
+        return result.Map(v => v?.Items is { } items ? items.ToList() : []);
     }
 
     // ── الاعتمادات (G6 — D-03 ب) ─────────────────────────────────────────
@@ -585,7 +586,7 @@ public sealed class WeraApiClient(
     {
         var qs = string.IsNullOrWhiteSpace(status) ? "" : "?status=" + Uri.EscapeDataString(status);
         var result = await GetAsync<ApprovalListResponse>(ApiRoutes.Approvals + qs, ct);
-        return result.Map(v => v?.Items ?? []);
+        return result.Map(v => v?.Items is { } items ? items.ToList() : []);
     }
 
     // ── المشتريات (G6 — §12.3) ───────────────────────────────────────────
@@ -624,9 +625,11 @@ public sealed class WeraApiClient(
     public async Task<ApiCallResult<PurchaseOrderDto>> ReplacePoLinesAsync(long poId, ReplacePurchaseOrderLinesRequest request, CancellationToken ct = default)
         => await PutAsync<ReplacePurchaseOrderLinesRequest, PurchaseOrderDto>(PurchasingOrderById(poId) + "/lines", request, ct);
 
+    // ملاحظة: نقطتا submit/cancel لأوامر الشراء لا تقبلان جسداً (المسار فقط) —
+    // سبب التغيير: ClosePoRequest لم يكن معرّفاً في العقود أصلاً.
     public async Task<ApiCallResult<PoStatusChangeResponse>> PoActionAsync(long poId, string action, string? reasonAr, CancellationToken ct = default)
-        => await PostAsync<ClosePoRequest, PoStatusChangeResponse>(
-            PurchasingOrderById(poId) + "/" + action, new ClosePoRequest(reasonAr), allowAnonymous: false, ct);
+        => await PostAsync<object, PoStatusChangeResponse>(
+            PurchasingOrderById(poId) + "/" + action, new { }, allowAnonymous: false, ct);
 
     public async Task<ApiCallResult<ReceiptDto>> CreateReceiptAsync(CreateReceiptRequest request, CancellationToken ct = default)
         => await PostAsync<CreateReceiptRequest, ReceiptDto>(ApiRoutes.PurchasingReceipts, request, allowAnonymous: false, ct);
@@ -714,7 +717,7 @@ public sealed class WeraApiClient(
     public async Task<ApiCallResult<List<TreasuryAccountDto>>> GetTreasuryAccountsAsync(CancellationToken ct = default)
     {
         var result = await GetAsync<TreasuryAccountListResponse>(ApiRoutes.PurchasingTreasuryAccounts, ct);
-        return result.Map(v => v?.Items ?? []);
+        return result.Map(v => v?.Items is { } items ? items.ToList() : []);
     }
 
     // ── الأطراف (G6 — §13) ───────────────────────────────────────────────
@@ -982,7 +985,7 @@ public sealed class WeraApiClient(
         if (response.IsSuccessStatusCode)
         {
             var payload = await response.Content.ReadFromJsonAsync<T>(Json, ct);
-            return ApiCallResult<T>.Ok(payload!);
+            return ApiCallResult<T>.Success(payload!);
         }
 
         string detail = "تعذر إكمال الطلب";
@@ -1008,17 +1011,17 @@ public sealed class WeraApiClient(
 /// <summary>نتيجة نداء API للعرض في الواجهة — نجاح بقيمة أو فشل برسالة عربية.</summary>
 public sealed record ApiCallResult<T>(bool Ok, T? Value, string? ErrorAr)
 {
-    public static ApiCallResult<T> Ok(T value) => new(true, value, null);
+    public static ApiCallResult<T> Success(T value) => new(true, value, null);
     public static ApiCallResult<T> Fail(string errorAr) => new(false, default, errorAr);
 
     public ApiCallResult<TOut> Map<TOut>(Func<T, TOut> map) =>
-        Ok ? ApiCallResult<TOut>.Ok(map(Value!)) : ApiCallResult<TOut>.Fail(ErrorAr!);
+        Ok ? ApiCallResult<TOut>.Success(map(Value!)) : ApiCallResult<TOut>.Fail(ErrorAr!);
 }
 
 /// <summary>نتيجة جلب بايتات نسخة وسائط — للمصغرات والمعاينة (ETag خادمي للتخزين المؤقت).</summary>
 public sealed record MediaVariantFetch(bool Ok, byte[]? Bytes, string? MimeType, string? ErrorAr)
 {
-    public static MediaVariantFetch Ok(byte[] bytes, string mimeType) => new(true, bytes, mimeType, null);
+    public static MediaVariantFetch Success(byte[] bytes, string mimeType) => new(true, bytes, mimeType, null);
     public static MediaVariantFetch Fail(string errorAr) => new(false, null, null, errorAr);
 }
 

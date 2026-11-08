@@ -54,6 +54,7 @@ public sealed class WeightSaleDialog : ContentDialog
         panel.Children.Add(_input);
         panel.Children.Add(_result);
         Content = panel;
+        Opened += Dialog_Opened;
     }
 
     private async Task PreviewAsync()
@@ -96,9 +97,8 @@ public sealed class WeightSaleDialog : ContentDialog
         _ => 0m,
     };
 
-    protected override async void OnOpened(EventArgs e)
+    private async void Dialog_Opened(ContentDialog sender, object args)
     {
-        base.OnOpened(e);
         await PreviewAsync();
     }
 
@@ -178,6 +178,7 @@ public sealed class PaymentDialog : ContentDialog
         panel.Children.Add(_summary);
         Content = panel;
         UpdateSummary();
+        Opened += Dialog_Opened;
     }
 
     private void UpdateSummary()
@@ -191,13 +192,12 @@ public sealed class PaymentDialog : ContentDialog
         IsPrimaryButtonEnabled = Math.Abs(sum - due) <= 0.005m && _vm.Cart.Count > 0;
     }
 
-    protected override void OnOpened(EventArgs e)
+    private void Dialog_Opened(ContentDialog sender, object args)
     {
-        base.OnOpened(e);
         UpdateSummary();
     }
 
-    public new async Task<(bool Posted, PostedSaleResponse? Sale, string? ErrorAr)> ShowAndPostAsync()
+    public async Task<(bool Posted, PostedSaleResponse? Sale, string? ErrorAr)> ShowAndPostAsync()
     {
         var result = await base.ShowAsync();
         if (result != ContentDialogResult.Primary)
@@ -236,7 +236,7 @@ public sealed class ReturnDialog : ContentDialog
 
     private readonly TextBox _invoiceBox = new() { PlaceholderText = "رقم الفاتورة الأصلية (InvoiceId) أو رقم العرض (SI-…)" };
     private readonly TextBox _lineBox = new() { PlaceholderText = "معرف السطر (LineId) — من تفاصيل الفاتورة" };
-    private readonly NumberBox _qtyBox = new() { Header = "الكمية المرتجعة", Minimum = 0.01m };
+    private readonly NumberBox _qtyBox = new() { Header = "الكمية المرتجعة", Minimum = 0.01 };
     private readonly ComboBox _methodBox = new() { PlaceholderText = "وسيلة الرد", HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly CheckBox _restockBox = new() { Content = "إعادة للمخزون (ألغِها إن كان هالكاً)", IsChecked = true };
     private readonly TextBox _reasonBox = new() { PlaceholderText = "السبب (≥ 3 محارف)" };
@@ -292,11 +292,14 @@ public sealed class ReturnDialog : ContentDialog
             return;
         }
         _sale = sale.Value;
+        // PosPreviewLine يحمل LineNo (لا LineId) ولا يعرض الكميات المردودة سابقاً —
+        // الإجمالي المردود يظهر من ReturnedTopLevel في الترويسة.
         _info.Text = string.Join("\n", _sale.Lines.Select(l =>
-            $"سطر {l.LineId}: {l.ProductNameAr} × {l.Qty:0.###} {l.UomCode} — مردود سابقاً {l.RefundedQty:0.###} · متبقي {l.Qty - l.RefundedQty:0.###}"));
+            $"سطر {l.LineNo}: {l.ProductNameAr} × {l.Qty:0.###} {l.UomCode}")) +
+            $"\nالمرتجع سابقاً من الفاتورة: {_sale.ReturnedTotal:0.00} ج.م";
         if (_sale.Lines.Count > 0)
         {
-            _lineBox.Text = _sale.Lines[0].LineId.ToString(CultureInfo.InvariantCulture);
+            _lineBox.Text = _sale.Lines[0].LineNo.ToString(CultureInfo.InvariantCulture);
         }
     }
 
@@ -368,11 +371,11 @@ public sealed class HeldCartsDialog : ContentDialog
         panel.Children.Add(_list);
         panel.Children.Add(_restoreButton);
         Content = panel;
+        Opened += Dialog_Opened;
     }
 
-    protected override async void OnOpened(EventArgs e)
+    private async void Dialog_Opened(ContentDialog sender, object args)
     {
-        base.OnOpened(e);
         var carts = await _api.ListHeldCartsAsync();
         _list.Items.Clear();
         if (carts.Ok && carts.Value is not null)
@@ -457,11 +460,11 @@ public sealed class ShiftDialog : ContentDialog
         panel.Children.Add(_floatBox);
         panel.Children.Add(_summary);
         Content = panel;
+        Opened += Dialog_Opened;
     }
 
-    protected override async void OnOpened(EventArgs e)
+    private async void Dialog_Opened(ContentDialog sender, object args)
     {
-        base.OnOpened(e);
         var current = await _vm.LoadCurrentShiftTextAsync();
         _summary.Text = current;
         IsPrimaryButtonEnabled = !_vm.HasOpenShift;

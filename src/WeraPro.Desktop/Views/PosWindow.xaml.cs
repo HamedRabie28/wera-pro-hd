@@ -22,8 +22,7 @@ public sealed partial class PosWindow : Window
     {
         InitializeComponent();
         Title = "WERA PRO HD — POS";
-        MinWidth = 1280;
-        MinHeight = 720;
+        // Window لا تملك MinWidth/MinHeight — الحجم الافتراضي من AppWindow
 
         _vm = App.Host.Services.GetRequiredService<PosViewModel>();
         _api = App.Host.Services.GetRequiredService<WeraApiClient>();
@@ -31,7 +30,7 @@ public sealed partial class PosWindow : Window
 
         ViewModel = _vm;
         SessionText.Text = $"{_vm.CashierDisplayAr} · {_vm.StationDisplayAr} · {_vm.ScopeDisplayAr}";
-        _vm.PropertyChanged += (_, e) => _ = DispatcherQueue.TryRunAsync(
+        _vm.PropertyChanged += (_, e) => _ = DispatcherQueue.TryEnqueue(
             Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
             {
                 if (e.PropertyName == nameof(PosViewModel.StatusAr))
@@ -51,7 +50,7 @@ public sealed partial class PosWindow : Window
         _ = LoadFoundationAsync();
 
         _connectivity.StateChanged += () =>
-            _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshConnection);
+            _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshConnection);
 
         _heartbeatTimer = DispatcherQueue.CreateTimer();
         _heartbeatTimer.Interval = TimeSpan.FromSeconds(30);
@@ -67,7 +66,7 @@ public sealed partial class PosWindow : Window
     private async Task LoadFoundationAsync()
     {
         await _vm.LoadFoundationAsync(default);
-        await DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
         {
             ShiftText.Text = _vm.ShiftInfoAr;
             PrinterText.Text = _vm.PrinterInfoAr;
@@ -110,7 +109,7 @@ public sealed partial class PosWindow : Window
         }
         BarcodeField.Text = string.Empty;
         await _vm.CaptureAsync(code, line => OpenWeightDialogAsync(line), default);
-        await DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshTotals);
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshTotals);
     }
 
     private async Task<bool> OpenWeightDialogAsync(CartLineViewModel line)
@@ -123,7 +122,7 @@ public sealed partial class PosWindow : Window
             line.WeightSource = dialog.AcceptedSource;
             line.AmountTarget = dialog.AcceptedAmountTarget;
             await _vm.PreviewAsync();
-            await DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshTotals);
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshTotals);
             return true;
         }
         return false;
@@ -138,7 +137,7 @@ public sealed partial class PosWindow : Window
         {
             await _vm.CaptureAsync(code, line => OpenWeightDialogAsync(line), default);
             BarcodeField.Text = string.Empty;
-            await DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshTotals);
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshTotals);
             return;
         }
         // بحث نصي (F2): قائمة نتائج محدودة خادمياً
@@ -287,7 +286,7 @@ public sealed partial class PosWindow : Window
     private async void OnRemoveLineClick(object sender, RoutedEventArgs e)
     {
         await _vm.RemoveActiveCommand.ExecuteAsync(null);
-        await DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshTotals);
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshTotals);
     }
 
     private void OnCartSelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -3,6 +3,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Input;
 using WeraPro.Desktop.ViewModels;
 
@@ -23,7 +24,7 @@ public sealed partial class CatalogPage : UserControl
                 or nameof(CatalogViewModel.SummaryAr) or nameof(CatalogViewModel.Page)
                 or nameof(CatalogViewModel.TotalPages) or nameof(CatalogViewModel.CanCreate))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
             }
         };
         RowsControl.ItemsSource = _vm.Rows;
@@ -33,7 +34,7 @@ public sealed partial class CatalogPage : UserControl
     private async Task LoadAsync()
     {
         await _vm.LoadAsync(default);
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
     }
 
     /// <summary>حالات صدق: تحميل · خطأ مع إعادة محاولة · فارغ — بلا ادعاء.</summary>
@@ -72,7 +73,7 @@ public sealed partial class CatalogPage : UserControl
     {
         _vm.SearchText = SearchBox.Text;
         await _vm.SearchAsync(default);
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
     }
 
     private void Filter_Changed(object sender, SelectionChangedEventArgs e)
@@ -98,13 +99,13 @@ public sealed partial class CatalogPage : UserControl
         {
             await command.ExecuteAsync(null);
         }
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
     }
 
     private void NewProduct_Click(object sender, RoutedEventArgs e)
     {
         var editor = ActivatorUtilities.CreateInstance<ProductEditorWindow>(App.Host.Services);
-        editor.FlowDirection = FlowDirection.RightToLeft;
+        // RTL مضبوط في جذر نافذة XAML (Window لا تملك FlowDirection)
         editor.Activate();
     }
 }

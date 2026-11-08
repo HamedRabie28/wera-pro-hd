@@ -160,7 +160,7 @@ public sealed partial class FinanceViewModel : ObservableObject
     public async Task LoadAccountsAsync(CancellationToken ct)
     {
         IsBusy = true;
-        var result = await _api.GetTreasuryAccountsAsync(ct: ct);
+        var result = await _api.GetTreasuryAccountsAsync(includeInactive: true, ct: ct);
         IsBusy = false;
         if (!result.Ok)
         {

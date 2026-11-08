@@ -17,12 +17,12 @@ public sealed partial class MovementCardWindow : Window
         Title = "WERA PRO HD — كرت حركة المنتج";
         App.ActiveWindow = this;
         _vm = App.Host.Services.GetRequiredService<MovementCardViewModel>();
-        DataContext = _vm;
+        // Window لا تملك DataContext — التحديث عبر PropertyChanged + حقول x:Name
         _vm.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MovementCardViewModel.IsLoading))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                 {
                     LoadingRing.Visibility = _vm.IsLoading ? Visibility.Visible : Visibility.Collapsed;
                     ErrorText.Text = _vm.ErrorAr;

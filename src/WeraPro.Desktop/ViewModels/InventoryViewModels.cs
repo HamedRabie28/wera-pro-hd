@@ -187,7 +187,7 @@ public sealed partial class InventoryDashboardViewModel : ObservableObject
     public bool CanAdjust => _session.User?.Permissions.Contains("inventory.movement.post") == true;
 
     [RelayCommand]
-    private async Task LoadAsync(CancellationToken ct)
+    public async Task LoadAsync(CancellationToken ct)
     {
         IsLoading = true;
         ErrorAr = null;
@@ -254,7 +254,7 @@ public sealed partial class InventoryDashboardViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task SearchAsync(CancellationToken ct)
+    public async Task SearchAsync(CancellationToken ct)
     {
         Page = 1;
         IsLoading = true;
@@ -264,7 +264,7 @@ public sealed partial class InventoryDashboardViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task NextPageAsync(CancellationToken ct)
+    public async Task NextPageAsync(CancellationToken ct)
     {
         if (Page * PageSize < TotalCount)
         {
@@ -274,7 +274,7 @@ public sealed partial class InventoryDashboardViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task PreviousPageAsync(CancellationToken ct)
+    public async Task PreviousPageAsync(CancellationToken ct)
     {
         if (Page > 1)
         {
@@ -368,7 +368,7 @@ public sealed partial class StocktakeViewModel : ObservableObject
     public bool CanApprove => _session.User?.Permissions.Contains("inventory.stocktake.approve") == true;
 
     [RelayCommand]
-    private async Task LoadAsync(CancellationToken ct)
+    public async Task LoadAsync(CancellationToken ct)
     {
         IsLoading = true;
         ErrorAr = null;
@@ -498,7 +498,7 @@ public sealed partial class TransfersViewModel : ObservableObject
     public bool CanOperate => _session.User?.Permissions.Contains("inventory.movement.post") == true;
 
     [RelayCommand]
-    private async Task LoadAsync(CancellationToken ct)
+    public async Task LoadAsync(CancellationToken ct)
     {
         IsLoading = true;
         ErrorAr = null;
@@ -609,7 +609,7 @@ public sealed partial class WarehousesViewModel : ObservableObject
     public bool CanManage => _session.User?.Permissions.Contains("inventory.warehouse.manage") == true;
 
     [RelayCommand]
-    private async Task LoadAsync(CancellationToken ct)
+    public async Task LoadAsync(CancellationToken ct)
     {
         IsLoading = true;
         ErrorAr = null;

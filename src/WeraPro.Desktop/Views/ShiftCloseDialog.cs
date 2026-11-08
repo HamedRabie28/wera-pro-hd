@@ -19,7 +19,7 @@ public sealed class ShiftCloseDialog : ContentDialog
     {
         Header = "النقدية الفعلية المعدودة",
         Minimum = 0,
-        SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact,
+        SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact,
     };
     private readonly TextBox _reasonBox = new() { PlaceholderText = "سبب الفارق (إلزامي عند فارق ≠ 0 — ≥ 3 محارف)" };
     private readonly TextBox _notesBox = new() { PlaceholderText = "ملاحظات العدّ (اختياري)" };

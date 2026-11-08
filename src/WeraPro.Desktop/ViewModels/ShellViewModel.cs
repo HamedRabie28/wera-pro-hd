@@ -48,7 +48,7 @@ public sealed partial class ShellViewModel : ObservableObject
     public Task HeartbeatAsync(CancellationToken ct) => _connectivity.ProbeAsync(ct);
 
     [RelayCommand]
-    private async Task LogoutAsync(CancellationToken ct)
+    public async Task LogoutAsync(CancellationToken ct)
     {
         await _api.LogoutAsync(ct);
         _session.Clear();

@@ -211,7 +211,7 @@ public sealed partial class PurchasingViewModel : ObservableObject
     public bool CanReturn => _session.User?.Permissions.Contains("purchasing.return.post") == true;
 
     [RelayCommand]
-    private async Task LoadAsync(CancellationToken ct)
+    public async Task LoadAsync(CancellationToken ct)
     {
         IsLoading = true;
         ErrorAr = null;
@@ -428,7 +428,7 @@ public sealed partial class PartiesViewModel : ObservableObject
     public bool CanManage => _session.User?.Permissions.Contains("suppliers.manage") == true;
 
     [RelayCommand]
-    private async Task LoadAsync(CancellationToken ct)
+    public async Task LoadAsync(CancellationToken ct)
     {
         IsLoading = true;
         ErrorAr = null;
@@ -444,7 +444,7 @@ public sealed partial class PartiesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task LoadSuppliersAsync(CancellationToken ct)
+    public async Task LoadSuppliersAsync(CancellationToken ct)
     {
         var result = await _api.SearchSuppliersAsync(SupplierSearch, 1, 100, ct);
         if (!result.Ok)
@@ -457,7 +457,7 @@ public sealed partial class PartiesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task LoadCustomersAsync(CancellationToken ct)
+    public async Task LoadCustomersAsync(CancellationToken ct)
     {
         var result = await _api.SearchCustomersAsync(CustomerSearch, 1, 100, ct);
         if (!result.Ok)

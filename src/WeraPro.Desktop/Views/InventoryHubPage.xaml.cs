@@ -24,7 +24,7 @@ public sealed partial class InventoryHubPage : Page
         {
             if (e.PropertyName == nameof(InventoryDashboardViewModel.IsLoading))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                 {
                     LoadingRing.Visibility = _vm.IsLoading ? Visibility.Visible : Visibility.Collapsed;
                     ErrorText.Text = _vm.ErrorAr;
@@ -33,7 +33,7 @@ public sealed partial class InventoryHubPage : Page
             }
             if (e.PropertyName == nameof(InventoryDashboardViewModel.TotalCount))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshPager);
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshPager);
             }
         };
         foreach (var w in _vm.Warehouses) WarehouseFilter.Items.Add(w);
@@ -84,7 +84,7 @@ public sealed partial class InventoryHubPage : Page
         if (BalancesList.SelectedItem is BalanceRow row)
         {
             var card = ActivatorUtilities.CreateInstance<MovementCardWindow>(App.Host.Services);
-            card.FlowDirection = FlowDirection.RightToLeft;
+            // RTL مضبوط في جذر نافذة XAML (Window لا تملك FlowDirection)
             card.LoadFor(row.SkuId, _vm.WarehouseFilter?.WarehouseId, row.SkuCode);
             card.Activate();
         }

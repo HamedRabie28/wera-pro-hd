@@ -13,7 +13,7 @@ namespace WeraPro.Desktop.ViewModels;
 /// <summary>مسودة صيغة بيع داخل المحرر — صيغة صريحة لا تُستنتج (§4.2).</summary>
 public sealed partial class SkuDraft : ObservableObject
 {
-    public int Ordinal { get; init; }
+    public int Ordinal { get; set; }
 
     [ObservableProperty]
     private string _skuCode = string.Empty;

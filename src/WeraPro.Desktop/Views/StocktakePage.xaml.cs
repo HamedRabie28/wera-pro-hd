@@ -28,7 +28,7 @@ public sealed partial class StocktakePage : Page
         {
             if (e.PropertyName == nameof(StocktakeViewModel.IsLoading))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                 {
                     LoadingRing.Visibility = _vm.IsLoading ? Visibility.Visible : Visibility.Collapsed;
                     ErrorText.Text = _vm.ErrorAr;
@@ -37,7 +37,7 @@ public sealed partial class StocktakePage : Page
                 });
             }
         };
-        _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, BuildWarehouseMenu);
+        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, BuildWarehouseMenu);
     }
 
     private void BuildWarehouseMenu()
@@ -81,7 +81,7 @@ public sealed partial class StocktakePage : Page
         }
         var panel = new StackPanel { Spacing = 8 };
         var skuBox = new TextBox { PlaceholderText = "كود الصيغة (مثال: G6-SCN-01-BAG)" };
-        var qtyBox = new NumberBox { PlaceholderText = "الكمية المعدودة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+        var qtyBox = new NumberBox { PlaceholderText = "الكمية المعدودة", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
         panel.Children.Add(skuBox);
         panel.Children.Add(qtyBox);
         var dialog = new ContentDialog
@@ -99,7 +99,7 @@ public sealed partial class StocktakePage : Page
             _vm.ErrorAr = "كود الصيغة غير معروف: " + skuBox.Text.Trim();
             return;
         }
-        await _vm.RecordAsync(lookup.Value!.SkuId, (decimal)qtyBox.Value, default);
+        await _vm.RecordAsync(lookup.Value!.Sku.SkuId, (decimal)qtyBox.Value, default);
     }
 
     private async void Close_Click(object sender, RoutedEventArgs e) => await _vm.ActionAsync("close", default);

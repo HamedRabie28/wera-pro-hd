@@ -25,7 +25,7 @@ public sealed partial class MediaImportWindow : Window
 
         _vm = ActivatorUtilities.CreateInstance<MediaImportViewModel>(App.Host.Services);
         FilesControl.ItemsSource = _vm.Files;
-        _vm.ImportFinished += () => _ = DispatcherQueue.TryRunAsync(
+        _vm.ImportFinished += () => _ = DispatcherQueue.TryEnqueue(
             Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, async () => await RefreshReportAsync());
 
         _vm.PropertyChanged += (_, e) =>
@@ -39,7 +39,7 @@ public sealed partial class MediaImportWindow : Window
                 or nameof(MediaImportViewModel.StagedCount)
                 or nameof(MediaImportViewModel.ScopeNoteAr))
             {
-                _ = DispatcherQueue.TryRunAsync(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
+                _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, RefreshState);
             }
         };
 
@@ -98,15 +98,17 @@ public sealed partial class MediaImportWindow : Window
 
     private async void AddFiles_Click(object sender, RoutedEventArgs e)
     {
-        var picker = new Windows.Storage.Pickers.OpenFilePicker
+        // WinAppSDK picker (Microsoft.Windows.Storage.Pickers) — الوحيد الذي يعمل
+        // في تطبيق غير مُغلَّف؛ النتيجة PickFileResult.Path فقط (لا StorageFile).
+        var picker = new Microsoft.Windows.Storage.Pickers.FileOpenPicker(
+            Microsoft.UI.Win32Interop.GetWindowIdFromWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)))
         {
-            SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary,
-            ViewMode = Windows.Storage.Pickers.PickerViewMode.List,
+            SuggestedStartLocation = Microsoft.Windows.Storage.Pickers.PickerLocationId.PicturesLibrary,
+            ViewMode = Microsoft.Windows.Storage.Pickers.PickerViewMode.List,
         };
         picker.FileTypeFilter.Add(".jpg");
         picker.FileTypeFilter.Add(".jpeg");
         picker.FileTypeFilter.Add(".png");
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(this));
 
         var files = await picker.PickMultipleFilesAsync();
         if (files.Count == 0)
@@ -123,13 +125,12 @@ public sealed partial class MediaImportWindow : Window
                 try
                 {
                     var owned = new MemoryStream();
-                    using (var source = await file.OpenReadAsync())
+                    using (var source = System.IO.File.OpenRead(file.Path))
                     {
-                        using var stream = source.AsStreamForRead();
-                        await stream.CopyToAsync(owned, 64 * 1024);
+                        await source.CopyToAsync(owned, 64 * 1024);
                     }
                     owned.Position = 0;
-                    payload.Add((file.Name, owned));
+                    payload.Add((System.IO.Path.GetFileName(file.Path), owned));
                 }
                 catch (Exception)
                 {

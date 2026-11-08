@@ -58,7 +58,7 @@ public sealed partial class LoginViewModel : ObservableObject
     public event Action? LoginSucceeded;
 
     [RelayCommand]
-    private async Task CheckServerAsync(CancellationToken ct)
+    public async Task CheckServerAsync(CancellationToken ct)
     {
         Busy = true;
         ServerStatusAr = "جارٍ التحقق من الخادم…";
@@ -121,7 +121,7 @@ public sealed partial class LoginViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanLogin))]
-    private async Task LoginAsync(CancellationToken ct)
+    public async Task LoginAsync(CancellationToken ct)
     {
         Busy = true;
         StatusAr = "جارٍ التحقق من البيانات…";

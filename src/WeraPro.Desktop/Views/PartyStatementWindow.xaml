@@ -9,7 +9,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     mc:Ignorable="d" xmlns:vm="using:WeraPro.Desktop.ViewModels">
 
-    <Grid RowSpacing="10" Padding="18,14" Background="{StaticResource WeraSurfaceBackgroundBrush}">
+    <Grid FlowDirection="RightToLeft" RowSpacing="10" Padding="18,14" Background="{StaticResource WeraSurfaceBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

@@ -178,7 +178,7 @@ public sealed class NewVoucherDialog : ContentDialog
     private readonly ComboBox _typeBox = new() { PlaceholderText = "نوع السند", HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly ComboBox _accountBox = new() { PlaceholderText = "الخزينة", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly ComboBox _counterAccountBox = new() { PlaceholderText = "خزينة الوجهة (للتحويل)", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly NumberBox _amountBox = new() { Header = "المبلغ", Minimum = 0.01m, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+    private readonly NumberBox _amountBox = new() { Header = "المبلغ", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
     private readonly ComboBox _counterpartyTypeBox = new() { PlaceholderText = "نوع الطرف (اختياري)", HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly TextBox _counterpartyIdBox = new() { PlaceholderText = "معرف الطرف (رقم)" };
     private readonly TextBox _reasonBox = new() { PlaceholderText = "السبب الموثق (≥ 3 محارف)" };
@@ -217,9 +217,10 @@ public sealed class NewVoucherDialog : ContentDialog
         panel.Children.Add(_reasonBox);
         panel.Children.Add(_allocationsBox);
         Content = panel;
+        PrimaryButtonClick += OnPrimaryButtonClick;
     }
 
-    protected override async void OnPrimaryButtonClick(ContentDialogButtonClickEventArgs args)
+    private async void OnPrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         var deferral = args.GetDeferral();
         try
@@ -269,8 +270,8 @@ public sealed class NewExpenseDialog : ContentDialog
 {
     private readonly Services.WeraApiClient _api = App.Host.Services.GetRequiredService<Services.WeraApiClient>();
     private readonly ComboBox _categoryBox = new() { PlaceholderText = "الفئة", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly NumberBox _amountBox = new() { Header = "المبلغ", Minimum = 0.01m, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
-    private readonly NumberBox _taxBox = new() { Header = "الضريبة (إن انطبقت)", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+    private readonly NumberBox _amountBox = new() { Header = "المبلغ", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
+    private readonly NumberBox _taxBox = new() { Header = "الضريبة (إن انطبقت)", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
     private readonly ComboBox _methodBox = new() { PlaceholderText = "وسيلة السداد", HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly ComboBox _treasuryBox = new() { PlaceholderText = "من خزينة", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly TextBox _beneficiaryBox = new() { PlaceholderText = "المستفيد" };
@@ -302,9 +303,10 @@ public sealed class NewExpenseDialog : ContentDialog
         panel.Children.Add(_beneficiaryBox);
         panel.Children.Add(_notesBox);
         Content = panel;
+        PrimaryButtonClick += OnPrimaryButtonClick;
     }
 
-    protected override async void OnPrimaryButtonClick(ContentDialogButtonClickEventArgs args)
+    private async void OnPrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         var deferral = args.GetDeferral();
         try
@@ -340,10 +342,10 @@ public sealed class NewCapitalEventDialog : ContentDialog
 {
     private readonly Services.WeraApiClient _api = App.Host.Services.GetRequiredService<Services.WeraApiClient>();
     private readonly ComboBox _typeBox = new() { PlaceholderText = "نوع الحدث", HorizontalAlignment = HorizontalAlignment.Stretch };
-    private readonly NumberBox _amountBox = new() { Header = "المبلغ", Minimum = 0.01m, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+    private readonly NumberBox _amountBox = new() { Header = "المبلغ", Minimum = 0.01, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
     private readonly ComboBox _treasuryBox = new() { PlaceholderText = "الخزينة (اختياري)", DisplayMemberPath = "NameAr", HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly TextBox _descriptionBox = new() { PlaceholderText = "الوصف الموثق (≥ 3 محارف)" };
-    private readonly NumberBox _approvalBox = new() { Header = "رقم الاعتماد المُوافَق (إلزامي للرصيد الافتتاحي فقط)", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.Primitives.NumberBoxSpinButtonPlacementMode.Compact };
+    private readonly NumberBox _approvalBox = new() { Header = "رقم الاعتماد المُوافَق (إلزامي للرصيد الافتتاحي فقط)", Minimum = 0, SpinButtonPlacementMode = Microsoft.UI.Xaml.Controls.NumberBoxSpinButtonPlacementMode.Compact };
 
     public NewCapitalEventDialog(XamlRoot root)
     {
@@ -368,9 +370,10 @@ public sealed class NewCapitalEventDialog : ContentDialog
         panel.Children.Add(_descriptionBox);
         panel.Children.Add(_approvalBox);
         Content = panel;
+        PrimaryButtonClick += OnPrimaryButtonClick;
     }
 
-    protected override async void OnPrimaryButtonClick(ContentDialogButtonClickEventArgs args)
+    private async void OnPrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         var deferral = args.GetDeferral();
         try
@@ -426,9 +429,10 @@ public sealed class NewTreasuryAccountDialog : ContentDialog
         panel.Children.Add(_nameBox);
         panel.Children.Add(_kindBox);
         Content = panel;
+        PrimaryButtonClick += OnPrimaryButtonClick;
     }
 
-    protected override async void OnPrimaryButtonClick(ContentDialogButtonClickEventArgs args)
+    private async void OnPrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         var deferral = args.GetDeferral();
         try
