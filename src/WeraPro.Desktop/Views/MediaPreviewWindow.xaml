@@ -8,32 +8,36 @@
     x:Class="WeraPro.Desktop.Views.MediaPreviewWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl FontFamily="{StaticResource WeraFontBody}">
 
-    <Grid FontFamily="{StaticResource WeraFontBody}" FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Padding="18,12" Spacing="2">
-            <TextBlock x:Name="TitleText" Text="معاينة الصورة" FontFamily="{StaticResource WeraFontDisplay}"
-                       FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
-            <TextBlock x:Name="SubtitleText" Text="نسخة معاينة (≤ 1024px) — تُطلب بطلب منفصل عن المصغرة"
-                       FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
-        </StackPanel>
+        <Grid FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <Border Grid.Row="1" Background="{StaticResource WeraSurfaceSubtleBrush}" Margin="18,4,18,8"
-                CornerRadius="14" Padding="10">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ZoomMode="Enabled">
-                <Image x:Name="PreviewImage" Stretch="Uniform"/>
-            </ScrollViewer>
-        </Border>
+            <StackPanel Grid.Row="0" Padding="18,12" Spacing="2">
+                <TextBlock x:Name="TitleText" Text="معاينة الصورة" FontFamily="{StaticResource WeraFontDisplay}"
+                           FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                <TextBlock x:Name="SubtitleText" Text="نسخة معاينة (≤ 1024px) — تُطلب بطلب منفصل عن المصغرة"
+                           FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+            </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" Padding="18,10">
-            <ProgressRing x:Name="LoadingRing" Width="24" Height="24" IsActive="False"/>
-            <TextBlock x:Name="StatusText" Text="" FontSize="12.5" VerticalAlignment="Center"
-                       Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
-        </StackPanel>
-    </Grid>
+            <Border Grid.Row="1" Background="{StaticResource WeraSurfaceSubtleBrush}" Margin="18,4,18,8"
+                    CornerRadius="14" Padding="10">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" ZoomMode="Enabled">
+                    <Image x:Name="PreviewImage" Stretch="Uniform"/>
+                </ScrollViewer>
+            </Border>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" Padding="18,10">
+                <ProgressRing x:Name="LoadingRing" Width="24" Height="24" IsActive="False"/>
+                <TextBlock x:Name="StatusText" Text="" FontSize="12.5" VerticalAlignment="Center"
+                           Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+        </Grid>
+
+    </UserControl>
 </Window>

@@ -10,134 +10,138 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:views="using:WeraPro.Desktop.Views">
+    <UserControl FontFamily="{StaticResource WeraFontBody}">
 
-    <Grid FontFamily="{StaticResource WeraFontBody}" FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="56"/>   <!-- TopNav: WeraTopNavHeight -->
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
 
-        <!-- ═══ الشريط العلوي (brand.navy) ═══ -->
-        <Grid Grid.Row="0" Background="{StaticResource WeraBrandNavyBrush}" Padding="18,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <Grid FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="56"/>   <!-- TopNav: WeraTopNavHeight -->
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!-- الشعار + فتح POS المستقلة -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
-                <Button x:Name="OpenPosBtn" Click="OpenPos_Click" Background="#00000000" BorderThickness="0" Padding="0">
-                    <StackPanel Orientation="Horizontal" Spacing="9">
-                        <Border Width="30" Height="30" CornerRadius="8" Background="{StaticResource WeraActionPrimaryBrush}">
-                            <TextBlock Text="W" Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="WERA PRO HD" Foreground="{StaticResource WeraShellTextBrush}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
+            <!-- ═══ الشريط العلوي (brand.navy) ═══ -->
+            <Grid Grid.Row="0" Background="{StaticResource WeraBrandNavyBrush}" Padding="18,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- الشعار + فتح POS المستقلة -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+                    <Button x:Name="OpenPosBtn" Click="OpenPos_Click" Background="#00000000" BorderThickness="0" Padding="0">
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Border Width="30" Height="30" CornerRadius="8" Background="{StaticResource WeraActionPrimaryBrush}">
+                                <TextBlock Text="W" Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="WERA PRO HD" Foreground="{StaticResource WeraShellTextBrush}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- مجموعات القوائم — المبني فقط يفتح؛ غير المبني معط بسبب معلن -->
+                <muxc:NavigationView Grid.Column="1" x:Name="NavTop" PaneDisplayMode="Top"
+                                     IsBackButtonVisible="Collapsed" IsPaneToggleButtonVisible="False"
+                                     OpenPaneLength="0" Margin="12,0"
+                                     SelectionChanged="NavTop_SelectionChanged">
+                    <muxc:NavigationView.MenuItems>
+                        <muxc:NavigationViewItem Content="التشغيل" Tag="home" IsSelected="True"/>
+                        <muxc:NavigationViewItem Content="نقطة البيع (POS)" Tag="pos" ToolTipService.ToolTip="G7: نافذة بيع مستقلة — سلالم ومساحيق ومرتجعات وسلات معلّقة وورديات"/>
+                        <muxc:NavigationViewItem Content="الكتالوج" Tag="catalog" ToolTipService.ToolTip="G4: المنتجات وصيغ البيع والعبوات والباركود — بحث Exact Match"/>
+                        <muxc:NavigationViewItem Content="مكتبة الصور" Tag="media" ToolTipService.ToolTip="G5: رفع/ربط/فك ربط/رئيسية/مكررات — الحذف محمي بمراجعة"/>
+                        <muxc:NavigationViewItem Content="المخزون" Tag="inventory" ToolTipService.ToolTip="G6: لوحة الأرصدة والنواقص والدفعات والتقييم + الجرد والتحويلات والمخازن"/>
+                        <muxc:NavigationViewItem Content="المشتريات" Tag="purchasing" ToolTipService.ToolTip="G6: السلة والاستلامات وفواتير الموردين والسداد والمرتجعات"/>
+                        <muxc:NavigationViewItem Content="الأطراف" Tag="parties" ToolTipService.ToolTip="G6: الموردون والعملاء وكشوف الحساب — التعطيل لا الحذف"/>
+                        <muxc:NavigationViewItem Content="المالية (G8)" Tag="finance" ToolTipService.ToolTip="G8: الخزائن والسندات والمصروفات ورأس المال والورديات وإقفالها (PAGE-33..38)"/>
+                    </muxc:NavigationView.MenuItems>
+                </muxc:NavigationView>
+
+                <!-- حالة اتصال حقيقية -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="14,0">
+                    <Ellipse Width="8" Height="8" Fill="{StaticResource WeraActionPrimaryInkBrush}" x:Name="ConnDot"/>
+                    <TextBlock x:Name="ConnText" Text="جارٍ التحقق…" FontSize="12" Foreground="{StaticResource WeraShellTextSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- المستخدم/الدور/الخروج -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                            Padding="12,0" BorderBrush="{StaticResource WeraShellBorderBrush}" BorderThickness="1,0,0,0">
+                    <Border Width="30" Height="30" CornerRadius="999" Background="{StaticResource WeraAccentGoldBrush}">
+                        <TextBlock x:Name="UserInitials" Text="؟" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock x:Name="UserNameText" Text="—" FontSize="12" Foreground="{StaticResource WeraShellTextBrush}"/>
+                        <TextBlock x:Name="UserRoleText" Text="—" FontSize="10" Foreground="{StaticResource WeraShellTextMutedBrush}"/>
                     </StackPanel>
-                </Button>
-            </StackPanel>
-
-            <!-- مجموعات القوائم — المبني فقط يفتح؛ غير المبني معط بسبب معلن -->
-            <muxc:NavigationView Grid.Column="1" x:Name="NavTop" PaneDisplayMode="Top"
-                                 IsBackButtonVisible="Collapsed" IsPaneToggleButtonVisible="False"
-                                 OpenPaneLength="0" Margin="12,0"
-                                 SelectionChanged="NavTop_SelectionChanged">
-                <muxc:NavigationView.MenuItems>
-                    <muxc:NavigationViewItem Content="التشغيل" Tag="home" IsSelected="True"/>
-                    <muxc:NavigationViewItem Content="نقطة البيع (POS)" Tag="pos" ToolTipService.ToolTip="G7: نافذة بيع مستقلة — سلالم ومساحيق ومرتجعات وسلات معلّقة وورديات"/>
-                    <muxc:NavigationViewItem Content="الكتالوج" Tag="catalog" ToolTipService.ToolTip="G4: المنتجات وصيغ البيع والعبوات والباركود — بحث Exact Match"/>
-                    <muxc:NavigationViewItem Content="مكتبة الصور" Tag="media" ToolTipService.ToolTip="G5: رفع/ربط/فك ربط/رئيسية/مكررات — الحذف محمي بمراجعة"/>
-                    <muxc:NavigationViewItem Content="المخزون" Tag="inventory" ToolTipService.ToolTip="G6: لوحة الأرصدة والنواقص والدفعات والتقييم + الجرد والتحويلات والمخازن"/>
-                    <muxc:NavigationViewItem Content="المشتريات" Tag="purchasing" ToolTipService.ToolTip="G6: السلة والاستلامات وفواتير الموردين والسداد والمرتجعات"/>
-                    <muxc:NavigationViewItem Content="الأطراف" Tag="parties" ToolTipService.ToolTip="G6: الموردون والعملاء وكشوف الحساب — التعطيل لا الحذف"/>
-                    <muxc:NavigationViewItem Content="المالية (G8)" Tag="finance" ToolTipService.ToolTip="G8: الخزائن والسندات والمصروفات ورأس المال والورديات وإقفالها (PAGE-33..38)"/>
-                </muxc:NavigationView.MenuItems>
-            </muxc:NavigationView>
-
-            <!-- حالة اتصال حقيقية -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="14,0">
-                <Ellipse Width="8" Height="8" Fill="{StaticResource WeraActionPrimaryInkBrush}" x:Name="ConnDot"/>
-                <TextBlock x:Name="ConnText" Text="جارٍ التحقق…" FontSize="12" Foreground="{StaticResource WeraShellTextSecondaryBrush}"/>
-            </StackPanel>
-
-            <!-- المستخدم/الدور/الخروج -->
-            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
-                        Padding="12,0" BorderBrush="{StaticResource WeraShellBorderBrush}" BorderThickness="1,0,0,0">
-                <Border Width="30" Height="30" CornerRadius="999" Background="{StaticResource WeraAccentGoldBrush}">
-                    <TextBlock x:Name="UserInitials" Text="؟" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <StackPanel>
-                    <TextBlock x:Name="UserNameText" Text="—" FontSize="12" Foreground="{StaticResource WeraShellTextBrush}"/>
-                    <TextBlock x:Name="UserRoleText" Text="—" FontSize="10" Foreground="{StaticResource WeraShellTextMutedBrush}"/>
+                    <Button x:Name="LogoutBtn" Click="Logout_Click" Background="#00000000" BorderThickness="0"
+                            ToolTipService.ToolTip="إنهاء الجلسة وإغلاق التطبيق">
+                        <FontIcon Glyph="&#xE7E8;" FontSize="14" Foreground="{StaticResource WeraShellTextSecondaryBrush}"/>
+                    </Button>
                 </StackPanel>
-                <Button x:Name="LogoutBtn" Click="Logout_Click" Background="#00000000" BorderThickness="0"
-                        ToolTipService.ToolTip="إنهاء الجلسة وإغلاق التطبيق">
-                    <FontIcon Glyph="&#xE7E8;" FontSize="14" Foreground="{StaticResource WeraShellTextSecondaryBrush}"/>
-                </Button>
-            </StackPanel>
+            </Grid>
+
+            <!-- ═══ المحتوى: التشغيل التأسيسية أو صفحة الكتالوج (G4) أو مكتبة الوسائط (G5) ═══ -->
+            <Grid Grid.Row="1">
+                <ScrollViewer x:Name="HomeContent" Padding="24,18">
+                    <StackPanel Spacing="14" MaxWidth="900" HorizontalAlignment="Stretch">
+                        <TextBlock Text="التشغيل" FontFamily="{StaticResource WeraFontDisplay}" FontSize="20"
+                                   FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                        <TextBlock x:Name="ScopeText" Text="—" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+
+                        <!-- بطاقة الحالة التأسيسية — بيانات حقيقية من الخادم -->
+                        <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="14" Padding="18,14">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="أساس G3 قائم ويعمل" FontSize="14.5" FontWeight="SemiBold"
+                                           Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                <TextBlock Text="الخادم: API موثق + مصادقة JWT + صلاحيات خادمية + ترحيلات SQL خطية · العميل: متصل عبر IHttpClientFactory ولا يملك أي وصول مباشر لقاعدة البيانات."
+                                           FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                                <TextBlock x:Name="WeighingText" Text="إعدادات الوزن (D-07): تُجلب من الخادم…"
+                                           FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- الوحدات القادمة — أسباب معلنة لا صفحات وهمية -->
+                        <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="14" Padding="18,14">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="الوحدات القادمة (بعد اعتماد كل بوابة)" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                <TextBlock FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"
+                                           Text="G6 المخزون والمشتريات · G7 POS الكاملة (الوزن/الدفع/المرتجع) · G8 الورديات والخزينة · G9 المحاسبة والتقارير · G10 الأجهزة · G11 DPI · G13 الحمل · G14 التغليف"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- صفحة الكتالوج (G4) — تُعرض عند اختيار «الكتالوج» -->
+                <views:CatalogPage x:Name="CatalogContent" Visibility="Collapsed"/>
+
+                <!-- مكتبة الوسائط (G5 · PAGE-16) — تُعرض عند اختيار «مكتبة الصور» -->
+                <views:MediaLibraryPage x:Name="MediaContent" Visibility="Collapsed"/>
+
+                <!-- المخزون (G6 · PAGE-18..23) — تبويبات: الأرصدة/النواقص/الدفعات/التقييم -->
+                <views:InventoryHubPage x:Name="InventoryContent" Visibility="Collapsed"/>
+
+                <!-- الجرد والتسويات (G6 · PAGE-20) -->
+                <views:StocktakePage x:Name="StocktakeContent" Visibility="Collapsed"/>
+
+                <!-- التحويلات بين المخازن (G6 · PAGE-21) -->
+                <views:TransfersPage x:Name="TransfersContent" Visibility="Collapsed"/>
+
+                <!-- المشتريات (G6 · PAGE-24..27) — تبويبات: السلة/الاستلامات/الفواتير والسداد/المرتجعات -->
+                <views:PurchasingHubPage x:Name="PurchasingContent" Visibility="Collapsed"/>
+
+                <!-- الأطراف (G6 · PAGE-29..32) — الموردون والعملاء وكشوف الحساب -->
+                <views:PartiesPage x:Name="PartiesContent" Visibility="Collapsed"/>
+
+                <!-- إدارة المخازن (G6 · PAGE-28) -->
+                <views:WarehousesPage x:Name="WarehousesContent" Visibility="Collapsed"/>
+
+                <!-- المالية (G8 · PAGE-33..38): الخزائن والسندات والمصروفات ورأس المال والورديات -->
+                <views:FinancePage x:Name="FinanceContent" Visibility="Collapsed"/>
+            </Grid>
         </Grid>
 
-        <!-- ═══ المحتوى: التشغيل التأسيسية أو صفحة الكتالوج (G4) أو مكتبة الوسائط (G5) ═══ -->
-        <Grid Grid.Row="1">
-            <ScrollViewer x:Name="HomeContent" Padding="24,18">
-                <StackPanel Spacing="14" MaxWidth="900" HorizontalAlignment="Stretch">
-                    <TextBlock Text="التشغيل" FontFamily="{StaticResource WeraFontDisplay}" FontSize="20"
-                               FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
-                    <TextBlock x:Name="ScopeText" Text="—" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
-
-                    <!-- بطاقة الحالة التأسيسية — بيانات حقيقية من الخادم -->
-                    <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
-                            BorderThickness="1" CornerRadius="14" Padding="18,14">
-                        <StackPanel Spacing="8">
-                            <TextBlock Text="أساس G3 قائم ويعمل" FontSize="14.5" FontWeight="SemiBold"
-                                       Foreground="{StaticResource WeraBrandNavyBrush}"/>
-                            <TextBlock Text="الخادم: API موثق + مصادقة JWT + صلاحيات خادمية + ترحيلات SQL خطية · العميل: متصل عبر IHttpClientFactory ولا يملك أي وصول مباشر لقاعدة البيانات."
-                                       FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
-                            <TextBlock x:Name="WeighingText" Text="إعدادات الوزن (D-07): تُجلب من الخادم…"
-                                       FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- الوحدات القادمة — أسباب معلنة لا صفحات وهمية -->
-                    <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="14" Padding="18,14">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="الوحدات القادمة (بعد اعتماد كل بوابة)" FontSize="13" FontWeight="SemiBold"
-                                       Foreground="{StaticResource WeraTextSecondaryBrush}"/>
-                            <TextBlock FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"
-                                       Text="G6 المخزون والمشتريات · G7 POS الكاملة (الوزن/الدفع/المرتجع) · G8 الورديات والخزينة · G9 المحاسبة والتقارير · G10 الأجهزة · G11 DPI · G13 الحمل · G14 التغليف"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!-- صفحة الكتالوج (G4) — تُعرض عند اختيار «الكتالوج» -->
-            <views:CatalogPage x:Name="CatalogContent" Visibility="Collapsed"/>
-
-            <!-- مكتبة الوسائط (G5 · PAGE-16) — تُعرض عند اختيار «مكتبة الصور» -->
-            <views:MediaLibraryPage x:Name="MediaContent" Visibility="Collapsed"/>
-
-            <!-- المخزون (G6 · PAGE-18..23) — تبويبات: الأرصدة/النواقص/الدفعات/التقييم -->
-            <views:InventoryHubPage x:Name="InventoryContent" Visibility="Collapsed"/>
-
-            <!-- الجرد والتسويات (G6 · PAGE-20) -->
-            <views:StocktakePage x:Name="StocktakeContent" Visibility="Collapsed"/>
-
-            <!-- التحويلات بين المخازن (G6 · PAGE-21) -->
-            <views:TransfersPage x:Name="TransfersContent" Visibility="Collapsed"/>
-
-            <!-- المشتريات (G6 · PAGE-24..27) — تبويبات: السلة/الاستلامات/الفواتير والسداد/المرتجعات -->
-            <views:PurchasingHubPage x:Name="PurchasingContent" Visibility="Collapsed"/>
-
-            <!-- الأطراف (G6 · PAGE-29..32) — الموردون والعملاء وكشوف الحساب -->
-            <views:PartiesPage x:Name="PartiesContent" Visibility="Collapsed"/>
-
-            <!-- إدارة المخازن (G6 · PAGE-28) -->
-            <views:WarehousesPage x:Name="WarehousesContent" Visibility="Collapsed"/>
-
-            <!-- المالية (G8 · PAGE-33..38): الخزائن والسندات والمصروفات ورأس المال والورديات -->
-            <views:FinancePage x:Name="FinanceContent" Visibility="Collapsed"/>
-        </Grid>
-    </Grid>
+    </UserControl>
 </Window>

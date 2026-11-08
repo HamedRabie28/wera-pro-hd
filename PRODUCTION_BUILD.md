@@ -135,15 +135,19 @@ WeraPro.Api.exe
 - **`Design/DesignTokens.xaml`**: رموز الخطوط تشير الآن إلى الخط المضمّن مع بدائل
   نظامية (`Dubai, Tahoma, Segoe UI`) إن تعذّر التحميل، وأُضيف تجاوز
   `ContentControlThemeFontFamily` فعناصر التحكم غير المنسّقة ترث الهوية نفسها.
-- **كل صفحة/نافذة (17 عرضًا)**: حقن `FontFamily` على الجذر — الملكية موروثة
-  فيشمل كل النصوص والأزرار داخل الشجرة (لا قيم عشوائية — §7.2).
+- **كل صفحة/نافذة (17 عرضًا)**: الخط على عنصر جذر من نوع Control فيُورَّث لكامل
+  الشجرة (درس CI WMC0011: Grid لا يملك FontFamily) — صفحات `Page`/`UserControl`:
+  السمة على وسم الجذر نفسه؛ نوافذ `Window` (ليست Control): تغليف المحتوى
+  بـ`<UserControl FontFamily>` واحد.
 
 ### 7.2 بوابة الدخول الجديدة (`Views/LoginWindow.xaml`)
 - صورة سوبر ماركت حقيقية **تملأ النافذة بالكامل** (UniformToFill) + تعتيم متدرّج.
 - بطاقة **زجاجية (AcrylicBackdrop)** في **منتصف الصفحة تمامًا**: اسم المستخدم +
   كلمة المرور + زر الدخول **فقط** — أُزيلت محددات الفرع/المحطة (أمر المالك).
 - عناصر ذهبية شعرية (`WeraGlassHairline`) وألوان تعتيم موثّقة (`WeraScrim*`).
-- إصلاح توافق WinUI 3: `Border` بدل `Rectangle.CornerRadius` (WMC0011).
+- إصلاحات توافق WinUI 3 (دروس مترجم CI): `Border` بدل `Rectangle.CornerRadius`
+  (WMC0011) وحذف `BackgroundSource` من `AcrylicBrush` (الأكريليك في WinUI 3
+  دائماً Backdrop داخل التطبيق).
 - إصلاح توصيل حقيقي: مزاملة الحقول إلى ViewModel لحظياً (`TextChanged`/
   `PasswordChanged`) — كانت الجلسات السابقة ترسل اسم مستخدم فارغاً أبداً.
 

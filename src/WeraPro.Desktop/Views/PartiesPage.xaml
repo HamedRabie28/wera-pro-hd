@@ -1,7 +1,7 @@
 <!-- Views/PartiesPage.xaml — WERA PRO HD Desktop (G6)
      الأطراف: الموردون (PAGE-31) والعملاء (PAGE-29) — التعطيل لا الحذف،
      وكشف الحساب بنافذة مستقلة بفلترة الفترة (PAGE-32/30). -->
-<Page
+<Page FontFamily="{StaticResource WeraFontBody}"
     x:Class="WeraPro.Desktop.Views.PartiesPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,7 +10,7 @@
     mc:Ignorable="d" FlowDirection="RightToLeft"
     xmlns:vm="using:WeraPro.Desktop.ViewModels">
 
-    <Grid FontFamily="{StaticResource WeraFontBody}" RowSpacing="10" Padding="18,12">
+    <Grid RowSpacing="10" Padding="18,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

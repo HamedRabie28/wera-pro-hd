@@ -1,7 +1,7 @@
 <!-- Views/WarehousesPage.xaml — WERA PRO HD Desktop (G6)
      إدارة المخازن والفروع (PAGE-28): رئيسي/فرعي/خارجي — التعطيل لا الحذف
      (لكل حركة تاريخية مستند)، والإنشاء للمالك/المدير (رصد الصفحة). -->
-<Page
+<Page FontFamily="{StaticResource WeraFontBody}"
     x:Class="WeraPro.Desktop.Views.WarehousesPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,7 +10,7 @@
     mc:Ignorable="d" FlowDirection="RightToLeft"
     xmlns:vm="using:WeraPro.Desktop.ViewModels">
 
-    <Grid FontFamily="{StaticResource WeraFontBody}" RowSpacing="10" Padding="18,12">
+    <Grid RowSpacing="10" Padding="18,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

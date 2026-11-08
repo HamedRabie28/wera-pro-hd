@@ -1,7 +1,7 @@
 <!-- Views/TransfersPage.xaml — WERA PRO HD Desktop (G6)
      التحويلات بين المخازن (PAGE-21): مرحلتان مستقلتان — إرسال يخرج من دفتر
      المصدر واستلام يدخل دفتر الوجهة؛ النقص المؤقت يتطلب اعتماد مشرف (D-03). -->
-<Page
+<Page FontFamily="{StaticResource WeraFontBody}"
     x:Class="WeraPro.Desktop.Views.TransfersPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,7 +10,7 @@
     mc:Ignorable="d" FlowDirection="RightToLeft"
     xmlns:vm="using:WeraPro.Desktop.ViewModels">
 
-    <Grid FontFamily="{StaticResource WeraFontBody}" RowSpacing="10" Padding="18,12">
+    <Grid RowSpacing="10" Padding="18,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>

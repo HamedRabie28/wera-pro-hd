@@ -2,7 +2,7 @@
      لوحة المخزون (PAGE-18): الأرصدة من الدفتر والمحجوز والمتاح (المتاح =
      الرصيد − المحجوز §12.1) + النواقص وإعادة الطلب (PAGE-22) + الدفعات
      والصلاحية (PAGE-23) + التقييم WAC (D-02) — كل البيانات من الخادم. -->
-<Page
+<Page FontFamily="{StaticResource WeraFontBody}"
     x:Class="WeraPro.Desktop.Views.InventoryHubPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,7 +12,7 @@
     xmlns:vm="using:WeraPro.Desktop.ViewModels"
     xmlns:c="using:WeraPro.Contracts.V1">
 
-    <Grid FontFamily="{StaticResource WeraFontBody}" RowSpacing="10" Padding="18,12">
+    <Grid RowSpacing="10" Padding="18,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
