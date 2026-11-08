@@ -152,8 +152,8 @@
 
             <!-- رسالة العلامة أسفل الصورة -->
             <StackPanel VerticalAlignment="Bottom" Padding="40,0,40,38" Spacing="12">
-                <Rectangle Width="56" Height="4" CornerRadius="2" Fill="{StaticResource WeraAccentGoldBrush}"
-                           HorizontalAlignment="Right"/>
+                <Border Width="56" Height="4" CornerRadius="2" Background="{StaticResource WeraAccentGoldBrush}"
+                        HorizontalAlignment="Right"/>
                 <TextBlock Text="إدارة احترافية متكاملة لسوبر ماركتك"
                            FontFamily="{StaticResource WeraFontDisplay}"
                            FontSize="27" FontWeight="SemiBold" TextWrapping="Wrap"
