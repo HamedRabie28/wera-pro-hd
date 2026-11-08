@@ -17,7 +17,7 @@ public sealed class CorrelationHandler(SessionService session) : DelegatingHandl
 {
     private static readonly string HeaderName = "X-Correlation-ID";
 
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var correlationId = "wera-" + Guid.NewGuid().ToString("N")[..20];
         request.Headers.Remove(HeaderName);
@@ -28,7 +28,7 @@ public sealed class CorrelationHandler(SessionService session) : DelegatingHandl
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        var response = await base.SendAsync(request, ct);
+        var response = await base.SendAsync(request, cancellationToken);
         // 401 عند انتهاء صلاحية الوصول: محاولة تجديد شفافة واحدة ثم إعادة الطلب
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized &&
             session.CanRefresh &&
@@ -36,12 +36,12 @@ public sealed class CorrelationHandler(SessionService session) : DelegatingHandl
             !request.RequestUri!.AbsolutePath.EndsWith("/auth/refresh", StringComparison.OrdinalIgnoreCase) &&
             !request.RequestUri!.AbsolutePath.EndsWith("/auth/login", StringComparison.OrdinalIgnoreCase))
         {
-            var refreshed = await session.TryRefreshAsync(ct);
+            var refreshed = await session.TryRefreshAsync(cancellationToken);
             if (refreshed)
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", session.AccessToken);
                 response.Dispose();
-                response = await base.SendAsync(request, ct);
+                response = await base.SendAsync(request, cancellationToken);
             }
         }
         return response;
@@ -52,9 +52,10 @@ public sealed class CorrelationHandler(SessionService session) : DelegatingHandl
 /// عميل API المكتوب (typed): يبني على HttpClient باسم مسجل في IHttpClientFactory.
 /// كل الاستجابات تُفحص وتُترجم أخطاؤها إلى رسائل عربية واضحة — لا استثناء خام للواجهة.
 /// </summary>
+// ملاحظة: معامل SessionService حُذف (CS9113 — غير مقروء): المصادقة والتجديد
+// يجريان داخل CorrelationHandler الذي يملك جلسته الخاصة.
 public sealed class WeraApiClient(
     IHttpClientFactory factory,
-    SessionService session,
     ILogger<WeraApiClient> logger)
 {
     public const string HttpClientName = "wera-api";

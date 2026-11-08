@@ -60,7 +60,7 @@ internal static class Program
 
             try
             {
-                MessageBoxW(IntPtr.Zero,
+                _ = MessageBoxW(IntPtr.Zero,
                     "تعذّر تهيئة إطار Windows App SDK." + Environment.NewLine + Environment.NewLine +
                     "السبب: " + ex.Message + Environment.NewLine + Environment.NewLine +
                     "تأكد من أن نظامك Windows 10 (إصدار 1809 / بناء 17763) أو أحدث،" + Environment.NewLine +

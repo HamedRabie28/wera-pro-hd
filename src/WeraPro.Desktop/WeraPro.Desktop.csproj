@@ -28,6 +28,16 @@
     <PublishReadyToRun>true</PublishReadyToRun>
     <!-- أيقونة التطبيق (exe/المهمة/النافذة) — حزمة الأيقونات الاحترافية Assets/ -->
     <ApplicationIcon>Assets\appicon.ico</ApplicationIcon>
+    <!-- قواعد المحلل المسكوتة عن قصد لعميل سطح المكتب (الخادم يبقى صارماً بلا استثناء):
+         CA1305 — تنسيق واجهة عربي RTL بالثقافة الحالية مقصود (العرض للبشر لا التبادل الآلي؛
+                  التبادل الآلي عبر الخادم يستخدم InvariantCulture في عقوده).
+         CA1848/CA2254/CA1873 — تحسينات أداء تسجيل LoggerMessage: مقبولة في عميل سطح مكتب
+                  (حجم السجل محدود) — لا نولّد مفوضين لكل رسالة عربية.
+         CA1000 — مصانع ساكنة على ApiCallResult<T>/MediaVariantFetch نمط وظيفي مقصود.
+         CA1001 — أعضاء قابلة للإتلاف (SemaphoreSlim/CancellationTokenSource) داخل خدمات/نماذج
+                  وحيدة ضمن عمر التطبيق كله — الإتلاف الصريح بلا معنى هنا. -->
+    <!-- MVVMTK0045 — قلق NativeAOT لا ينطبق: نشرنا Self-Contained ReadyToRun لا NativeAOT -->
+    <NoWarn>$(NoWarn);CA1305;CA1848;CA2254;CA1873;CA1000;CA1001;MVVMTK0045</NoWarn>
     <!-- عقود API من مشروع العقود المشترك — لا نسخ DTO يدوية -->
   </PropertyGroup>
 

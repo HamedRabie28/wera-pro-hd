@@ -433,7 +433,7 @@ public sealed partial class StocktakeViewModel : ObservableObject
             return;
         }
         SelectedLines.Clear();
-        foreach (var line in result.Value.Lines) SelectedLines.Add(new CountLineRow { Source = line });
+        foreach (var line in result.Value!.Lines) SelectedLines.Add(new CountLineRow { Source = line });
     }
 
     public async Task ActionAsync(string action, CancellationToken ct)
@@ -448,7 +448,8 @@ public sealed partial class StocktakeViewModel : ObservableObject
                 ErrorAr = result.ErrorAr;
                 return;
             }
-            InfoAr = $"اعتُمدت الجلسة: أسطر معدلة {result.Value.AdjustedLines} · فرق صفر {result.Value.ZeroVarianceLines} · حركات {result.Value.MovementIds.Length}";
+            var approved = result.Value!;
+            InfoAr = $"اعتُمدت الجلسة: أسطر معدلة {approved.AdjustedLines} · فرق صفر {approved.ZeroVarianceLines} · حركات {approved.MovementIds.Length}";
         }
         else
         {
@@ -544,8 +545,9 @@ public sealed partial class TransfersViewModel : ObservableObject
         var result = await _api.SendTransferAsync(row.TransferId, null, ct);
         if (!result.Ok)
         {
-            ErrorAr = result.ErrorAr + (result.ErrorAr.Contains("اعتماد", StringComparison.Ordinal)
-                ? " — أنشئ طلب اعتماد ودع المشرف يبت ثم أعد الإرسال بمفتاحه" : "");
+            var sendErr = result.ErrorAr ?? "تعذر إرسال التحويل";
+            ErrorAr = sendErr.Contains("اعتماد", StringComparison.Ordinal)
+                ? sendErr + " — أنشئ طلب اعتماد ودع المشرف يبت ثم أعد الإرسال بمفتاحه" : sendErr;
             return;
         }
         InfoAr = $"أُرسل التحويل {row.TransferId}: {result.Value!.MovementIds.Length} حركة خروج";

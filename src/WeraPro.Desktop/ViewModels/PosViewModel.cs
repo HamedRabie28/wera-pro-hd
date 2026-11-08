@@ -72,6 +72,10 @@ public sealed partial class CartLineViewModel : ObservableObject
 /// </summary>
 public sealed partial class PosViewModel : ObservableObject
 {
+    // CA1869: خيارات JSON للتعليق — نسخة واحدة مخبأة لا نسخة لكل عملية
+    private static readonly System.Text.Json.JsonSerializerOptions HoldJson =
+        new(System.Text.Json.JsonSerializerDefaults.Web);
+
     private readonly SessionService _session;
     private readonly WeraApiClient _api;
     private CancellationTokenSource _previewCts = new();
@@ -219,7 +223,7 @@ public sealed partial class PosViewModel : ObservableObject
         return true;
     }
 
-    private CartLineViewModel NewLine(PosItemDto item) => new()
+    private static CartLineViewModel NewLine(PosItemDto item) => new()
     {
         SkuId = item.SkuId,
         SkuCode = item.SkuCode,
@@ -412,7 +416,7 @@ public sealed partial class PosViewModel : ObservableObject
                 qty = l.Qty, weightKg = l.WeightKg, weightSource = l.WeightSource,
                 amountTarget = l.AmountTarget, lineDiscount = l.LineDiscount,
             }).ToArray(),
-        }, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+        }, HoldJson);
 
     public async Task HoldAsync(string noteAr, CancellationToken ct = default)
     {

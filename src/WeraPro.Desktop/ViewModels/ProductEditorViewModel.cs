@@ -194,8 +194,10 @@ public sealed partial class ProductEditorViewModel : ObservableObject
         {
             CategoryLabels.Add(c.NameAr);
         }
-        _defaultPriceListId = reference.Value.PriceLists.FirstOrDefault(p => p.IsDefault)?.PriceListId
-            ?? reference.Value.PriceLists.FirstOrDefault()?.PriceListId ?? 0;
+        var lists = reference.Value.PriceLists;
+        _defaultPriceListId = (lists.Count > 0
+                ? (lists.FirstOrDefault(p => p.IsDefault) ?? lists[0]).PriceListId
+                : 0);
     }
 
     [RelayCommand]

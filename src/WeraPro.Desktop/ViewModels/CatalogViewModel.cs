@@ -77,8 +77,6 @@ public sealed partial class CatalogViewModel : ObservableObject
     /// <summary>صلاحية الإنشاء من الجلسة — العرض فقط؛ الفحص الحاسم على الخادم.</summary>
     public bool CanCreate => _session.User?.Permissions.Contains("catalog.product.create") == true;
 
-    public event Action<ProductDto>? ProductActivated;
-
     public CatalogViewModel(WeraApiClient api, SessionService session)
     {
         _api = api;
