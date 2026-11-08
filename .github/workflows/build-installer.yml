@@ -1,0 +1,139 @@
+name: Installer — Build Windows Setup
+
+# WERA PRO HD — خط أنابيب بناء حزمة التثبيت الاحترافية (أمر المالك 2026-11-07).
+# يبني المثبِّت الكامل (Inno Setup + نشر Self-Contained) على windows-latest
+# لأن سطح مكتب WinUI 3 لا يُبنى إلا على ويندوز (قيد B-05 الموثق).
+# الناتج: WeraProSetup-<إصدار>-win-x64.exe (مرفق Artifact + إصدار GitHub عند الوسم v*)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      app_version:
+        description: 'AppVersion (مثال: 0.3.0)'
+        required: false
+        default: '0.3.0'
+      platform:
+        description: 'المعمارية'
+        required: false
+        default: 'x64'
+        type: choice
+        options: [x64, arm64]
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  DOTNET_TELEMETRY_OPTOUT: "1"
+  APP_VERSION_DEFAULT: "0.3.0"
+
+jobs:
+  installer:
+    name: Installer (windows) — publish + Inno Setup
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Resolve version
+        id: ver
+        shell: pwsh
+        run: |
+          $v = '${{ github.event.inputs.app_version }}'
+          if ([string]::IsNullOrWhiteSpace($v)) {
+            if ('${{ github.ref_type }}' -eq 'tag') { $v = '${{ github.ref_name }}'.TrimStart('v') }
+            else { $v = '${{ env.APP_VERSION_DEFAULT }}' }
+          }
+          "version=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Resolve platform
+        id: plat
+        shell: pwsh
+        run: |
+          $p = '${{ github.event.inputs.platform }}'
+          if ([string]::IsNullOrWhiteSpace($p)) { $p = 'x64' }
+          "platform=$p" >> $env:GITHUB_OUTPUT
+
+      # Inno Setup 6.3+ مطلوب (RightToLeft) — مثبت عبر winget على عدّاء windows
+      - name: Install Inno Setup 6.3+
+        shell: pwsh
+        run: |
+          winget install --id JRSoftware.InnoSetup --exact --silent --accept-package-agreements --accept-source-agreements
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "$env:ProgramFiles\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) { throw 'ISCC.exe غير موجود بعد التثبيت' }
+          "ISCC_PATH=$iscc" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          & $iscc /? | Select-Object -First 1
+
+      - name: Publish Desktop (self-contained)
+        shell: pwsh
+        run: >
+          dotnet publish src/WeraPro.Desktop/WeraPro.Desktop.csproj
+          -c Release -r win-${{ steps.plat.outputs.platform }}
+          -p:Platform=${{ steps.plat.outputs.platform }}
+          --self-contained true
+          -o installer/publish/win-${{ steps.plat.outputs.platform }}
+
+      - name: Verify published exe + icon
+        shell: pwsh
+        run: |
+          $exe = 'installer/publish/win-${{ steps.plat.outputs.platform }}/WeraPro.Desktop.exe'
+          if (-not (Test-Path $exe)) { throw 'WeraPro.Desktop.exe غير موجود بعد النشر' }
+          $ico = 'installer/publish/win-${{ steps.plat.outputs.platform }}/Assets/appicon.ico'
+          if (-not (Test-Path $ico)) { Write-Host '::warning::appicon.ico غير موجود في ناتج النشر' }
+
+      - name: Download VC++ Redist (optional component)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path installer/redist | Out-Null
+          try {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vc_redist.x64.exe' `
+              -OutFile 'installer/redist/vc_redist.x64.exe' -UseBasicParsing
+            Write-Host ("vc_redist: " + [math]::Round((Get-Item 'installer/redist/vc_redist.x64.exe').Length/1MB,1) + " MB")
+          } catch {
+            Write-Host '::warning::تعذر تنزيل vc_redist — الحزمة ستعمل دونه (المكون يُتجاوز تلقائيًا)'
+          }
+
+      - name: Build installer (ISCC · lzma2/max)
+        shell: pwsh
+        run: |
+          $iscc = $env:ISCC_PATH
+          & $iscc installer/WeraProSetup.iss `
+            "/DPlatform=${{ steps.plat.outputs.platform }}" `
+            "/DAppVersion=${{ steps.ver.outputs.version }}"
+          if ($LASTEXITCODE -ne 0) { throw 'ISCC فشل' }
+
+      - name: Verify + hash
+        shell: pwsh
+        run: |
+          $setup = "installer/output/WeraProSetup-${{ steps.ver.outputs.version }}-win-${{ steps.plat.outputs.platform }}.exe"
+          if (-not (Test-Path $setup)) { throw 'ملف الحزمة غير موجود' }
+          "حجم الحزمة: " + [math]::Round((Get-Item $setup).Length/1MB,1) + " MB"
+          (Get-FileHash $setup -Algorithm SHA256).Hash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WeraProSetup-${{ steps.ver.outputs.version }}-win-${{ steps.plat.outputs.platform }}
+          path: installer/output/*.exe
+          if-no-files-found: error
+
+      - name: GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $setup = Get-ChildItem 'installer/output/*.exe' | Select-Object -First 1
+          gh release create "${{ github.ref_name }}" $setup.FullName `
+            --title "WERA PRO HD ${{ steps.ver.outputs.version }}" `
+            --notes "حزمة تثبيت WERA PRO HD (Windows 10 1809+ / Windows 11 · ${{ steps.plat.outputs.platform }}) — التثبيت الصامت: /VERYSILENT /SUPPRESSMSGBOXES /NORESTART"

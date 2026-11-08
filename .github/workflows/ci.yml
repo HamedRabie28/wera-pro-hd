@@ -1,0 +1,86 @@
+name: CI — G3 Solution Foundation
+
+# WERA PRO HD — خط أنابيب CI (بوابة G3):
+# ubuntu: بناء Release للخادم + كل الاختبارات (على PostgreSQL خدمة) + فحص التنسيق + فحص الاعتماديات.
+# windows: بناء Desktop (WinUI 3) — البناء فقط؛ لقطات الشاشة تتطلب بيئة موثقة (B-05).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  DOTNET_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  server:
+    name: Server (ubuntu) — build · test · format · audit
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: wera_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore (server solution filter)
+        run: dotnet restore WeraPro.Server.slnf
+
+      - name: Build Release (TreatWarningsAsErrors)
+        run: dotnet build WeraPro.Server.slnf -c Release --no-restore
+
+      - name: Format check (dotnet format verify)
+        run: dotnet format WeraPro.Server.slnf --verify-no-changes --no-restore
+
+      - name: Test (unit + integration on real PostgreSQL)
+        run: >
+          dotnet test WeraPro.Server.slnf -c Release --no-build
+          --logger "trx" --results-directory ./test-results
+
+      - name: Dependency audit (vulnerable + deprecated)
+        run: |
+          dotnet list WeraPro.Server.slnf package --vulnerable --include-transitive | tee audit.txt
+          ! grep -E "high|critical" audit.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: ./test-results
+
+  desktop:
+    name: Desktop (windows) — build WinUI 3
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Desktop
+        run: dotnet restore src/WeraPro.Desktop
+
+      - name: Build Desktop Release (x64)
+        run: dotnet build src/WeraPro.Desktop -c Release -p:Platform=x64 --no-restore
+
+      # ملاحظة B-05: تشغيل النموذج والتقاط الصور يتطلبان بيئة Windows تفاعلية موثقة
+      # (بوابة القبول: صور حقيقية للـShell والدخول وPOS shell) — خارج CI.
