@@ -12,6 +12,9 @@ public sealed partial class WarehousesPage : Page
 {
     private readonly WarehousesViewModel _vm;
 
+    /// <summary>كشف الـ ViewModel لربط x:Bind في XAML (تمييز الأحرف إلزامي — _vm خاصة لا تُرى).</summary>
+    public WarehousesViewModel Vm => _vm;
+
     public WarehousesPage()
     {
         InitializeComponent();

@@ -12,6 +12,9 @@ public sealed partial class StocktakePage : Page
 {
     private readonly StocktakeViewModel _vm;
 
+    /// <summary>كشف الـ ViewModel لربط x:Bind في XAML (تمييز الأحرف إلزامي — _vm خاصة لا تُرى).</summary>
+    public StocktakeViewModel Vm => _vm;
+
     public StocktakePage()
     {
         InitializeComponent();

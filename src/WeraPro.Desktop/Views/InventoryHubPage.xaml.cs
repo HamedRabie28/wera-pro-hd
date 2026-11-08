@@ -13,6 +13,9 @@ public sealed partial class InventoryHubPage : Page
 {
     private readonly InventoryDashboardViewModel _vm;
 
+    /// <summary>كشف الـ ViewModel لربط x:Bind في XAML (تمييز الأحرف إلزامي — _vm خاصة لا تُرى).</summary>
+    public InventoryDashboardViewModel Vm => _vm;
+
     public InventoryHubPage()
     {
         InitializeComponent();

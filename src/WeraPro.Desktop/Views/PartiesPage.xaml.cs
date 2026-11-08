@@ -13,6 +13,9 @@ public sealed partial class PartiesPage : Page
 {
     private readonly PartiesViewModel _vm;
 
+    /// <summary>كشف الـ ViewModel لربط x:Bind في XAML (تمييز الأحرف إلزامي — _vm خاصة لا تُرى).</summary>
+    public PartiesViewModel Vm => _vm;
+
     public PartiesPage()
     {
         InitializeComponent();

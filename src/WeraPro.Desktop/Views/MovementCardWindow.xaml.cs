@@ -11,6 +11,9 @@ public sealed partial class MovementCardWindow : Window
 {
     private readonly MovementCardViewModel _vm;
 
+    /// <summary>كشف الـ ViewModel لربط x:Bind في XAML (تمييز الأحرف إلزامي — _vm خاصة لا تُرى).</summary>
+    public MovementCardViewModel Vm => _vm;
+
     public MovementCardWindow()
     {
         InitializeComponent();

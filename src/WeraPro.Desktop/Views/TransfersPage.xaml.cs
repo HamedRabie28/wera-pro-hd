@@ -12,6 +12,9 @@ public sealed partial class TransfersPage : Page
 {
     private readonly TransfersViewModel _vm;
 
+    /// <summary>كشف الـ ViewModel لربط x:Bind في XAML (تمييز الأحرف إلزامي — _vm خاصة لا تُرى).</summary>
+    public TransfersViewModel Vm => _vm;
+
     public TransfersPage()
     {
         InitializeComponent();

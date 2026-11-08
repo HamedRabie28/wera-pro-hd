@@ -15,6 +15,9 @@ namespace WeraPro.Desktop.Views;
 public sealed partial class MediaLibraryPage : UserControl
 {
     private readonly MediaLibraryViewModel _vm;
+
+    /// <summary>كشف الـ ViewModel لربط x:Bind في XAML (تمييز الأحرف إلزامي — _vm خاصة لا تُرى).</summary>
+    public MediaLibraryViewModel Vm => _vm;
     private readonly WeraApiClient _api;
     private long _selectedMediaId;
 

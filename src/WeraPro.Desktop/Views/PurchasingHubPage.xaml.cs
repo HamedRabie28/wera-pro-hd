@@ -13,6 +13,9 @@ public sealed partial class PurchasingHubPage : Page
 {
     private readonly PurchasingViewModel _vm;
 
+    /// <summary>كشف الـ ViewModel لربط x:Bind في XAML (تمييز الأحرف إلزامي — _vm خاصة لا تُرى).</summary>
+    public PurchasingViewModel Vm => _vm;
+
     public PurchasingHubPage()
     {
         InitializeComponent();
