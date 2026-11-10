@@ -88,6 +88,21 @@ try
     builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
     builder.Services.AddScoped<IBranchRepository, BranchRepository>();
     builder.Services.AddScoped<IAuditWriter, AuditWriter>();
+    // ── G-ADMIN: المستخدمون والإعدادات والصيانة (PAGE-47/51/52) ──
+    builder.Services.AddScoped<WeraPro.Application.Abstractions.IUsersAdminRepository, WeraPro.Infrastructure.Persistence.Repositories.UsersAdminRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Abstractions.IBackupRepository, WeraPro.Infrastructure.Persistence.Repositories.BackupRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Abstractions.ISystemMaintenanceRepository, WeraPro.Infrastructure.Maintenance.SystemMaintenanceRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Abstractions.IBackupStorage, WeraPro.Infrastructure.Maintenance.PgDumpBackupStorage>();
+    builder.Services.Configure<WeraPro.Infrastructure.Maintenance.BackupOptions>(options =>
+    {
+        options.ConnectionString = connectionString;
+    });
+    builder.Services.Configure<WeraPro.Infrastructure.Maintenance.BackupOptions>(builder.Configuration.GetSection(WeraPro.Infrastructure.Maintenance.BackupOptions.SectionName));
+    builder.Services.AddScoped<WeraPro.Application.Security.UsersAdminUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Settings.UpdateSettingUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Maintenance.BackupUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Maintenance.SystemCleanupUseCase>();
+    builder.Services.AddScoped<WeraPro.Application.Maintenance.WipeDataUseCase>();
     builder.Services.AddScoped<LoginUseCase>();
     builder.Services.AddScoped<RefreshUseCase>();
     builder.Services.AddScoped<LogoutUseCase>();
@@ -346,6 +361,9 @@ try
     app.MapAuthEndpoints()
        .MapReferenceEndpoints()
        .MapAuditEndpoints()
+       .MapUsersEndpoints()
+       .MapSettingsEndpoints()
+       .MapMaintenanceEndpoints()
        .MapCatalogEndpoints()
        .MapMediaEndpoints()
        .MapInventoryEndpoints()

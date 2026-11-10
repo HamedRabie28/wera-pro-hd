@@ -41,6 +41,22 @@ public static class ApiRoutes
     public const string PurchasingTreasuryAccounts = Prefix + "/purchasing/treasury-accounts";
     public const string PartiesCustomers = Prefix + "/parties/customers";
     public const string Approvals = Prefix + "/approvals";
+    // ── إدارة المستخدمين والأدوار (PAGE-47) ──
+    public const string Users = Prefix + "/users";
+    public const string UserById = Prefix + "/users/{userId:long}";
+    public const string UserActive = Prefix + "/users/{userId:long}/active";
+    public const string UserPassword = Prefix + "/users/{userId:long}/password";
+    public const string UserRoles = Prefix + "/users/{userId:long}/roles";
+    public const string Roles = Prefix + "/roles";
+    // ── تعديل الإعدادات (PAGE-52) ──
+    public const string SettingByKey = Prefix + "/settings/{settingKey}";
+    // ── النسخ الاحتياطي والصيانة (PAGE-51) ──
+    public const string Backups = Prefix + "/maintenance/backups";
+    public const string BackupRun = Prefix + "/maintenance/backups/run";
+    public const string BackupRestore = Prefix + "/maintenance/backups/restore";
+    public const string SystemCleanup = Prefix + "/maintenance/system/cleanup";
+    public const string SystemWipe = Prefix + "/maintenance/system/wipe";
+    public const string SystemStats = Prefix + "/maintenance/system/stats";
     public const string HealthLive = "health/live";
     public const string HealthReady = "health/ready";
 }

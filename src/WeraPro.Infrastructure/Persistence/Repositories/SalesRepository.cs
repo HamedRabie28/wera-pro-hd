@@ -821,7 +821,7 @@ public sealed class SalesRepository : ISalesRepository
                join u in _db.Users.AsNoTracking() on c.HeldBy equals u.UserId
                where c.StationId == stationId && (!openOnly || c.RestoredAt == null)
                orderby c.HeldAt descending
-               select new HeldCartInfo(c.CartId, c.HeldAt, u.DisplayNameAr, c.NoteAr, c.CustomerId, c.RestoredAt != null))
+               select new HeldCartInfo(c.CartId, c.HeldAt, u.DisplayNameAr, c.NoteAr, c.CustomerId, c.RestoredAt != null, c.CartSnapshot))
               .ToListAsync(ct);
 
     public async Task<RestoredCart?> RestoreCartAsync(long cartId, long restoredByUserId, CancellationToken ct = default)

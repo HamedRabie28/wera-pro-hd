@@ -211,6 +211,44 @@ public sealed class SettingsRepository : ISettingsRepository
             UpdatedAt = r.UpdatedAt,
         })];
     }
+
+    public async Task<BusinessSetting?> FindByKeyAsync(string settingKey, CancellationToken ct = default)
+    {
+        var row = await _db.BusinessSettings.AsNoTracking()
+            .SingleOrDefaultAsync(s => s.SettingKey == settingKey && s.ScopeType == "BUSINESS", ct);
+        return row is null ? null : ToDomain(row);
+    }
+
+    public async Task<BusinessSetting> UpdateValueAsync(string settingKey, string valueText, CancellationToken ct = default)
+    {
+        var row = await _db.BusinessSettings
+            .SingleOrDefaultAsync(s => s.SettingKey == settingKey && s.ScopeType == "BUSINESS", ct)
+            ?? throw new InvalidOperationException($"الإعداد «{settingKey}» غير موجود");
+        row.ValueText = valueText;
+        row.UpdatedAt = DateTimeOffset.UtcNow;
+        await _db.SaveChangesAsync(ct);
+        return ToDomain(row);
+    }
+
+    private static BusinessSetting ToDomain(BusinessSettingRow r) => new()
+    {
+        SettingId = r.SettingId,
+        SettingKey = r.SettingKey,
+        ScopeType = r.ScopeType,
+        BranchId = r.BranchId,
+        ValueText = r.ValueText,
+        ValueType = r.ValueType,
+        Category = r.Category,
+        DecisionRef = r.DecisionRef,
+        Confirmation = r.ConfirmationStatus switch
+        {
+            "OWNER_CONFIRMED" => ConfirmationStatus.OwnerConfirmed,
+            "PENDING_OWNER_CONFIRMATION" => ConfirmationStatus.PendingOwnerConfirmation,
+            _ => ConfirmationStatus.ApprovedWithSpec,
+        },
+        DescriptionAr = r.DescriptionAr,
+        UpdatedAt = r.UpdatedAt,
+    };
 }
 
 public sealed class BranchRepository : IBranchRepository

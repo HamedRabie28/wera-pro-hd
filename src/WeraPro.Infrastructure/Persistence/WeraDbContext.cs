@@ -20,6 +20,7 @@ public sealed class WeraDbContext : DbContext
     public DbSet<PermissionRow> Permissions => Set<PermissionRow>();
     public DbSet<RolePermissionRow> RolePermissions => Set<RolePermissionRow>();
     public DbSet<BusinessSettingRow> BusinessSettings => Set<BusinessSettingRow>();
+    public DbSet<BackupRecordRow> BackupRecords => Set<BackupRecordRow>();
     public DbSet<UserSessionRow> UserSessions => Set<UserSessionRow>();
     public DbSet<RefreshTokenRow> RefreshTokens => Set<RefreshTokenRow>();
     public DbSet<AuditLogRow> AuditLogs => Set<AuditLogRow>();

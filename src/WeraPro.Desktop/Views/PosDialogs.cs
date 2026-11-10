@@ -292,14 +292,15 @@ public sealed class ReturnDialog : ContentDialog
             return;
         }
         _sale = sale.Value;
-        // PosPreviewLine يحمل LineNo (لا LineId) ولا يعرض الكميات المردودة سابقاً —
-        // الإجمالي المردود يظهر من ReturnedTopLevel في الترويسة.
+        // العقد يعرض الآن LineId وRefundedQty لكل سطر — الحد القابل للرد = qty − refunded.
         _info.Text = string.Join("\n", _sale.Lines.Select(l =>
-            $"سطر {l.LineNo}: {l.ProductNameAr} × {l.Qty:0.###} {l.UomCode}")) +
+            $"سطر {l.LineNo} (معرف {l.LineId}): {l.ProductNameAr} × {l.Qty:0.###} {l.UomCode}" +
+            (l.RefundedQty > 0 ? $" — مردود سابقاً {l.RefundedQty:0.###} (المتبقي {Math.Max(0, l.Qty - l.RefundedQty):0.###})" : ""))) +
             $"\nالمرتجع سابقاً من الفاتورة: {_sale.ReturnedTotal:0.00} ج.م";
         if (_sale.Lines.Count > 0)
         {
-            _lineBox.Text = _sale.Lines[0].LineNo.ToString(CultureInfo.InvariantCulture);
+            // المعرف الحقيقي للسطر (لا رقم العرض) — OriginalLineId في الخادم يقصد LineId
+            _lineBox.Text = _sale.Lines[0].LineId.ToString(CultureInfo.InvariantCulture);
         }
     }
 

@@ -1071,7 +1071,7 @@ public sealed class ManageHeldCartsUseCase
         }
         var carts = await _sales.ListHeldCartsAsync(stationId, openOnly, ct);
         return Result.Ok(carts.Select(c => new Contracts.V1.HeldCartDto(
-            c.CartId, c.HeldAtUtc, c.HeldByDisplayAr, c.NoteAr, c.Restored)).ToArray());
+            c.CartId, c.HeldAtUtc, c.HeldByDisplayAr, c.NoteAr, c.Restored, c.CartSnapshot)).ToArray());
     }
 }
 
@@ -1571,7 +1571,8 @@ public sealed class GetSaleUseCase
         s.Lines.Select(l => new Contracts.V1.PosPreviewLine(
             l.LineNo, l.SkuId, l.SkuCode, l.ProductNameAr, l.SaleMode, l.Qty, l.UomCode,
             l.WeightKg, l.WeightSource, l.UnitPrice, l.LineDiscount, l.InvoiceDiscountShare,
-            l.TaxAmount, l.NetAmount, l.NetAmount + l.TaxAmount)).ToList(),
+            l.TaxAmount, l.NetAmount, l.NetAmount + l.TaxAmount,
+            l.LineId, l.RefundedQty)).ToList(),
         s.Payments.Select(p => new Contracts.V1.PosPaymentDto(
             p.Method, p.Amount, p.Status, p.ProviderName, p.ProviderReference)).ToList(),
         CanReturn: s.Status is "POSTED" or "PARTIAL_RETURN");

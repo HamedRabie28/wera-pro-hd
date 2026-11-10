@@ -1,0 +1,98 @@
+<!-- Views/SettingsPage.xaml — WERA PRO HD Desktop (G-ADMIN)
+     الإعدادات العامة (PAGE-52): كل قرارات D-xx إعدادات نشاط لا ثوابت كود —
+     تُعرض بحقيقة حسمها الحوكمي (محسوم/توصية/مواصفة) والتعديل بصلاحية
+     ops.settings.manage للمالك مع توثيق القيمة القديمة والجديدة في التدقيق. -->
+<Page
+    x:Class="WeraPro.Desktop.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d" FlowDirection="RightToLeft"
+    xmlns:vm="using:WeraPro.Desktop.ViewModels">
+
+    <Grid RowSpacing="10" Padding="18,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="الإعدادات العامة (PAGE-52)" FontSize="18" FontWeight="SemiBold"
+                       Foreground="{StaticResource WeraBrandNavyBrush}" VerticalAlignment="Center"
+                       FontFamily="{StaticResource WeraFontDisplay}"/>
+            <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="999" Padding="10,3" VerticalAlignment="Center">
+                <TextBlock Text="كل قرار تجاري إعداد قابل للتغيير — لا ثوابت في الكود (§2 ق9)"
+                           FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}"/>
+            </Border>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,2,0,0">
+            <ComboBox x:Name="CategoryFilter" Header="التصنيف" Width="230"
+                      SelectionChanged="CategoryFilter_SelectionChanged"/>
+            <Button Content="تحديث" Click="Refresh_Click" VerticalAlignment="Bottom"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="2" x:Name="ErrorText" FontSize="13" Foreground="{StaticResource WeraStatusDangerBrush}"
+                   Visibility="Collapsed" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="2" x:Name="StatusText" FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}"
+                   Text="{x:Bind Vm.StatusAr, Mode=OneWay}" TextWrapping="Wrap"/>
+
+        <ScrollViewer Grid.Row="3" Padding="0,2">
+            <ItemsControl x:Name="SettingsList" ItemsSource="{x:Bind Vm.Filtered, Mode=OneWay}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SettingRow">
+                        <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="16,12" Margin="0,0,0,8">
+                            <Grid ColumnSpacing="14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Spacing="5">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{x:Bind Key}" FontFamily="{StaticResource WeraFontMono}" FontSize="12.5"
+                                                   Foreground="{StaticResource WeraTextSecondaryBrush}" VerticalAlignment="Center"/>
+                                        <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="6" Padding="7,1" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind CategoryAr}" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                        </Border>
+                                        <Border CornerRadius="6" Padding="7,1" VerticalAlignment="Center"
+                                                Background="{StaticResource WeraAccentGoldSoftBrush}">
+                                            <TextBlock Text="{x:Bind ValueTypeAr}" FontSize="10.5"
+                                                       Foreground="{StaticResource WeraAccentGoldBrush}"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{x:Bind DescriptionAr}" FontSize="12" TextWrapping="Wrap"
+                                               Foreground="{StaticResource WeraTextPrimaryBrush}"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock VerticalAlignment="Center">
+                                            <Run Text="القيمة الحالية: " FontSize="11.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                            <Run Text="{x:Bind ValueAr}" FontSize="12.5" FontWeight="SemiBold"
+                                                 Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                        </TextBlock>
+                                        <Border CornerRadius="999" Padding="9,2" VerticalAlignment="Center">
+                                            <Border.Background>
+                                                <SolidColorBrush Color="{StaticResource WeraStatusInfoSoftColor}"/>
+                                            </Border.Background>
+                                            <TextBlock Text="{x:Bind ConfirmationAr}" FontSize="10.5">
+                                                <TextBlock.Foreground>
+                                                    <SolidColorBrush Color="{StaticResource WeraStatusInfoColor}"/>
+                                                </TextBlock.Foreground>
+                                            </TextBlock>
+                                        </Border>
+                                        <TextBlock Text="{x:Bind DecisionLabelAr, Mode=OneWay}" FontSize="10.5"
+                                                   Foreground="{StaticResource WeraTextMutedBrush}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="تعديل القيمة…" Click="EditSetting_Click" Tag="{x:Bind}"
+                                        VerticalAlignment="Center" MinWidth="120"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</Page>

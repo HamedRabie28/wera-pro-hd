@@ -107,7 +107,7 @@ public sealed record HoldCartPlan(
 
 public sealed record HeldCartInfo(
     long CartId, DateTimeOffset HeldAtUtc, string HeldByDisplayAr, string? NoteAr,
-    long? CustomerId, bool Restored);
+    long? CustomerId, bool Restored, string? CartSnapshot = null);
 
 public sealed record RestoredCart(long CartId, string CartJson, long? CustomerId);
 

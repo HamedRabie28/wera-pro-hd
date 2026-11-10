@@ -189,4 +189,27 @@ public static class PermissionCodes
 
     /// <summary>أحداث رأس المال والمساهمات والسحوبات — OWNER (V009 seed).</summary>
     public const string FinanceCapitalManage = "finance.capital.manage";
+
+    // ── صلاحيات G-ADMIN (V020 — المستخدمون والإعدادات والنسخ الاحتياطي والصيانة) ──
+
+    /// <summary>عرض صفحة المستخدمين والأدوار — OWNER/MANAGER/AUDITOR (V020).</summary>
+    public const string SecurityUsersRead = "security.users.read";
+
+    /// <summary>إنشاء/تعديل/تعطيل مستخدم وإسناد الأدوار — OWNER (V009 seed).</summary>
+    public const string SecurityUsersManage = "security.users.manage";
+
+    /// <summary>عرض سجل النسخ الاحتياطية وإحصاءات الصيانة — OWNER/MANAGER/AUDITOR (V020).</summary>
+    public const string BackupRead = "ops.backup.read";
+
+    /// <summary>تشغيل نسخة احتياطية — OWNER (V009 seed).</summary>
+    public const string BackupRun = "ops.backup.run";
+
+    /// <summary>استعادة نسخة احتياطية (إجراء حرج) — OWNER (V009 seed).</summary>
+    public const string BackupRestore = "ops.backup.restore";
+
+    /// <summary>تنظيف النظام: تدقيق قديم وجلسات ووسائط يتيمة — OWNER (V020).</summary>
+    public const string SystemCleanup = "ops.system.cleanup";
+
+    /// <summary>الحذف الكامل لبيانات التشغيل (حرج بتأكيد نصي) — OWNER فقط (V020).</summary>
+    public const string SystemWipe = "ops.system.wipe";
 }

@@ -141,3 +141,23 @@ public sealed class AuditLogRow
     public required string Result { get; set; }
     public string? CorrelationId { get; set; }
 }
+
+[Table("backup_records", Schema = "ops")]
+public sealed class BackupRecordRow
+{
+    public long BackupId { get; set; }
+    public required string BackupKind { get; set; } = "FULL";
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? FinishedAt { get; set; }
+    public long? SizeBytes { get; set; }
+    public required string Status { get; set; } = "RUNNING";
+    public required string Scope { get; set; } = "db";
+    public required string StorageLocationRef { get; set; }
+    public required string BackupSetId { get; set; }
+    public bool VerifiedReadable { get; set; }
+    public string? ErrorSummary { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    /// <summary>V020: من أنشأ النسخة وبصمة الملف (سلسلة الإسناد §19).</summary>
+    public string CreatedBy { get; set; } = "system";
+    public string? ChecksumSha256 { get; set; }
+}

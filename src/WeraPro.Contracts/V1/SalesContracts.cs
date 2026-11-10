@@ -125,7 +125,9 @@ public sealed record PosPreviewLine(
     decimal InvoiceDiscountShare,
     decimal TaxAmount,
     decimal NetAmount,
-    decimal LineTotal);
+    decimal LineTotal,
+    long LineId = 0,              // معرف السطر الحقيقي (0 في معاينة سلة غير مرحّلة) — لربط المرتجع بالأصل
+    decimal RefundedQty = 0m);    // المردود سابقاً من هذا السطر (0 في المعاينة) — حد المرتجع = qty − refunded
 
 public sealed record PosPreviewResponse(
     IReadOnlyList<PosPreviewLine> Lines,
@@ -221,7 +223,8 @@ public sealed record HeldCartDto(
     DateTimeOffset HeldAtUtc,
     string HeldByDisplayAr,
     string? NoteAr,
-    bool Restored);
+    bool Restored,
+    string? CartJson = null);      // لقطة السلة للعرض فقط — الاستعادة الفعلية تتم من POS (§9.5)
 
 public sealed record RestoreCartResponse(long CartId, string CartJson, long? CustomerId);
 

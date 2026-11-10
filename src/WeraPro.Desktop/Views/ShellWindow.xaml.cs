@@ -73,7 +73,9 @@ public sealed partial class ShellWindow : Window
             }
             var g6 = tag is "inventory" or "purchasing" or "parties" or "warehouses";
             var g8 = tag is "finance";
-            HomeContent.Visibility = tag is "catalog" or "media" || g6 || g8 ? Visibility.Collapsed : Visibility.Visible;
+            var admin = tag is "users" or "settings" or "maintenance";
+            var sales = tag is "sales" or "returns";
+            HomeContent.Visibility = tag is "catalog" or "media" || g6 || g8 || admin || sales ? Visibility.Collapsed : Visibility.Visible;
             CatalogContent.Visibility = tag == "catalog" ? Visibility.Visible : Visibility.Collapsed;
             MediaContent.Visibility = tag == "media" ? Visibility.Visible : Visibility.Collapsed;
             InventoryContent.Visibility = tag == "inventory" ? Visibility.Visible : Visibility.Collapsed;
@@ -83,6 +85,13 @@ public sealed partial class ShellWindow : Window
             PurchasingContent.Visibility = tag == "purchasing" ? Visibility.Visible : Visibility.Collapsed;
             PartiesContent.Visibility = tag == "parties" ? Visibility.Visible : Visibility.Collapsed;
             FinanceContent.Visibility = tag == "finance" ? Visibility.Visible : Visibility.Collapsed;
+            // G7 سجلات البيع: الفواتير والمعلقات والمطابقة + المرتجعات (PAGE-03/05/06/08)
+            SalesContent.Visibility = tag == "sales" ? Visibility.Visible : Visibility.Collapsed;
+            ReturnsContent.Visibility = tag == "returns" ? Visibility.Visible : Visibility.Collapsed;
+            // G-ADMIN (PAGE-47/51/52): المستخدمون والإعدادات والنسخ والصيانة
+            UsersContent.Visibility = tag == "users" ? Visibility.Visible : Visibility.Collapsed;
+            SettingsContent.Visibility = tag == "settings" ? Visibility.Visible : Visibility.Collapsed;
+            MaintenanceContent.Visibility = tag == "maintenance" ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

@@ -55,6 +55,11 @@
                         <muxc:NavigationViewItem Content="المشتريات" Tag="purchasing" ToolTipService.ToolTip="G6: السلة والاستلامات وفواتير الموردين والسداد والمرتجعات"/>
                         <muxc:NavigationViewItem Content="الأطراف" Tag="parties" ToolTipService.ToolTip="G6: الموردون والعملاء وكشوف الحساب — التعطيل لا الحذف"/>
                         <muxc:NavigationViewItem Content="المالية (G8)" Tag="finance" ToolTipService.ToolTip="G8: الخزائن والسندات والمصروفات ورأس المال والورديات وإقفالها (PAGE-33..38)"/>
+                        <muxc:NavigationViewItem Content="سجل المبيعات" Tag="sales" ToolTipService.ToolTip="G7: فواتير البيع (PAGE-03) + السلال المعلقة (PAGE-06) + المدفوعات والمطابقة (PAGE-08)"/>
+                        <muxc:NavigationViewItem Content="المرتجعات" Tag="returns" ToolTipService.ToolTip="G7: مرتجع مرتبط بالفاتورة الأصل باعتماد مشرف ورد بوسيلة الدفع الأصلية (PAGE-05 · D-04)"/>
+                        <muxc:NavigationViewItem Content="المستخدمون والصلاحيات" Tag="users" ToolTipService.ToolTip="G-ADMIN: المستخدمون والأدوار السبعة وصلاحياتهم الذرية — التعطيل لا الحذف (PAGE-47)"/>
+                        <muxc:NavigationViewItem Content="الإعدادات" Tag="settings" ToolTipService.ToolTip="G-ADMIN: إعدادات النشاط وقرارات D-01..D-18 بحقيقة حسمها (PAGE-52)"/>
+                        <muxc:NavigationViewItem Content="النسخ والصيانة" Tag="maintenance" ToolTipService.ToolTip="G-ADMIN: نسخ احتياطية موثقة واستعادة وتنظيف وحذف كامل بمنطقة خطر (PAGE-51)"/>
                     </muxc:NavigationView.MenuItems>
                 </muxc:NavigationView>
 
@@ -140,6 +145,22 @@
 
                 <!-- المالية (G8 · PAGE-33..38): الخزائن والسندات والمصروفات ورأس المال والورديات -->
                 <views:FinancePage x:Name="FinanceContent" Visibility="Collapsed"/>
+
+                <!-- سجل المبيعات (G7 · PAGE-03/06/08) -->
+                <views:SalesLogPage x:Name="SalesContent" Visibility="Collapsed"/>
+
+                <!-- المرتجعات والاستردادات (G7 · PAGE-05) -->
+                <views:ReturnsPage x:Name="ReturnsContent" Visibility="Collapsed"/>
+
+                <!-- المستخدمون والصلاحيات (G-ADMIN · PAGE-47) -->
+                <views:UsersPage x:Name="UsersContent" Visibility="Collapsed"/>
+
+                <!-- الإعدادات العامة (G-ADMIN · PAGE-52) -->
+                <views:SettingsPage x:Name="SettingsContent" Visibility="Collapsed"/>
+
+                <!-- النسخ الاحتياطي والصيانة (G-ADMIN · PAGE-51 + منطقة الخطر) -->
+                <views:MaintenancePage x:Name="MaintenanceContent" Visibility="Collapsed"/>
+
             </Grid>
         </Grid>
 

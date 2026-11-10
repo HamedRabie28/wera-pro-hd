@@ -160,6 +160,13 @@ public sealed partial class App : Application
                 services.AddTransient<ViewModels.PurchasingViewModel>();
                 services.AddTransient<ViewModels.PartiesViewModel>();
                 services.AddTransient<ViewModels.FinanceViewModel>();
+                // G-ADMIN (PAGE-47/51/52): المستخدمون والإعدادات والصيانة
+                services.AddTransient<ViewModels.UsersViewModel>();
+                services.AddTransient<ViewModels.SettingsViewModel>();
+                services.AddTransient<ViewModels.MaintenanceViewModel>();
+                // G7 (PAGE-03..08): سجلات المبيعات والمرتجعات
+                services.AddTransient<ViewModels.SalesLogViewModel>();
+                services.AddTransient<ViewModels.ReturnsViewModel>();
             })
             .Build();
 

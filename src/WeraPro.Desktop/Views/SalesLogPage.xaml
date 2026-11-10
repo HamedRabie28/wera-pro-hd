@@ -1,0 +1,252 @@
+<!-- Views/SalesLogPage.xaml — WERA PRO HD Desktop (G7 · سجلات البيع)
+     سجل فواتير البيع (PAGE-03): قائمة محطة الجلسة + تفاصيل/إعادة طباعة موسومة/
+     إلغاء مسودة بسبب · السلال المعلقة (PAGE-06): عرض بلا أي حركة — الاستعادة من
+     POS · المدفوعات والمطابقة (PAGE-08): مطابقة وردية من الدفتر + حركات الدرج
+     (مطابقة مزود البطاقة معلقة حتى اعتماده B-02/D-11). -->
+<Page
+    x:Class="WeraPro.Desktop.Views.SalesLogPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    mc:Ignorable="d" FlowDirection="RightToLeft"
+    xmlns:vm="using:WeraPro.Desktop.ViewModels">
+
+    <Grid RowSpacing="10" Padding="18,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="سجل المبيعات (G7)" FontSize="18" FontWeight="SemiBold"
+                       Foreground="{StaticResource WeraBrandNavyBrush}" VerticalAlignment="Center"
+                       FontFamily="{StaticResource WeraFontDisplay}"/>
+            <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="999" Padding="10,3" VerticalAlignment="Center">
+                <TextBlock Text="الفواتير تُعرض لمحطة الجلسة — الإلغاء للمسودات والمرحّلة تُرَد بالمرتجع (D-04)"
+                           FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}"/>
+            </Border>
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" x:Name="ErrorText" FontSize="13" Foreground="{StaticResource WeraStatusDangerBrush}"
+                   Visibility="Collapsed" TextWrapping="Wrap"/>
+        <TextBlock Grid.Row="1" x:Name="StatusText" FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}"
+                   Text="{x:Bind Vm.StatusAr, Mode=OneWay}" TextWrapping="Wrap"/>
+
+        <Pivot Grid.Row="2" SelectionChanged="Pivot_SelectionChanged">
+
+            <!-- ═══ فواتير البيع (PAGE-03) ═══ -->
+            <PivotItem Header="فواتير البيع (PAGE-03)">
+                <Grid RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <ComboBox x:Name="LimitFilter" Header="الحد" Width="120" SelectionChanged="LimitFilter_SelectionChanged">
+                            <ComboBoxItem Content="آخر 10" Tag="10"/>
+                            <ComboBoxItem Content="آخر 25" Tag="25" IsSelected="True"/>
+                            <ComboBoxItem Content="آخر 50" Tag="50"/>
+                        </ComboBox>
+                        <Button Content="تحديث" Click="RefreshInvoices_Click" VerticalAlignment="Bottom"/>
+                        <TextBlock Text="إعادة الطباعة نسخة موسومة REPRINT تُوثَّق كمهمة مستقلة (§29.9)"
+                                   FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ListView Grid.Row="1" x:Name="InvoicesList" ItemsSource="{x:Bind Vm.Invoices}" SelectionMode="Single"
+                              DoubleTapped="InvoicesList_DoubleTapped">
+                        <ListView.HeaderTemplate>
+                            <DataTemplate>
+                                <Grid Padding="10,6" Background="{StaticResource WeraSurfaceSubtleBrush}" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60"/><ColumnDefinition Width="130"/><ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="110"/><ColumnDefinition Width="110"/><ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="100"/><ColumnDefinition Width="*"/><ColumnDefinition Width="55"/>
+                                        <ColumnDefinition Width="270"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="#" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="1" Text="رقم الفاتورة" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="2" Text="التاريخ" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="3" Text="الحالة" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="4" Text="الصافي" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="5" Text="الضريبة" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="6" Text="المستحق" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="7" Text="الزبون" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="8" Text="سطور" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="9" Text="إجراءات" FontWeight="SemiBold" FontSize="12"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.HeaderTemplate>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:InvoiceRow">
+                                <Grid Padding="10,7" ColumnSpacing="10" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60"/><ColumnDefinition Width="130"/><ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="110"/><ColumnDefinition Width="110"/><ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="100"/><ColumnDefinition Width="*"/><ColumnDefinition Width="55"/>
+                                        <ColumnDefinition Width="270"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{x:Bind InvoiceId}" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{x:Bind InvoiceNumber}" FontSize="12" FontWeight="SemiBold"
+                                               FontFamily="{StaticResource WeraFontMono}" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{x:Bind WhenAr}" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{x:Bind StatusAr}" FontSize="12" VerticalAlignment="Center"
+                                               Foreground="{x:Bind StatusBrush}"/>
+                                    <TextBlock Grid.Column="4" Text="{x:Bind NetAr}" FontSize="12" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="5" Text="{x:Bind TaxAr}" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="6" Text="{x:Bind DueAr}" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="7" Text="{x:Bind CustomerAr}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="8" Text="{x:Bind LinesAr}" FontSize="12" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="9" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <Button Content="تفاصيل…" FontSize="11" Padding="10,4" Click="Details_Click" Tag="{x:Bind}"/>
+                                        <Button Content="إعادة طباعة" FontSize="11" Padding="10,4" Click="Reprint_Click" Tag="{x:Bind}"
+                                                Visibility="{x:Bind ReprintVisibility}"/>
+                                        <Button Content="إلغاء…" FontSize="11" Padding="10,4" Click="Void_Click" Tag="{x:Bind}"
+                                                Visibility="{x:Bind VoidVisibility}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+
+            <!-- ═══ السلال المعلقة (PAGE-06) ═══ -->
+            <PivotItem Header="السلال المعلقة (PAGE-06)">
+                <Grid RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Content="تحديث" Click="RefreshHeldCarts_Click"/>
+                        <Button Content="فتح نقطة البيع للاستعادة" Click="OpenPosForRestore_Click"
+                                Style="{StaticResource WeraPrimaryButtonStyle}"/>
+                        <TextBlock Text="الاستعادة تعيد السلة لحالة الكاشير في POS ولا تنشئ بيعاً ولا حركة (§9.5)"
+                                   FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <ListView Grid.Row="1" x:Name="HeldCartsList" ItemsSource="{x:Bind Vm.HeldCarts}" SelectionMode="Single">
+                        <ListView.HeaderTemplate>
+                            <DataTemplate>
+                                <Grid Padding="10,6" Background="{StaticResource WeraSurfaceSubtleBrush}" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60"/><ColumnDefinition Width="140"/><ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="120"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="#" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="1" Text="وقت التعليق" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="2" Text="علّقها" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="3" Text="الملاحظة" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="4" Text="الحالة" FontWeight="SemiBold" FontSize="12"/>
+                                    <TextBlock Grid.Column="5" Text="إجراء" FontWeight="SemiBold" FontSize="12"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.HeaderTemplate>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:HeldCartRow">
+                                <Grid Padding="10,7" ColumnSpacing="10" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60"/><ColumnDefinition Width="140"/><ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="120"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{x:Bind CartId}" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{x:Bind HeldAtAr}" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{x:Bind HeldBy}" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{x:Bind NoteAr}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="4" Text="{x:Bind RestoredAr}" FontSize="12" VerticalAlignment="Center"
+                                               Foreground="{x:Bind RestoredBrush}"/>
+                                    <Button Grid.Column="5" Content="عرض السلة…" FontSize="11" Padding="10,4" Click="ViewCart_Click" Tag="{x:Bind}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </PivotItem>
+
+            <!-- ═══ المدفوعات والمطابقة (PAGE-08) ═══ -->
+            <PivotItem Header="المدفوعات والمطابقة (PAGE-08)">
+                <Grid RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <ComboBox x:Name="ShiftsCombo" Header="الوردية" Width="380"
+                                  SelectionChanged="ShiftsCombo_SelectionChanged" DisplayMemberPath="LabelAr"/>
+                        <Button Content="عرض المطابقة" Click="LoadRecon_Click" VerticalAlignment="Bottom"
+                                Style="{StaticResource WeraPrimaryButtonStyle}"/>
+                        <TextBlock Text="المتوقع من الدفتر مقابل المحصَّل بكل وسيلة — مطابقة مزود البطاقة معلقة حتى اعتماده (B-02/D-11)"
+                                   FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}" VerticalAlignment="Bottom" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Grid Grid.Row="1" ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="430"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="12" Padding="14,10">
+                            <ScrollViewer>
+                                <ItemsControl ItemsSource="{x:Bind Vm.ReconLines}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ReconLineRow">
+                                            <Grid Padding="0,4" ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{x:Bind Label}" FontSize="12" VerticalAlignment="Center"
+                                                           Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                                <TextBlock Grid.Column="1" Text="{x:Bind Value}" FontSize="12.5" FontWeight="SemiBold"
+                                                           VerticalAlignment="Center" Foreground="{x:Bind Brush}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                        <Grid Grid.Column="1" RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="حركات نقد درج الوردية — لكل حركة مستند وسبب (§14.2 ق4)" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                            <ListView Grid.Row="1" x:Name="DrawerTxnsList" ItemsSource="{x:Bind Vm.DrawerTxns}">
+                                <ListView.HeaderTemplate>
+                                    <DataTemplate>
+                                        <Grid Padding="8,5" Background="{StaticResource WeraSurfaceSubtleBrush}" ColumnSpacing="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/><ColumnDefinition Width="110"/><ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="*"/><ColumnDefinition Width="90"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="اتجاه" FontWeight="SemiBold" FontSize="11.5"/>
+                                            <TextBlock Grid.Column="1" Text="المبلغ" FontWeight="SemiBold" FontSize="11.5"/>
+                                            <TextBlock Grid.Column="2" Text="المستند" FontWeight="SemiBold" FontSize="11.5"/>
+                                            <TextBlock Grid.Column="3" Text="السبب" FontWeight="SemiBold" FontSize="11.5"/>
+                                            <TextBlock Grid.Column="4" Text="الوقت" FontWeight="SemiBold" FontSize="11.5"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.HeaderTemplate>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:DrawerTxnRow">
+                                        <Grid Padding="8,5" ColumnSpacing="8" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="60"/><ColumnDefinition Width="110"/><ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="*"/><ColumnDefinition Width="90"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{x:Bind DirectionAr}" FontSize="11.5" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{x:Bind AmountAr}" FontSize="11.5" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="2" Text="{x:Bind DocAr}" FontSize="11.5" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{x:Bind ReasonAr}" FontSize="11.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="4" Text="{x:Bind WhenAr}" FontSize="11.5" VerticalAlignment="Center" Opacity="0.75"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

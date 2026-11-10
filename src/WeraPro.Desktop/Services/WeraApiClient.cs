@@ -988,6 +988,116 @@ public sealed class WeraApiClient(
     public Task<ApiCallResult<PrintJobDto[]>> ListPrintJobsAsync(long invoiceId, CancellationToken ct = default)
         => GetAsync<PrintJobDto[]>(Pos("/sales/" + invoiceId.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/print-jobs"), ct);
 
+    // ═══ G-ADMIN: المستخدمون والأدوار والإعدادات والصيانة (PAGE-47/51/52) ═══
+
+    /// <summary>غلاف استجابة قائمة موحدة — يطابق { items: [...], count: n }.</summary>
+    private sealed record ListResponse<T>(IReadOnlyList<T> Items, int Count);
+
+    /// <summary>سجل المستخدمين الإداريين — بلا أي hash أو أسرار (§18).</summary>
+    public async Task<ApiCallResult<List<UserAdminDto>>> GetUsersAsync(string? search, CancellationToken ct = default)
+    {
+        var url = ApiRoutes.Users + (string.IsNullOrWhiteSpace(search) ? "" : "?search=" + Uri.EscapeDataString(search));
+        var result = await GetAsync<ListResponse<UserAdminDto>>(url, ct);
+        return result.Map(v => [.. (v?.Items ?? [])]);
+    }
+
+    public Task<ApiCallResult<UserAdminDto>> CreateUserAsync(CreateUserRequest request, CancellationToken ct = default)
+        => PostAsync<CreateUserRequest, UserAdminDto>(ApiRoutes.Users, request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<bool>> UpdateUserAsync(long userId, UpdateUserRequest request, CancellationToken ct = default)
+        => PutAsync<UpdateUserRequest, object>(ApiRoutes.UserById.Replace("{userId:long}", userId.ToString(System.Globalization.CultureInfo.InvariantCulture)), request, ct);
+
+    public Task<ApiCallResult<bool>> SetUserActiveAsync(long userId, SetUserActiveRequest request, CancellationToken ct = default)
+        => PutAsync<SetUserActiveRequest, object>(ApiRoutes.UserActive.Replace("{userId:long}", userId.ToString(System.Globalization.CultureInfo.InvariantCulture)), request, ct);
+
+    public Task<ApiCallResult<bool>> ResetUserPasswordAsync(long userId, ResetPasswordRequest request, CancellationToken ct = default)
+        => PutAsync<ResetPasswordRequest, object>(ApiRoutes.UserPassword.Replace("{userId:long}", userId.ToString(System.Globalization.CultureInfo.InvariantCulture)), request, ct);
+
+    public async Task<ApiCallResult<List<UserRoleAssignmentDto>>> GetUserRolesAsync(long userId, CancellationToken ct = default)
+    {
+        var result = await GetAsync<ListResponse<UserRoleAssignmentDto>>(
+            ApiRoutes.UserRoles.Replace("{userId:long}", userId.ToString(System.Globalization.CultureInfo.InvariantCulture)), ct);
+        return result.Map(v => [.. (v?.Items ?? [])]);
+    }
+
+    public Task<ApiCallResult<UserRoleAssignmentDto>> AssignUserRoleAsync(long userId, AssignRoleRequest request, CancellationToken ct = default)
+        => PostAsync<AssignRoleRequest, UserRoleAssignmentDto>(
+            ApiRoutes.UserRoles.Replace("{userId:long}", userId.ToString(System.Globalization.CultureInfo.InvariantCulture)), request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<bool>> RevokeUserRoleAsync(long userId, RevokeRoleRequest request, CancellationToken ct = default)
+        => DeleteAsync<RevokeRoleRequest, object>(
+            ApiRoutes.UserRoles.Replace("{userId:long}", userId.ToString(System.Globalization.CultureInfo.InvariantCulture)), request, ct);
+
+    public async Task<ApiCallResult<List<RoleDetailDto>>> GetRolesAsync(CancellationToken ct = default)
+    {
+        var result = await GetAsync<ListResponse<RoleDetailDto>>(ApiRoutes.Roles, ct);
+        return result.Map(v => [.. (v?.Items ?? [])]);
+    }
+
+    /// <summary>تعديل إعداد نشاط بالمفتاح — صلاحية OWNER خادمياً.</summary>
+    public Task<ApiCallResult<UpdateSettingResponse>> UpdateSettingAsync(string settingKey, UpdateSettingRequest request, CancellationToken ct = default)
+        => PutAsync<UpdateSettingRequest, UpdateSettingResponse>(
+            ApiRoutes.SettingByKey.Replace("{settingKey}", Uri.EscapeDataString(settingKey)), request, ct);
+
+    /// <summary>سجل النسخ الاحتياطية الموثقة.</summary>
+    public async Task<ApiCallResult<List<BackupDto>>> GetBackupsAsync(int limit = 50, CancellationToken ct = default)
+    {
+        var result = await GetAsync<ListResponse<BackupDto>>(ApiRoutes.Backups + "?limit=" + limit.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
+        return result.Map(v => [.. (v?.Items ?? [])]);
+    }
+
+    /// <summary>تشغيل نسخة كاملة فورية (pg_dump) — إجراء حرج موثق.</summary>
+    public Task<ApiCallResult<BackupDto>> RunBackupAsync(RunBackupRequest request, CancellationToken ct = default)
+        => PostAsync<RunBackupRequest, BackupDto>(ApiRoutes.BackupRun, request, allowAnonymous: false, ct);
+
+    /// <summary>استعادة نسخة موثقة — عبارة تأكيد «استعادة» إلزامية.</summary>
+    public Task<ApiCallResult<RestoreResult>> RestoreBackupAsync(RestoreBackupRequest request, CancellationToken ct = default)
+        => PostAsync<RestoreBackupRequest, RestoreResult>(ApiRoutes.BackupRestore, request, allowAnonymous: false, ct);
+
+    public Task<ApiCallResult<bool>> DeleteBackupAsync(long backupId, CancellationToken ct = default)
+        => DeleteAsync<object, object>(ApiRoutes.Backups + "/" + backupId.ToString(System.Globalization.CultureInfo.InvariantCulture), new { }, ct);
+
+    /// <summary>إحصاءات النظام الحقيقية — تغذي صفحة الصيانة قبل أي قرار حذف.</summary>
+    public Task<ApiCallResult<SystemStatsDto>> GetSystemStatsAsync(CancellationToken ct = default)
+        => GetAsync<SystemStatsDto>(ApiRoutes.SystemStats, ct);
+
+    /// <summary>تنظيف النظام — تدقيق قديم وجلسات معلقة ووسائط يتيمة.</summary>
+    public Task<ApiCallResult<SystemCleanupResult>> RunSystemCleanupAsync(SystemCleanupRequest request, CancellationToken ct = default)
+        => PostAsync<SystemCleanupRequest, SystemCleanupResult>(ApiRoutes.SystemCleanup, request, allowAnonymous: false, ct);
+
+    /// <summary>الحذف الكامل لبيانات التشغيل — عبارة «حذف نهائي» إلزامية.</summary>
+    public Task<ApiCallResult<WipeDataResult>> WipeAllDataAsync(WipeDataRequest request, CancellationToken ct = default)
+        => PostAsync<WipeDataRequest, WipeDataResult>(ApiRoutes.SystemWipe, request, allowAnonymous: false, ct);
+
+    /// <summary>نتيجة الاستعادة — مطابقة لاستجابة { restored: true }.</summary>
+    public sealed record RestoreResult(bool Restored);
+
+    /// <summary>إحصاءات النظام من الخادم — نفس عقد Application مع تسمية عميلة.</summary>
+    public sealed record SystemStatsDto(
+        long Products, long Skus, long StockMovements, long Invoices,
+        long MediaAssets, long AuditEvents, long OpenSessions, long PrintJobs,
+        long BackupRecords, long Users, string DatabaseName);
+
+    private async Task<ApiCallResult<TRes>> DeleteAsync<TReq, TRes>(string url, TReq body, CancellationToken ct)
+    {
+        try
+        {
+            using var client = CreateClient();
+            using var request = new HttpRequestMessage(HttpMethod.Delete, url) { Content = JsonContent.Create(body, options: Json) };
+            using var response = await client.SendAsync(request, ct);
+            return await ReadAsync<TRes>(response, ct);
+        }
+        catch (TaskCanceledException)
+        {
+            return ApiCallResult<TRes>.Fail("انتهت مهلة الطلب — تحقق من حالة الخادم");
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "فشل اتصال بـ{Url}", url);
+            return ApiCallResult<TRes>.Fail("تعذر الوصول إلى الخادم — تحقق من العنوان والاتصال");
+        }
+    }
+
     private async Task<ApiCallResult<T>> GetAsync<T>(string url, CancellationToken ct)
     {
         try
@@ -1030,6 +1140,13 @@ public sealed class WeraApiClient(
     {
         if (response.IsSuccessStatusCode)
         {
+            // 204 NoContent أو جسم فارغ (تعديلات بلا قيمة إرجاع) — نجاح صامت
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent ||
+                response.Content.Headers.ContentLength is 0 ||
+                typeof(T) == typeof(object))
+            {
+                return ApiCallResult<T>.Success(default!);
+            }
             var payload = await response.Content.ReadFromJsonAsync<T>(Json, ct);
             return ApiCallResult<T>.Success(payload!);
         }

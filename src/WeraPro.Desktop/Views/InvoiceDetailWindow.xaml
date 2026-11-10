@@ -1,0 +1,137 @@
+<!-- Views/InvoiceDetailWindow.xaml — WERA PRO HD Desktop (G7 · PAGE-04)
+     تفاصيل الفاتورة وإعادة الطباعة: ترويسة صادقة (رقم/حالة/كاشير/وردية/زبون) +
+     المجاميع من الخادم فقط (§9.0 ق10) + السطور بلقطات السعر + الدفعات بحالتها
+     ومزودها + سجل مهام الطباعة (الأصل وإعادات الطباعة الموسومة REPRINT). -->
+<Window
+    x:Class="WeraPro.Desktop.Views.InvoiceDetailWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:WeraPro.Desktop.Views"
+    mc:Ignorable="d">
+
+    <Grid FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}" RowSpacing="10" Padding="18,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- الترويسة -->
+        <Grid Grid.Row="0" ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="TitleText" Text="تفاصيل الفاتورة" FontSize="19" FontWeight="SemiBold"
+                           Foreground="{StaticResource WeraBrandNavyBrush}" FontFamily="{StaticResource WeraFontDisplay}"/>
+                <TextBlock x:Name="MetaText" Text="جارٍ التحميل…" FontSize="12" TextWrapping="Wrap"
+                           Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button x:Name="ReprintButton" Content="إعادة طباعة (REPRINT)" Click="Reprint_Click"
+                        Style="{StaticResource WeraPrimaryButtonStyle}"/>
+                <Button x:Name="VoidButton" Content="إلغاء المسودة…" Click="Void_Click" Visibility="Collapsed"/>
+                <Button Content="إغلاق" Click="Close_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Grid.Row="1" x:Name="ErrorText" FontSize="12.5" Foreground="{StaticResource WeraStatusDangerBrush}"
+                   Visibility="Collapsed" TextWrapping="Wrap"/>
+
+        <!-- المجاميع -->
+        <Border Grid.Row="2" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                BorderThickness="1" CornerRadius="12" Padding="14,10">
+            <StackPanel Spacing="6">
+                <TextBlock x:Name="TotalsText" Text="—" FontSize="12.5" TextWrapping="Wrap"
+                           Foreground="{StaticResource WeraTextPrimaryBrush}"/>
+                <TextBlock x:Name="ReturnHintText" Text="" FontSize="11.5" TextWrapping="Wrap"
+                           Foreground="{StaticResource WeraTextMutedBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- الدفعات -->
+        <Border Grid.Row="3" Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="10" Padding="12,8">
+            <StackPanel Spacing="4">
+                <TextBlock Text="الدفعات — الوسيلة والمبلغ والحالة ومزود البطاقة (B-02/D-11)" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                <TextBlock x:Name="PaymentsText" Text="—" FontSize="12" TextWrapping="Wrap"
+                           Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- السطور + مهام الطباعة -->
+        <Grid Grid.Row="4" ColumnSpacing="14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="330"/>
+            </Grid.ColumnDefinitions>
+            <ListView x:Name="LinesList" SelectionMode="None">
+                <ListView.HeaderTemplate>
+                    <DataTemplate>
+                        <Grid Padding="8,5" Background="{StaticResource WeraSurfaceSubtleBrush}" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="45"/><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="110"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="سطر" FontWeight="SemiBold" FontSize="11.5"/>
+                            <TextBlock Grid.Column="1" Text="الصنف" FontWeight="SemiBold" FontSize="11.5"/>
+                            <TextBlock Grid.Column="2" Text="الاسم" FontWeight="SemiBold" FontSize="11.5"/>
+                            <TextBlock Grid.Column="3" Text="الكمية" FontWeight="SemiBold" FontSize="11.5"/>
+                            <TextBlock Grid.Column="4" Text="السعر" FontWeight="SemiBold" FontSize="11.5"/>
+                            <TextBlock Grid.Column="5" Text="الضريبة" FontWeight="SemiBold" FontSize="11.5"/>
+                            <TextBlock Grid.Column="6" Text="الإجمالي" FontWeight="SemiBold" FontSize="11.5"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.HeaderTemplate>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:SaleLineDisplay">
+                        <Grid Padding="8,5" ColumnSpacing="8" BorderBrush="{StaticResource WeraBorderRowBrush}" BorderThickness="0,0,0,1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="45"/><ColumnDefinition Width="100"/><ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="110"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="100"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{x:Bind LineNo}" FontSize="11.5" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{x:Bind SkuCode}" FontSize="11.5" FontFamily="{StaticResource WeraFontMono}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="{x:Bind ProductNameAr}" FontSize="11.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="3" Text="{x:Bind QtyText}" FontSize="11.5" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="4" Text="{x:Bind PriceText}" FontSize="11.5" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="5" Text="{x:Bind TaxText}" FontSize="11.5" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="6" Text="{x:Bind TotalText}" FontSize="11.5" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <Grid Grid.Column="1" RowSpacing="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="مهام الطباعة — الأصل وإعادات الموسومة" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{StaticResource WeraBrandNavyBrush}" TextWrapping="Wrap"/>
+                <ListView Grid.Row="1" x:Name="PrintJobsList" SelectionMode="None">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:PrintJobDisplay">
+                            <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                    BorderThickness="1" CornerRadius="8" Padding="8,6" Margin="0,0,0,6">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{x:Bind HeaderText}" FontSize="11.5" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{x:Bind DetailText}" FontSize="11" TextWrapping="Wrap"
+                                               Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Grid>
+
+        <TextBlock Grid.Row="5" x:Name="StatusText" Text="" FontSize="11.5" TextWrapping="Wrap"
+                   Foreground="{StaticResource WeraTextMutedBrush}"/>
+    </Grid>
+</Window>
