@@ -206,3 +206,31 @@ public sealed class AuditLogRowConfiguration : IEntityTypeConfiguration<AuditLog
         builder.HasIndex(x => x.CorrelationId);
     }
 }
+
+/// <summary>
+/// G-ADMIN (V008/V020): سجل النسخ الاحتياطية ops.backup_records — التهيئة التي كانت
+/// مفقودة فأبطلت نموذج EF كاملاً (خطأ إقلاع دورة عامل الاستيراد 2026-11-11).
+/// </summary>
+public sealed class BackupRecordRowConfiguration : IEntityTypeConfiguration<BackupRecordRow>
+{
+    public void Configure(EntityTypeBuilder<BackupRecordRow> builder)
+    {
+        builder.ToTable("backup_records", "ops");
+        builder.HasKey(x => x.BackupId);
+        builder.Property(x => x.BackupId).HasColumnName("backup_id").ValueGeneratedOnAdd();
+        builder.Property(x => x.BackupKind).HasColumnName("backup_kind").HasMaxLength(16);
+        builder.Property(x => x.StartedAt).HasColumnName("started_at");
+        builder.Property(x => x.FinishedAt).HasColumnName("finished_at");
+        builder.Property(x => x.SizeBytes).HasColumnName("size_bytes");
+        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(16);
+        builder.Property(x => x.Scope).HasColumnName("scope").HasMaxLength(16);
+        builder.Property(x => x.StorageLocationRef).HasColumnName("storage_location_ref").HasMaxLength(512);
+        builder.Property(x => x.BackupSetId).HasColumnName("backup_set_id").HasMaxLength(64);
+        builder.Property(x => x.VerifiedReadable).HasColumnName("verified_readable");
+        builder.Property(x => x.ErrorSummary).HasColumnName("error_summary");
+        builder.Property(x => x.CreatedAt).HasColumnName("created_at");
+        builder.Property(x => x.CreatedBy).HasColumnName("created_by").HasMaxLength(64);
+        builder.Property(x => x.ChecksumSha256).HasColumnName("checksum_sha256").HasMaxLength(64);
+        builder.HasIndex(x => x.CreatedAt);
+    }
+}

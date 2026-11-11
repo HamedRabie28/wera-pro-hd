@@ -168,13 +168,12 @@ public sealed class LogoutUseCase
 
     public async Task ExecuteAsync(CancellationToken ct = default)
     {
+        // إصلاح 2026-11-11: خروج الجلسة الواحدة يبطل توكنات هذه الجلسة فقط —
+        // إبطال كل توكنات المستخدم كان يقتل الجلسات الأخرى (تدفق الدخول الموقّع نطاقياً).
         if (_currentUser.SessionId is { } sid)
         {
             await _sessions.CloseSessionAsync(sid, ct);
-        }
-        if (_currentUser.IsAuthenticated)
-        {
-            await _refreshTokens.RevokeByUserAsync(_currentUser.UserId, "LOGOUT", ct);
+            await _refreshTokens.RevokeBySessionAsync(sid, "LOGOUT", ct);
         }
     }
 }

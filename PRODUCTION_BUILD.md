@@ -72,9 +72,15 @@ powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1 -BuildAll
 
 ```bash
 # Linux (من داخل production/api-server/linux-x64/)
-export TOKENS__SIGNINGKEYSECRET="مفتاح-إنتاج-32-محرف-أو-أكثر"
+export TOKENS__SIGNINGKEYSECRET="مفتاح-إنتاج-32-محرف-أو-أكثر"   # إلزامي
 export ASPNETCORE_URLS="http://0.0.0.0:5080"
 export ASPNETCORE_ENVIRONMENT="Production"
+export BOOTSTRAP__OWNERPASSWORD="كلمة-مرور-المالك-القوية"      # اختياري (الافتراضية Wera@2026 — غيّرها)
+export BOOTSTRAP__OWNERUSERNAME="owner"                        # اختياري
+export ConnectionStrings__WeraDatabase="Host=...;Port=5432;Username=...;Password=...;Database=wera"
+export RATELIMITING__AUTHPERMITLIMIT="20"                      # اختياري (الافتراضي 5/دقيقة)
+export BACKUP__PGDUMPPATH="/usr/bin/pg_dump"                   # اختياري (مسار أدوات النسخ)
+export BACKUP__PGRESTOREPATH="/usr/bin/pg_restore"
 ./WeraPro.Api
 ```
 
@@ -83,11 +89,47 @@ export ASPNETCORE_ENVIRONMENT="Production"
 set TOKENS__SIGNINGKEYSECRET=مفتاح-إنتاج-32-محرف-أو-أكثر
 set ASPNETCORE_URLS=http://0.0.0.0:5080
 set ASPNETCORE_ENVIRONMENT=Production
+set BOOTSTRAP__OWNERPASSWORD=كلمة-مرور-المالك-القوية
+set ConnectionStrings__WeraDatabase=Host=...;Port=5432;Username=...;Password=...;Database=wera
 WeraPro.Api.exe
 ```
 
 > ⚠️ ملاحظة مهمة: متغير البيئة يجب أن يكون `TOKENS__SIGNINGKEYSECRET` (بدون بادئة `WERA__`).
 > هذا التصحيح طُبّق في `Program.cs` بتاريخ 2026-11-08.
+
+### 4.1) جدول متغيرات البيئة الكامل (إصلاحات 2026-11-11)
+
+| المتغير | إلزامي | الافتراضي | الوظيفة |
+|---|---|---|---|
+| `TOKENS__SIGNINGKEYSECRET` | نعم | — (يرفض الإقلاع بدونه) | توقيع JWT — 32 محرفاً على الأقل |
+| `ConnectionStrings__WeraDatabase` | لا | من `appsettings.json` (localhost:55432) | سلسلة اتصال PostgreSQL |
+| `ASPNETCORE_URLS` | لا | `http://localhost:5080` | عنوان الاستماع |
+| `ASPNETCORE_ENVIRONMENT` | لا | Production | بيئة التشغيل |
+| `BOOTSTRAP__OWNERUSERNAME` | لا | `owner` | اسم دخول حساب المالك عند أول إقلاع على قاعدة فارغة |
+| `BOOTSTRAP__OWNERPASSWORD` | لا | `Wera@2026` | كلمة مرور المالك الافتراضية — **غيّرها بعد أول دخول** |
+| `BOOTSTRAP__OWNERDISPLAYNAME` | لا | `المالك` | الاسم المعروض لحساب المالك |
+| `RATELIMITING__AUTHPERMITLIMIT` | لا | 5 | حد محاولات الدخول/النافذة |
+| `RATELIMITING__AUTHWINDOWSECONDS` | لا | 60 | نافذة تحديد معدل الدخول (ثانية) |
+| `BACKUP__PGDUMPPATH` | لا | `pg_dump` | مسار أداة النسخ الاحتياطي |
+| `BACKUP__PGRESTOREPATH` | لا | `pg_restore` | مسار أداة الاستعادة |
+| `BACKUP__DIRECTORY` | لا | `backups` | مجلد ملفات النسخ |
+
+### 4.2) التهيئة الأولى التلقائية (First-Run Bootstrap — إصلاح جوهري 2026-11-11)
+
+عند أول إقلاع على قاعدة بيانات **فارغة** ينفّذ الخادم تلقائياً (بعد الترحيلات):
+
+1. **الفرع الرئيسي** (`MAIN` — الفرع الرئيسي)
+2. **محطة نقاط البيع الأولى** (`POS-1` — محطة نقاط البيع 1)
+3. **المخزن الرئيسي** (`MAIN` — المخزن الرئيسي)
+4. **درج محطة النقاط** (`DRAWER-ST1` من نوع CASH_DRAWER) — بدونه لا يُرحَّل البيع أثر خزينة
+5. **حساب المالك** بدور OWNER (كل الفروع) بكلمة المرور من `BOOTSTRAP__OWNERPASSWORD`
+
+كل خطوة **لا تمس بيانات قائمة** (تتحقق من الفراغ أولاً) وتُسجَّل في سجل التدقيق
+(`audit.audit_logs`) وسجل التطبيق. قبل هذا الإصلاح كان التثبيت الجديد بلا أي
+مستخدم — فلا يستطيع أحد الدخول وتبقى كل الصفحات فارغة.
+
+> 🔐 بعد أول دخول: غيّر كلمة مرور المالك من «المستخدمون والصلاحيات»، وأنشئ
+> حسابات الموظفين بأدوارهم (كاشير/مشرف/محاسب...) ولا تشارك حساب المالك.
 
 ---
 

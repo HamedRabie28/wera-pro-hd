@@ -32,20 +32,22 @@ public sealed partial class ShellWindow : Window
         _heartbeatTimer.Tick += async (_, _) => await _vm.HeartbeatAsync(default);
         _heartbeatTimer.Start();
         _ = _vm.HeartbeatAsync(default);
+
+        // الرئيسية التنفيذية (G9): طلب فتح POS من زر الإجراء السريع
+        HomeContent.OpenPosRequested += OpenPosWindow;
     }
 
     private void RefreshIdentity()
     {
         UserNameText.Text = _vm.DisplayNameAr;
         UserRoleText.Text = _vm.RolesDisplayAr + " · " + _vm.ScopeDisplayAr;
-        ScopeText.Text = "النطاق: " + _vm.ScopeDisplayAr;
         ConnText.Text = _vm.ConnectionDisplayAr;
         ConnDot.Fill = _vm.IsOnline
             ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["WeraActionPrimaryInkBrush"]
             : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["WeraStatusDangerBrush"];
         UserInitials.Text = _vm.DisplayNameAr.Length > 0 ? _vm.DisplayNameAr[..Math.Min(2, _vm.DisplayNameAr.Length)] : "؟";
 
-        // إعدادات الوزن (D-07) من الخادم — إثبات التغذية الحقيقية للأساس
+        // إعدادات الوزن (D-07) من الخادم — تغذية حقيقية لأساس POS عبر PosViewModel
         _ = LoadFoundationAsync();
     }
 
@@ -53,10 +55,7 @@ public sealed partial class ShellWindow : Window
     {
         var pos = App.Host.Services.GetRequiredService<PosViewModel>();
         await pos.LoadFoundationAsync(default);
-        _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
-        {
-            WeighingText.Text = pos.WeighingInfoAr;
-        });
+        // لا يوجد عنصر عرض هنا بعد الرئيسية الجديدة (HOME-01) — الأساس يُعرض في POS نفسها
     }
 
     private void NavTop_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -97,7 +96,7 @@ public sealed partial class ShellWindow : Window
 
     private void OpenPos_Click(object sender, RoutedEventArgs e) => OpenPosWindow();
 
-    private static void OpenPosWindow()
+    private void OpenPosWindow()
     {
         // POS نافذة مستقلة بلا أي قائمة إدارية (§9.0)
         var pos = ActivatorUtilities.CreateInstance<PosWindow>(App.Host.Services);

@@ -64,7 +64,7 @@ public sealed class UsersAdminUseCase
 
         await _audit.WriteAsync(new AuditEntry(
             actorUserId, null, null, request.BranchId, "core.users", userId,
-            "USER_CREATE", "OK", $"دور {request.RoleCode}" + (request.BranchId is null ? " (كل الفروع)" : $" (فرع {request.BranchId})")), ct);
+            "USER_CREATE", "SUCCESS", $"دور {request.RoleCode}" + (request.BranchId is null ? " (كل الفروع)" : $" (فرع {request.BranchId})")), ct);
 
         var rows = await _users.ListAsync(null, ct);
         return ToDto(rows.Single(u => u.UserId == userId));
@@ -80,7 +80,7 @@ public sealed class UsersAdminUseCase
         if (ok)
         {
             await _audit.WriteAsync(new AuditEntry(
-                actorUserId, null, null, null, "core.users", userId, "USER_UPDATE", "OK", "تعديل بيانات"), ct);
+                actorUserId, null, null, null, "core.users", userId, "USER_UPDATE", "SUCCESS", "تعديل بيانات"), ct);
         }
         return ok;
     }
@@ -102,7 +102,7 @@ public sealed class UsersAdminUseCase
         {
             await _audit.WriteAsync(new AuditEntry(
                 actorUserId, null, null, null, "core.users", userId,
-                request.IsActive ? "USER_ACTIVATE" : "USER_DEACTIVATE", "OK", request.ReasonAr), ct);
+                request.IsActive ? "USER_ACTIVATE" : "USER_DEACTIVATE", "SUCCESS", request.ReasonAr), ct);
         }
         return ok;
     }
@@ -115,7 +115,7 @@ public sealed class UsersAdminUseCase
         {
             await _audit.WriteAsync(new AuditEntry(
                 actorUserId, null, null, null, "core.users", userId,
-                "USER_PASSWORD_RESET", "OK", request.ReasonAr ?? "إعادة تعيين كلمة المرور"), ct);
+                "USER_PASSWORD_RESET", "SUCCESS", request.ReasonAr ?? "إعادة تعيين كلمة المرور"), ct);
         }
         return ok;
     }
@@ -137,7 +137,7 @@ public sealed class UsersAdminUseCase
         var userRoleId = await _users.AssignRoleAsync(userId, request.RoleCode, request.BranchId, actorUserId, ct);
         await _audit.WriteAsync(new AuditEntry(
             actorUserId, null, null, request.BranchId, "core.user_roles", userRoleId,
-            "ROLE_ASSIGN", "OK", $"إسناد {request.RoleCode}" + (request.ReasonAr is null ? "" : $" — {request.ReasonAr}")), ct);
+            "ROLE_ASSIGN", "SUCCESS", $"إسناد {request.RoleCode}" + (request.ReasonAr is null ? "" : $" — {request.ReasonAr}")), ct);
         var updated = await _users.ListRolesAsync(userId, ct);
         return updated.Single(r => r.UserRoleId == userRoleId);
     }
@@ -159,7 +159,7 @@ public sealed class UsersAdminUseCase
         {
             await _audit.WriteAsync(new AuditEntry(
                 actorUserId, null, null, target.BranchId, "core.user_roles", request.UserRoleId,
-                "ROLE_REVOKE", "OK", $"سحب {target.RoleCode}" + (request.ReasonAr is null ? "" : $" — {request.ReasonAr}")), ct);
+                "ROLE_REVOKE", "SUCCESS", $"سحب {target.RoleCode}" + (request.ReasonAr is null ? "" : $" — {request.ReasonAr}")), ct);
         }
         return ok;
     }

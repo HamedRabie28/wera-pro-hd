@@ -47,7 +47,7 @@
                                      OpenPaneLength="0" Margin="12,0"
                                      SelectionChanged="NavTop_SelectionChanged">
                     <muxc:NavigationView.MenuItems>
-                        <muxc:NavigationViewItem Content="التشغيل" Tag="home" IsSelected="True"/>
+                        <muxc:NavigationViewItem Content="الرئيسية" Tag="home" IsSelected="True" ToolTipService.ToolTip="HOME-01: مركز التشغيل التنفيذي — مؤشرات وتنبيهات وحدات تشغيل من الخادم"/>
                         <muxc:NavigationViewItem Content="نقطة البيع (POS)" Tag="pos" ToolTipService.ToolTip="G7: نافذة بيع مستقلة — سلالم ومساحيق ومرتجعات وسلات معلّقة وورديات"/>
                         <muxc:NavigationViewItem Content="الكتالوج" Tag="catalog" ToolTipService.ToolTip="G4: المنتجات وصيغ البيع والعبوات والباركود — بحث Exact Match"/>
                         <muxc:NavigationViewItem Content="مكتبة الصور" Tag="media" ToolTipService.ToolTip="G5: رفع/ربط/فك ربط/رئيسية/مكررات — الحذف محمي بمراجعة"/>
@@ -86,38 +86,10 @@
                 </StackPanel>
             </Grid>
 
-            <!-- ═══ المحتوى: التشغيل التأسيسية أو صفحة الكتالوج (G4) أو مكتبة الوسائط (G5) ═══ -->
+            <!-- ═══ المحتوى: الرئيسية التنفيذية أو صفحات الوحدات (G4..G-ADMIN) ═══ -->
             <Grid Grid.Row="1">
-                <ScrollViewer x:Name="HomeContent" Padding="24,18">
-                    <StackPanel Spacing="14" MaxWidth="900" HorizontalAlignment="Stretch">
-                        <TextBlock Text="التشغيل" FontFamily="{StaticResource WeraFontDisplay}" FontSize="20"
-                                   FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
-                        <TextBlock x:Name="ScopeText" Text="—" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
-
-                        <!-- بطاقة الحالة التأسيسية — بيانات حقيقية من الخادم -->
-                        <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
-                                BorderThickness="1" CornerRadius="14" Padding="18,14">
-                            <StackPanel Spacing="8">
-                                <TextBlock Text="أساس G3 قائم ويعمل" FontSize="14.5" FontWeight="SemiBold"
-                                           Foreground="{StaticResource WeraBrandNavyBrush}"/>
-                                <TextBlock Text="الخادم: API موثق + مصادقة JWT + صلاحيات خادمية + ترحيلات SQL خطية · العميل: متصل عبر IHttpClientFactory ولا يملك أي وصول مباشر لقاعدة البيانات."
-                                           FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
-                                <TextBlock x:Name="WeighingText" Text="إعدادات الوزن (D-07): تُجلب من الخادم…"
-                                           FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- الوحدات القادمة — أسباب معلنة لا صفحات وهمية -->
-                        <Border Background="{StaticResource WeraSurfaceSubtleBrush}" CornerRadius="14" Padding="18,14">
-                            <StackPanel Spacing="6">
-                                <TextBlock Text="الوحدات القادمة (بعد اعتماد كل بوابة)" FontSize="13" FontWeight="SemiBold"
-                                           Foreground="{StaticResource WeraTextSecondaryBrush}"/>
-                                <TextBlock FontSize="12" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"
-                                           Text="G6 المخزون والمشتريات · G7 POS الكاملة (الوزن/الدفع/المرتجع) · G8 الورديات والخزينة · G9 المحاسبة والتقارير · G10 الأجهزة · G11 DPI · G13 الحمل · G14 التغليف"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                <!-- ═══ الرئيسية التنفيذية HOME-01 (G9) — كل مؤشر من الخادم عبر Analytics API ═══ -->
+                <views:HomePage x:Name="HomeContent"/>
 
                 <!-- صفحة الكتالوج (G4) — تُعرض عند اختيار «الكتالوج» -->
                 <views:CatalogPage x:Name="CatalogContent" Visibility="Collapsed"/>

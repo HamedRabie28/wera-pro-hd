@@ -47,17 +47,17 @@ public sealed class SystemMaintenanceRepository : ISystemMaintenanceRepository
     {
         var sql = """
             SELECT
-                (SELECT count(*) FROM catalog.products)::bigint AS products,
-                (SELECT count(*) FROM catalog.skus)::bigint AS skus,
-                (SELECT count(*) FROM inv.stock_movements)::bigint AS movements,
-                (SELECT count(*) FROM sales.invoices)::bigint AS invoices,
-                (SELECT count(*) FROM catalog.media_assets)::bigint AS media,
-                (SELECT count(*) FROM audit.audit_logs)::bigint AS audit_events,
-                (SELECT count(*) FROM audit.user_sessions WHERE closed_at IS NULL)::bigint AS open_sessions,
-                (SELECT count(*) FROM print.print_jobs)::bigint AS print_jobs,
-                (SELECT count(*) FROM ops.backup_records)::bigint AS backups,
-                (SELECT count(*) FROM core.users)::bigint AS users,
-                current_database() AS db_name
+                (SELECT count(*) FROM catalog.products)::bigint AS "Products",
+                (SELECT count(*) FROM catalog.skus)::bigint AS "Skus",
+                (SELECT count(*) FROM inv.stock_movements)::bigint AS "Movements",
+                (SELECT count(*) FROM sales.invoices)::bigint AS "Invoices",
+                (SELECT count(*) FROM catalog.media_assets)::bigint AS "Media",
+                (SELECT count(*) FROM audit.audit_logs)::bigint AS "AuditEvents",
+                (SELECT count(*) FROM audit.user_sessions WHERE outcome = 'ACTIVE')::bigint AS "OpenSessions",
+                (SELECT count(*) FROM print.print_jobs)::bigint AS "PrintJobs",
+                (SELECT count(*) FROM ops.backup_records)::bigint AS "Backups",
+                (SELECT count(*) FROM core.users)::bigint AS "Users",
+                current_database() AS "DbName"
             """;
         var row = await _db.Database.SqlQueryRaw<StatsRow>(sql).SingleAsync(ct);
         return new SystemStats(
@@ -78,8 +78,19 @@ public sealed class SystemMaintenanceRepository : ISystemMaintenanceRepository
         {
             try
             {
+                // أسماء الجداول من مصفوفة ثابتة داخل الكود (ليست مدخلات مستخدم) —
+                // تحقق صارم من الصيغة (مخطط.جدول بأحرف لاتينية صغيرة وشرطات فقط)
+                System.ArgumentException.ThrowIfNullOrWhiteSpace(table);
+                if (!System.Text.RegularExpressions.Regex.IsMatch(table,
+                        "^[a-z_]+\\.[a-z_]+$", System.Text.RegularExpressions.RegexOptions.CultureInvariant))
+                {
+                    throw new InvalidOperationException($"اسم جدول غير صالح في قائمة المسح: {table}");
+                }
+                // معرّف جدول لا يُمرَّر كمعامل SQL إطلاقاً — التحقق أعلاه يوثق الأمان (EF1003)
+#pragma warning disable EF1003
                 await _db.Database.ExecuteSqlRawAsync(
-                    $"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE", ct);
+                    "TRUNCATE TABLE " + table + " RESTART IDENTITY CASCADE", ct);
+#pragma warning restore EF1003
                 done.Add(table);
             }
             catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
@@ -97,30 +108,17 @@ public sealed class SystemMaintenanceRepository : ISystemMaintenanceRepository
 
     public async Task<int> CloseStaleSessionsAsync(int retentionDays, CancellationToken ct = default)
         => await _db.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE audit.user_sessions SET closed_at = now() WHERE closed_at IS NULL AND opened_at < now() - make_interval(days => {retentionDays})", ct);
+            $"UPDATE audit.user_sessions SET outcome = 'EXPIRED', logout_at = now() WHERE outcome = 'ACTIVE' AND login_at < now() - make_interval(days => {retentionDays})", ct);
 
     public async Task<int> RemoveOrphanMediaAsync(int retentionDays, CancellationToken ct = default)
         => await _db.Database.ExecuteSqlInterpolatedAsync(
             $"""
              DELETE FROM catalog.media_assets
              WHERE created_at < now() - make_interval(days => {retentionDays})
-               AND NOT EXISTS (SELECT 1 FROM catalog.product_images pi WHERE pi.media_asset_id = catalog.media_assets.media_asset_id)
+               AND NOT EXISTS (SELECT 1 FROM catalog.product_images pi WHERE pi.media_id = catalog.media_assets.media_id)
              """, ct);
 
     public async Task<int> PurgeCompletedPrintJobsAsync(int retentionDays, CancellationToken ct = default)
         => await _db.Database.ExecuteSqlInterpolatedAsync(
-            $"DELETE FROM print.print_jobs WHERE created_at < now() - make_interval(days => {retentionDays}) AND status IN ('DONE','FAILED','CANCELLED')", ct);
-
-    private static async Task<SystemStats> ReadStatsAsync(System.Data.Common.DbCommand cmd, CancellationToken ct)
-    {
-        await using var reader = await cmd.ExecuteReaderAsync(ct);
-        if (!await reader.ReadAsync(ct))
-        {
-            return new SystemStats(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "؟");
-        }
-        return new SystemStats(
-            reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2), reader.GetInt64(3),
-            reader.GetInt64(4), reader.GetInt64(5), reader.GetInt64(6), reader.GetInt64(7),
-            reader.GetInt64(8), reader.GetInt64(9), reader.GetString(10));
-    }
+            $"DELETE FROM print.print_jobs WHERE created_at < now() - make_interval(days => {retentionDays}) AND status IN ('COMPLETED_CONFIRMED','FAILED','CANCELLED','UNKNOWN')", ct);
 }

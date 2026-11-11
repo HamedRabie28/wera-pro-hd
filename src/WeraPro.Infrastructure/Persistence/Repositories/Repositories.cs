@@ -173,6 +173,26 @@ public sealed class RefreshTokenStore : IRefreshTokenStore
         }
     }
 
+    /// <summary>
+    /// إبطال توكنات جلسة واحدة (إصلاح 2026-11-11): الخروج من جلسة يجب ألا يقتل توكنات
+    /// الجلسات الأخرى لنفس المستخدم (تسجيل الدخول الموقّع نطاقياً بعد المركزي أنشأ جلسة ثانية).
+    /// </summary>
+    public async Task RevokeBySessionAsync(long sessionId, string reasonAr, CancellationToken ct = default)
+    {
+        var actives = await _db.RefreshTokens
+            .Where(t => t.SessionId == sessionId && t.RevokedAt == null)
+            .ToListAsync(ct);
+        foreach (var token in actives)
+        {
+            token.RevokedAt = DateTimeOffset.UtcNow;
+            token.RevokedReason = reasonAr;
+        }
+        if (actives.Count > 0)
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+    }
+
     private static RefreshTokenRecord ToRecord(RefreshTokenRow row) =>
         new(row.RefreshTokenId, row.UserId, row.SessionId, row.ExpiresAt, row.IssuedAt);
 }

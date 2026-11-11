@@ -36,7 +36,7 @@ public sealed class UpdateSettingUseCase
 
         await _audit.WriteAsync(new AuditEntry(
             actorUserId, null, null, null, "core.business_settings", updated.SettingId,
-            "SETTING_UPDATE", "OK",
+            "SETTING_UPDATE", "SUCCESS",
             $"{settingKey}: {current.ValueText} → {value}" + (request.ReasonAr is null ? "" : $" — {request.ReasonAr}")), ct);
 
         return new UpdateSettingResponse(

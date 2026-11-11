@@ -6,22 +6,23 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using WeraPro.Application.Abstractions;
 
-/// <summary>خيارات النسخ الاحتياطي — مسار الأدوات والمجلد من الإعدادات لا الكود.</summary>
+/// <summary>خيارات النسخ الاحتياطي — مسار الأدوات والمجلد من الإعدادات لا الكود.
+/// خصائص قابلة للضبط ليعمل ربط التهيئة + PostConfigure لسلسلة الاتصال.</summary>
 public sealed record BackupOptions
 {
     public const string SectionName = "Backup";
 
     /// <summary>مسار pg_dump — الاسم المجرد يعتمد PATH أو المسار الكامل لتثبيت PostgreSQL.</summary>
-    public string PgDumpPath { get; init; } = "pg_dump";
+    public string PgDumpPath { get; set; } = "pg_dump";
 
     /// <summary>مسار pg_restore.</summary>
-    public string PgRestorePath { get; init; } = "pg_restore";
+    public string PgRestorePath { get; set; } = "pg_restore";
 
     /// <summary>مجلد ملفات النسخ (يُنشأ إن لم يوجد) — نسخة القرص ليست خطة استعادة (§19).</summary>
-    public string Directory { get; init; } = "backups";
+    public string Directory { get; set; } = "backups";
 
     /// <summary>سلسلة اتصال قاعدة البيانات بصيغة Npgsql (تُحقن من ConnectionStrings:WeraDatabase).</summary>
-    public string ConnectionString { get; init; } = "";
+    public string ConnectionString { get; set; } = "";
 }
 
 /// <summary>
@@ -29,7 +30,7 @@ public sealed record BackupOptions
 /// pg_restore --clean. سلسلة Npgsql تُفكك إلى معاملات libpq مستقلة (Host= → --host)
 /// وكلمة المرور عبر PGPASSWORD لا سطر الأوامر. الفشل برسالة عربية واضحة.
 /// </summary>
-public sealed class PgDumpBackupStorage : IBackupStorage
+public sealed partial class PgDumpBackupStorage : IBackupStorage
 {
     private readonly BackupOptions _options;
     private readonly ILogger<PgDumpBackupStorage> _logger;
@@ -58,7 +59,7 @@ public sealed class PgDumpBackupStorage : IBackupStorage
         var (code, error) = await RunAsync(_options.PgDumpPath, args, ct);
         if (code != 0 || !File.Exists(path))
         {
-            _logger.LogError("pg_dump فشل برمز {Code}: {Error}", code, error);
+            LogPgDumpFailed(code, error);
             throw new InvalidOperationException(
                 $"فشل إنشاء النسخة الاحتياطية (pg_dump رمز {code}) — تأكد من تثبيت أدوات PostgreSQL وضبط Backup:PgDumpPath. التفصيل: {Truncate(error)}");
         }
@@ -88,7 +89,7 @@ public sealed class PgDumpBackupStorage : IBackupStorage
         var (code, error) = await RunAsync(_options.PgRestorePath, args, ct);
         if (code != 0)
         {
-            _logger.LogError("pg_restore فشل برمز {Code}: {Error}", code, error);
+            LogPgRestoreFailed(code, error);
             throw new InvalidOperationException($"فشل الاستعادة (pg_restore رمز {code}) — التفصيل: {Truncate(error)}");
         }
     }
@@ -102,7 +103,7 @@ public sealed class PgDumpBackupStorage : IBackupStorage
         return string.Equals(actual, expectedChecksum, StringComparison.OrdinalIgnoreCase);
     }
 
-    private sealed record ParsedConnection(string Host, string Port, string? User, string? Database, string? Password);
+    private sealed record ParsedConnection(string Host, string Port, string? User, string Database, string? Password);
 
     private ParsedConnection? _parsed;
     /// <summary>تفكيك سلسلة Npgsql إلى معاملات libpq — مرة واحدة لكل عملية (مُخزّنة).</summary>
@@ -169,4 +170,14 @@ public sealed class PgDumpBackupStorage : IBackupStorage
 
     private static string Truncate(string? text) =>
         string.IsNullOrWhiteSpace(text) ? "بدون تفصيل" : text.ReplaceLineEndings(" ")[..Math.Min(text.ReplaceLineEndings(" ").Length, 220)];
+
+    [Microsoft.Extensions.Logging.LoggerMessage(
+        Level = Microsoft.Extensions.Logging.LogLevel.Error,
+        Message = "pg_dump failed with code {Code}: {Error}")]
+    private partial void LogPgDumpFailed(int code, string error);
+
+    [Microsoft.Extensions.Logging.LoggerMessage(
+        Level = Microsoft.Extensions.Logging.LogLevel.Error,
+        Message = "pg_restore failed with code {Code}: {Error}")]
+    private partial void LogPgRestoreFailed(int code, string error);
 }

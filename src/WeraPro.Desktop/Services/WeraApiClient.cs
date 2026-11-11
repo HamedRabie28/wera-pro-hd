@@ -104,6 +104,14 @@ public sealed class WeraApiClient(
         }
     }
 
+    /// <summary>لوحة الرئيسية التنفيذية HOME-01 — كل الأرقام من الخادم (G9).</summary>
+    public async Task<ApiCallResult<DashboardDto>> GetDashboardAsync(DateOnly from, DateOnly to, long? branchId, CancellationToken ct = default)
+    {
+        var url = Contracts.V1.AnalyticsApi.Prefix + $"/dashboard?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}"
+            + (branchId is { } b ? $"&branchId={b}" : "");
+        return await GetAsync<DashboardDto>(url, ct);
+    }
+
     public async Task<ApiCallResult<List<BranchDto>>> GetBranchesAsync(CancellationToken ct = default)
     {
         // الخادم يعيد {items,count} — GetListAsync يفك الغلاف (إصلاح 2026-11-09:

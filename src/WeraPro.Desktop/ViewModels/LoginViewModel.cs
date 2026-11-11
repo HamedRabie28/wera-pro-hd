@@ -138,9 +138,37 @@ public sealed partial class LoginViewModel : ObservableObject
             _session.Establish(result.Value, null, null, null, null);
             StatusAr = "جارٍ تهيئة نطاق العمل…";
             await LoadScopeAsync(ct);
-            _session.EnrichScope(
-                SelectedBranch?.BranchId, SelectedStation?.StationId,
-                SelectedBranch?.NameAr, SelectedStation?.NameAr);
+
+            // الطور 3 (إصلاح 2026-11-11): إعادة دخول صامتة بنطاق الفرع/المحطة المختارين —
+            // نقاط نهاية POS وسجل المبيعات تتطلب جلسة محطة في مطالبات التوكن (§11.2)،
+            // والإثراء في الذاكرة وحده لا يصل إلى الخادم. عند نجاحها تُستبدل الجلسة
+            // المركزية المؤقتة بالجلسة الموثّقة نطاقياً (وتُغلق المؤقتة نظيفاً).
+            if (SelectedBranch is { } branch && SelectedStation is { } station)
+            {
+                StatusAr = "جارٍ توثيق نطاق المحطة…";
+                var scoped = await _api.LoginAsync(
+                    new LoginRequest(Username.Trim(), Password, branch.BranchId, station.StationId), ct);
+                if (scoped.Ok && scoped.Value is not null)
+                {
+                    await _api.LogoutAsync(ct);   // إغلاق الجلسة المركزية المؤقتة (لا يتسرب سجل مفتوح)
+                    _session.Establish(scoped.Value, branch.BranchId, station.StationId,
+                        branch.NameAr, station.NameAr);
+                }
+                else
+                {
+                    _logger.LogWarning("إعادة الدخول الموقعة فشلت — الجلسة تبقى مركزية: {Error}",
+                        scoped.ErrorAr);
+                    _session.EnrichScope(
+                        SelectedBranch?.BranchId, SelectedStation?.StationId,
+                        SelectedBranch?.NameAr, SelectedStation?.NameAr);
+                }
+            }
+            else
+            {
+                _session.EnrichScope(
+                    SelectedBranch?.BranchId, SelectedStation?.StationId,
+                    SelectedBranch?.NameAr, SelectedStation?.NameAr);
+            }
 
             _logger.LogInformation(
                 "دخول ناجح للمستخدم {Username} — النطاق: {Branch} / {Station}",

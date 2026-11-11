@@ -17,6 +17,7 @@ using WeraPro.Application.Abstractions;
 using WeraPro.Application.Auth;
 using WeraPro.Application.Settings;
 using WeraPro.Application.Validation;
+using WeraPro.Infrastructure.Bootstrap;
 using WeraPro.Infrastructure.HealthChecks;
 using WeraPro.Infrastructure.Migrations;
 using WeraPro.Infrastructure.Persistence;
@@ -93,12 +94,19 @@ try
     builder.Services.AddScoped<WeraPro.Application.Abstractions.IBackupRepository, WeraPro.Infrastructure.Persistence.Repositories.BackupRepository>();
     builder.Services.AddScoped<WeraPro.Application.Abstractions.ISystemMaintenanceRepository, WeraPro.Infrastructure.Maintenance.SystemMaintenanceRepository>();
     builder.Services.AddScoped<WeraPro.Application.Abstractions.IBackupStorage, WeraPro.Infrastructure.Maintenance.PgDumpBackupStorage>();
-    builder.Services.Configure<WeraPro.Infrastructure.Maintenance.BackupOptions>(options =>
+    // ربط قسم Backup من الإعدادات ثم حقن سلسلة الاتصال الفعلية بعده (PostConfigure
+    // لا يُسحقها ربط لاحق — إصلاح ترتيب التهيئة 2026-11-11)
+    // خيارات التهيئة الأولى (Bootstrap) — تُقرأ من قسم Bootstrap أو متغيرات البيئة BOOTSTRAP__*
+    builder.Services.Configure<BootstrapOptions>(builder.Configuration.GetSection(BootstrapOptions.SectionName));
+    builder.Services.Configure<WeraPro.Infrastructure.Maintenance.BackupOptions>(builder.Configuration.GetSection(WeraPro.Infrastructure.Maintenance.BackupOptions.SectionName));
+    builder.Services.PostConfigure<WeraPro.Infrastructure.Maintenance.BackupOptions>(options =>
     {
         options.ConnectionString = connectionString;
     });
-    builder.Services.Configure<WeraPro.Infrastructure.Maintenance.BackupOptions>(builder.Configuration.GetSection(WeraPro.Infrastructure.Maintenance.BackupOptions.SectionName));
     builder.Services.AddScoped<WeraPro.Application.Security.UsersAdminUseCase>();
+    // ── التحليلات: لوحة الرئيسية HOME-01 (G9) ──
+    builder.Services.AddScoped<WeraPro.Application.Analytics.IDashboardRepository, WeraPro.Infrastructure.Persistence.Repositories.DashboardRepository>();
+    builder.Services.AddScoped<WeraPro.Application.Analytics.DashboardUseCase>();
     builder.Services.AddScoped<WeraPro.Application.Settings.UpdateSettingUseCase>();
     builder.Services.AddScoped<WeraPro.Application.Maintenance.BackupUseCase>();
     builder.Services.AddScoped<WeraPro.Application.Maintenance.SystemCleanupUseCase>();
@@ -301,6 +309,16 @@ try
     var runner = app.Services.GetRequiredService<SqlMigrationRunner>();
     await runner.ApplyPendingAsync(connectionString);
 
+    // ── التهيئة الأولى عند قاعدة فارغة (إصلاح 2026-11-11): فرع + محطة + مخزن + حساب المالك ──
+    using (var bootstrapScope = app.Services.CreateScope())
+    {
+        await BootstrapSeeder.SeedAsync(
+            bootstrapScope.ServiceProvider.GetRequiredService<WeraDbContext>(),
+            bootstrapScope.ServiceProvider.GetRequiredService<WeraPro.Application.Abstractions.IPasswordHasher>(),
+            bootstrapScope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<BootstrapOptions>>(),
+            bootstrapScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("BootstrapSeeder"));
+    }
+
     // ── خط الأنابيب (الترتيب ملزم) ──
     app.UseForwardedHeaders(new ForwardedHeadersOptions
     {
@@ -364,6 +382,7 @@ try
        .MapUsersEndpoints()
        .MapSettingsEndpoints()
        .MapMaintenanceEndpoints()
+       .MapAnalyticsEndpoints()
        .MapCatalogEndpoints()
        .MapMediaEndpoints()
        .MapInventoryEndpoints()

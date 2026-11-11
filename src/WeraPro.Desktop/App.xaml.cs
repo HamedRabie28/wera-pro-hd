@@ -166,6 +166,7 @@ public sealed partial class App : Application
                 services.AddTransient<ViewModels.MaintenanceViewModel>();
                 // G7 (PAGE-03..08): سجلات المبيعات والمرتجعات
                 services.AddTransient<ViewModels.SalesLogViewModel>();
+                services.AddTransient<ViewModels.HomeViewModel>(); // الرئيسية التنفيذية HOME-01 (G9)
                 services.AddTransient<ViewModels.ReturnsViewModel>();
             })
             .Build();

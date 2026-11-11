@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Views/HomePage.xaml — WERA PRO HD (G9 · HOME-01 الرئيسية التنفيذية)
+  أول واجهة بعد الدخول: مؤشرات محدودة التعريف + اتجاه زمني + «يتطلب الانتباه»
+  + وحدات تشغيل مختصرة + إجراءات سريعة — بلا بطاقات متساوية زخرفية (§7.5).
+  كل رقم من HomeViewModel (الخادم فقط) — لا حسابات ولا بيانات تجريبية هنا.
+-->
+<Page
+    x:Class="WeraPro.Desktop.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:local="using:WeraPro.Desktop.Views"
+    xmlns:vm="using:WeraPro.Desktop.ViewModels"
+    FontFamily="{StaticResource WeraFontBody}">
+
+    <Grid RowSpacing="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- رأس + فترة -->
+            <RowDefinition Height="*"/>     <!-- جسم اللوحة -->
+        </Grid.RowDefinitions>
+
+        <!-- ═══ الرأس السياقي: ترحيب + نطاق + تاريخ + محدد الفترة ═══ -->
+        <Grid Grid.Row="0" Padding="28,20,28,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="3">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="{x:Bind Vm.WelcomeAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontDisplay}"
+                               FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                    <TextBlock Text="{x:Bind Vm.UserAr, Mode=OneWay}" FontSize="22" FontWeight="SemiBold"
+                               Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE1CB;" FontSize="12" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                    <TextBlock Text="{x:Bind Vm.ScopeAr, Mode=OneWay}" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                    <TextBlock Text="·" FontSize="12.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                    <TextBlock Text="{x:Bind Vm.DateAr, Mode=OneWay}" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- محدد الفترة: مقاسات متساوية وحد واضح — لا قوائم منسدلة للفترات الشائعة -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="0" VerticalAlignment="Top"
+                        Background="{StaticResource WeraSurfaceSubtleBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                        BorderThickness="1" CornerRadius="10" Padding="3">
+                <RadioButton Content="اليوم" IsChecked="{x:Bind Vm.PeriodTodayChecked, Mode=TwoWay}" Command="{x:Bind Vm.SelectTodayCommand}"
+                             Style="{StaticResource WeraPeriodToggleStyle}" MinWidth="64"/>
+                <RadioButton Content="أمس" IsChecked="{x:Bind Vm.PeriodYesterdayChecked, Mode=TwoWay}" Command="{x:Bind Vm.SelectYesterdayCommand}"
+                             Style="{StaticResource WeraPeriodToggleStyle}" MinWidth="64"/>
+                <RadioButton Content="7 أيام" IsChecked="{x:Bind Vm.PeriodWeekChecked, Mode=TwoWay}" Command="{x:Bind Vm.SelectWeekCommand}"
+                             Style="{StaticResource WeraPeriodToggleStyle}" MinWidth="72"/>
+                <RadioButton Content="30 يوماً" IsChecked="{x:Bind Vm.PeriodMonthChecked, Mode=TwoWay}" Command="{x:Bind Vm.SelectMonthCommand}"
+                             Style="{StaticResource WeraPeriodToggleStyle}" MinWidth="80"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══ الجسم: عمود أساسي واسع + عمود تنبيهات ثانوي ═══ -->
+        <ScrollViewer Grid.Row="1" Padding="28,0,28,16">
+            <Grid ColumnSpacing="18" RowSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="560"/>
+                    <ColumnDefinition Width="320"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- المؤشرات -->
+                    <RowDefinition Height="Auto"/> <!-- الرسم -->
+                    <RowDefinition Height="Auto"/> <!-- وحدات التشغيل -->
+                    <RowDefinition Height="Auto"/> <!-- الأعلى بيعاً -->
+                </Grid.RowDefinitions>
+
+                <!-- ══ 1) صف المؤشرات (الإدارة فقط — الكشف من الخادم) ══ -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Spacing="10" Visibility="{x:Bind Vm.KpiVisibility, Mode=OneWay}">
+                    <TextBlock Text="مؤشرات الفترة" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14"
+                               FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- صافي المبيعات دون الضريبة -->
+                        <Border Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,14">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="صافي المبيعات دون الضريبة" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{x:Bind Vm.NetSalesAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontDisplay}"
+                                           FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                <TextBlock Text="{x:Bind Vm.DeltaAr, Mode=OneWay}" FontSize="11" Foreground="{x:Bind Vm.DeltaBrush, Mode=OneWay}"/>
+                            </StackPanel>
+                        </Border>
+                        <!-- مجمل الربح (WAC) -->
+                        <Border Grid.Column="1" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,14">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="مجمل الربح (WAC)" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{x:Bind Vm.GrossProfitAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontDisplay}"
+                                           FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                <TextBlock Text="{x:Bind Vm.GrossProfitHintAr, Mode=OneWay}" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                        <!-- التحصيل المؤكد -->
+                        <Border Grid.Column="2" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,14">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="التحصيل المؤكد" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{x:Bind Vm.CollectionAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontDisplay}"
+                                           FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource WeraStatusSuccessBrush}"/>
+                                <TextBlock Text="نقدي وبطاقة مؤكدة — بلا آجل" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                            </StackPanel>
+                        </Border>
+                        <!-- الفواتير المكتملة -->
+                        <Border Grid.Column="3" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,14">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="الفواتير المكتملة" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{x:Bind Vm.InvoicesAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontDisplay}"
+                                           FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                <TextBlock Text="مرحّلة خلال الفترة" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+
+                <!-- ══ 2) الاتجاه الزمني: رسم مساحي خفيف بلا مكتبات خارجية ══ -->
+                <Border Grid.Row="1" Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                        BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCardLarge}" Padding="18,14"
+                        Visibility="{x:Bind Vm.KpiVisibility, Mode=OneWay}">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="اتجاه صافي المبيعات" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14"
+                                       FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                            <muxc:InfoBadge Value="{x:Bind Vm.Series.Count, Mode=OneWay}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <local:SalesTrendChart Points="{x:Bind Vm.Series, Mode=OneWay}" Height="170"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ══ 3) وحدات التشغيل: ورديات/خزينة/مشتريات (أولوية القرار لا شبكة متساوية) ══ -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Spacing="10">
+                    <TextBlock Text="التشغيل الآن" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14"
+                               FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/><ColumnDefinition Width="1.4*"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- الورديات -->
+                        <Border Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,14">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE91D;" FontSize="15" Foreground="{StaticResource WeraActionPrimaryBrush}"/>
+                                    <TextBlock Text="الورديات" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                </StackPanel>
+                                <TextBlock Text="{x:Bind Vm.ShiftsAr, Mode=OneWay}" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                        <!-- الخزينة: نقدي/بطاقة/آجل مفصولة (§13) -->
+                        <Border Grid.Column="1" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,14">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE9C7;" FontSize="15" Foreground="{StaticResource WeraAccentGoldBrush}"/>
+                                    <TextBlock Text="التحصيل خلال الفترة" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                </StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="نقدي" FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                        <TextBlock Text="{x:Bind Vm.CashAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontMono}" FontSize="14" Foreground="{StaticResource WeraTextPrimaryBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock Text="بطاقة" FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                        <TextBlock Text="{x:Bind Vm.CardAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontMono}" FontSize="14" Foreground="{StaticResource WeraTextPrimaryBrush}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="2">
+                                        <TextBlock Text="آجل" FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                        <TextBlock Text="{x:Bind Vm.CreditAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontMono}" FontSize="14" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <!-- المخزون الحرج + المشتريات المعلقة -->
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.4*"/><ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,12"
+                                Visibility="{x:Bind Vm.HasCritical, Mode=OneWay}">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE7BC;" FontSize="15" Foreground="{StaticResource WeraStatusDangerBrush}"/>
+                                    <TextBlock Text="المخزون الحرج" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                </StackPanel>
+                                <ItemsControl ItemsSource="{x:Bind Vm.CriticalStock, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:CriticalRow">
+                                            <Grid Padding="0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" FontSize="12" Foreground="{StaticResource WeraTextPrimaryBrush}" TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{x:Bind NameAr}"/><Run Text="  " FontSize="10" Foreground="{StaticResource WeraTextMutedBrush}"/><Run Text="{x:Bind SkuCode}" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="1" Text="{x:Bind AvailableAr}" FontFamily="{StaticResource WeraFontMono}" FontSize="12"
+                                                           Foreground="{x:Bind OutBrush}" Margin="0,0,10,0"/>
+                                                <TextBlock Grid.Column="2" Text="{x:Bind ReorderAr}" FontFamily="{StaticResource WeraFontMono}" FontSize="11"
+                                                           Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,12">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE7BF;" FontSize="15" Foreground="{StaticResource WeraActionPrimaryBrush}"/>
+                                    <TextBlock Text="المشتريات المعلقة" FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                </StackPanel>
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{x:Bind Vm.PosAr, Mode=OneWay}" FontFamily="{StaticResource WeraFontDisplay}" FontSize="21"
+                                               FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                    <TextBlock Text="{x:Bind Vm.PosHintAr, Mode=OneWay}" FontSize="11.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+
+                <!-- ══ 4) الأعلى بيعاً ══ -->
+                <Border Grid.Row="3" Grid.Column="0" Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                        BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCard}" Padding="16,12"
+                        Visibility="{x:Bind Vm.HasTopProducts, Mode=OneWay}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="الأصناف الأعلى بيعاً (صافي المبيعات)" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14"
+                                   FontWeight="SemiBold" Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                        <ItemsControl ItemsSource="{x:Bind Vm.TopProducts, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TopProductRow">
+                                    <Grid Padding="0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" FontSize="12.5" Foreground="{StaticResource WeraTextPrimaryBrush}" TextTrimming="CharacterEllipsis">
+                                            <Run Text="{x:Bind NameAr}"/><Run Text="  " FontSize="10" Foreground="{StaticResource WeraTextMutedBrush}"/><Run Text="{x:Bind SkuCode}" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind QtyAr}" FontFamily="{StaticResource WeraFontMono}" FontSize="11.5"
+                                                   Foreground="{StaticResource WeraTextMutedBrush}" Margin="0,0,12,0"/>
+                                        <TextBlock Grid.Column="2" Text="{x:Bind NetAr}" FontFamily="{StaticResource WeraFontMono}" FontSize="12.5"
+                                                   Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- ══ عمود «يتطلب الانتباه» — ثانوي ثابت العرض ══ -->
+                <Border Grid.Row="0" Grid.RowSpan="4" Grid.Column="1" VerticalAlignment="Stretch"
+                        Background="{StaticResource WeraSurfaceSubtleBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                        BorderThickness="1" CornerRadius="{StaticResource WeraCornerRadiusCardLarge}" Padding="16,14">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,10">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE7BA;" FontSize="15" Foreground="{StaticResource WeraAccentGoldBrush}"/>
+                                <TextBlock Text="يتطلب الانتباه" FontFamily="{StaticResource WeraFontDisplay}" FontSize="14.5"
+                                           FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="مرتبة حسب الشدة — من سجلات المصدر" FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                        </StackPanel>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto">
+                            <StackPanel Spacing="8">
+                                <!-- الحالة: لا تنبيهات -->
+                                <StackPanel Spacing="6" Visibility="{x:Bind Vm.NoAlertsVisibility, Mode=OneWay}" Padding="8,4">
+                                    <FontIcon Glyph="&#xE73E;" FontSize="22" Foreground="{StaticResource WeraStatusSuccessBrush}"/>
+                                    <TextBlock Text="لا شيء يتطلب انتباهك الآن" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <ItemsControl ItemsSource="{x:Bind Vm.Alerts, Mode=OneWay}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:AlertRow">
+                                            <Border Background="{StaticResource WeraSurfaceBaseBrush}" BorderBrush="{StaticResource WeraBorderDefaultBrush}"
+                                                    BorderThickness="1" CornerRadius="10" Padding="12,10">
+                                                <StackPanel Spacing="4">
+                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                        <Ellipse Width="8" Height="8" Fill="{x:Bind SeverityBrush}"/>
+                                                        <TextBlock Text="{x:Bind SeverityLabel}" FontSize="10.5" Foreground="{x:Bind SeverityBrush}"/>
+                                                        <TextBlock Text="·" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                                        <TextBlock Text="{x:Bind WhenAr}" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{x:Bind TitleAr}" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource WeraTextPrimaryBrush}" TextWrapping="Wrap"/>
+                                                    <TextBlock Text="{x:Bind DetailAr}" FontSize="11" Foreground="{StaticResource WeraTextSecondaryBrush}" TextWrapping="Wrap"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- إجراءات سريعة حسب الدور -->
+                        <StackPanel Grid.Row="2" Spacing="8" Margin="0,12,0,0">
+                            <TextBlock Text="إجراءات سريعة" FontSize="11" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="فتح نقطة البيع" Command="{x:Bind Vm.OpenPosCommand}"
+                                        Style="{StaticResource WeraPrimaryButtonStyle}" HorizontalAlignment="Stretch"/>
+                                <Button Grid.Column="1" Content="تحديث اللوحة" Command="{x:Bind Vm.LoadCommand}"
+                                        HorizontalAlignment="Stretch"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- ══ حالات الصفحة: خطأ (لا يحول الخطأ إلى صفر §7.5) ══ -->
+        <Border Grid.Row="0" Grid.RowSpan="2" Background="{StaticResource WeraSurfaceBackgroundColor}"
+                Visibility="{x:Bind Vm.ErrorVisibility, Mode=OneWay}" HorizontalAlignment="Stretch">
+            <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="380">
+                <FontIcon Glyph="&#xE783;" FontSize="30" Foreground="{StaticResource WeraStatusDangerBrush}"/>
+                <TextBlock Text="تعذر تحميل لوحة الرئيسية" FontFamily="{StaticResource WeraFontDisplay}" FontSize="16"
+                           FontWeight="SemiBold" Foreground="{StaticResource WeraBrandNavyBrush}" HorizontalAlignment="Center"/>
+                <TextBlock Text="{x:Bind Vm.ErrorAr, Mode=OneWay}" FontSize="12.5" Foreground="{StaticResource WeraTextSecondaryBrush}"
+                           HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                <Button Content="إعادة المحاولة" Command="{x:Bind Vm.LoadCommand}" Style="{StaticResource WeraPrimaryButtonStyle}"
+                        HorizontalAlignment="Center" Margin="0,6,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- ══ تذييل البيانات الموثوقة ══ -->
+        <Border Grid.Row="0" Grid.RowSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                Background="#E6FFFFFF" BorderBrush="{StaticResource WeraBorderDefaultBrush}" BorderThickness="0,1,0,0"
+                Padding="28,6" IsHitTestVisible="False" Visibility="{x:Bind Vm.KpiVisibility, Mode=OneWay}">
+            <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Left">
+                <FontIcon Glyph="&#xE71B;" FontSize="10" Foreground="{StaticResource WeraStatusSuccessBrush}"/>
+                <TextBlock Text="آخر تحديث" FontSize="10.5" Foreground="{StaticResource WeraTextMutedBrush}"/>
+                <TextBlock Text="{x:Bind Vm.LastUpdatedAr, Mode=OneWay}" FontSize="10.5" FontFamily="{StaticResource WeraFontMono}"
+                           Foreground="{StaticResource WeraTextSecondaryBrush}"/>
+                <TextBlock Text="· مباشر من قاعدة البيانات عند الطلب · تحديث تلقائي كل 60 ثانية" FontSize="10.5"
+                           Foreground="{StaticResource WeraTextMutedBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- مؤشر انشغال خفيف أعلى الصفحة -->
+        <muxc:ProgressRing Grid.Row="0" Grid.RowSpan="2" Width="34" Height="34" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           IsActive="{x:Bind Vm.Busy, Mode=OneWay}"/>
+    </Grid>
+</Page>

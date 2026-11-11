@@ -27,6 +27,8 @@ public interface IRefreshTokenStore
     /// <summary>تدوير: وسم القديم بـ rotated_to وإصدار جديد ذرياً — إعادة استخدام القديم تكشف وتلغي السلسلة.</summary>
     Task<RefreshTokenRecord> RotateAsync(long oldTokenId, long userId, long sessionId, string newTokenHash, DateTimeOffset expiresAtUtc, CancellationToken ct = default);
     Task RevokeByUserAsync(long userId, string reasonAr, CancellationToken ct = default);
+    /// <summary>إبطال توكنات جلسة محددة فقط — خروج الجلسة الواحدة لا يقتل جلسات المستخدم الأخرى (إصلاح 2026-11-11).</summary>
+    Task RevokeBySessionAsync(long sessionId, string reasonAr, CancellationToken ct = default);
 }
 
 /// <summary>مستودع الإعدادات (core.business_settings) — القراءة للجميع والتعديل بصلاحية.</summary>

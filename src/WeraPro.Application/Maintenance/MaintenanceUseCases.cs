@@ -30,8 +30,8 @@ public sealed class BackupUseCase
 
     public async Task<BackupDto> RunFullBackupAsync(RunBackupRequest request, long actorUserId, string actorName, CancellationToken ct = default)
     {
-        var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss");
-        var fileName = $"wera-full-{stamp}-{Guid.NewGuid().ToString("N")[..8]}.dump";
+        var stamp = DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture);
+        var fileName = $"wera-full-{stamp}-{Guid.NewGuid().ToString("N", System.Globalization.CultureInfo.InvariantCulture)[..8]}.dump";
 
         var backupId = await _registry.RegisterAsync(fileName, "FULL", 0, actorName, null, request.NoteAr, ct);
         try
@@ -43,8 +43,8 @@ public sealed class BackupUseCase
 
             await _audit.WriteAsync(new AuditEntry(
                 actorUserId, null, null, null, "ops.backup_records", backupId,
-                "BACKUP_RUN", readable ? "VERIFIED" : "UNVERIFIED",
-                $"نسخة كاملة {actualFile} ({size} بايت)"), ct);
+                "BACKUP_RUN", "SUCCESS",
+                $"نسخة كاملة {actualFile} ({size} بايت) — قابلة للقراءة: {(readable ? "موثقة" : "قيد التوثيق")}"), ct);
 
             return new BackupDto(backupId, actualFile, "FULL", readable ? "VERIFIED" : "VERIFYING",
                 size, DateTimeOffset.UtcNow, actorName, checksum, request.NoteAr);
@@ -75,13 +75,13 @@ public sealed class BackupUseCase
 
         await _audit.WriteAsync(new AuditEntry(
             actorUserId, null, null, null, "ops.backup_records", backup.BackupId,
-            "BACKUP_RESTORE_BEGIN", "OK", $"استعادة {backup.FileName}" + (request.ReasonAr is null ? "" : $" — {request.ReasonAr}")), ct);
+            "BACKUP_RESTORE_BEGIN", "SUCCESS", $"استعادة {backup.FileName}" + (request.ReasonAr is null ? "" : $" — {request.ReasonAr}")), ct);
 
         await _storage.RestoreAsync(backup.FileName, ct);
 
         await _audit.WriteAsync(new AuditEntry(
             actorUserId, null, null, null, "ops.backup_records", backup.BackupId,
-            "BACKUP_RESTORE_DONE", "OK", "اكتمال الاستعادة — أعد تشغيل العملاء"), ct);
+            "BACKUP_RESTORE_DONE", "SUCCESS", "اكتمال الاستعادة — أعد تشغيل العملاء"), ct);
         return true;
     }
 
@@ -92,7 +92,7 @@ public sealed class BackupUseCase
         {
             await _audit.WriteAsync(new AuditEntry(
                 actorUserId, null, null, null, "ops.backup_records", backupId,
-                "BACKUP_DELETE", "OK", "حذف سجل النسخة (الملف الفعلي يُدار يدوياً)"), ct);
+                "BACKUP_DELETE", "SUCCESS", "حذف سجل النسخة (الملف الفعلي يُدار يدوياً)"), ct);
         }
         return ok;
     }
@@ -123,7 +123,7 @@ public sealed class SystemCleanupUseCase
 
         var result = new SystemCleanupResult(purgedAudit, closedSessions, removedMedia, purgedJobs, DateTimeOffset.UtcNow);
         await _audit.WriteAsync(new AuditEntry(
-            actorUserId, null, null, null, "ops", 0, "SYSTEM_CLEANUP", "OK",
+            actorUserId, null, null, null, "ops", 0, "SYSTEM_CLEANUP", "SUCCESS",
             $"تنظيف (احتفاظ {days} يوماً): تدقيق {purgedAudit} · جلسات {closedSessions} · وسائط يتيمة {removedMedia} · مهام طباعة {purgedJobs}"), ct);
         return result;
     }
@@ -159,7 +159,7 @@ public sealed class WipeDataUseCase
         var truncated = await _maintenance.WipeBusinessDataAsync(ct);
 
         await _audit.WriteAsync(new AuditEntry(
-            actorUserId, null, null, null, "ops", 0, "SYSTEM_WIPE", "OK",
+            actorUserId, null, null, null, "ops", 0, "SYSTEM_WIPE", "SUCCESS",
             $"حذف كامل: {truncated.Count} جدولاً (منتجات {before.Products} · حركات {before.StockMovements} · فواتير {before.Invoices})" +
             (request.ReasonAr is null ? "" : $" — {request.ReasonAr}")), ct);
 

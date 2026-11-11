@@ -31,6 +31,22 @@ public sealed partial class ErrorHandlingMiddleware
         catch (Exception ex)
         {
             var correlationId = context.GetCorrelationId();
+            // أخطاء قواعد العمل (InvalidOperationException برسالة عربية من حالات الاستخدام)
+            // هي أخطاء مدخلات متوقعة → 400 برسالتها، لا 500 (إصلاح 2026-11-11)
+            if (ex is InvalidOperationException)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                context.Response.ContentType = "application/problem+json";
+                var badRequest = new ApiProblem(
+                    Type: "https://wera.example/errors/validation",
+                    Title: "طلب غير مقبول",
+                    Status: 400,
+                    Detail: ex.Message,
+                    CorrelationId: correlationId,
+                    OccurredAtUtc: DateTimeOffset.UtcNow);
+                await context.Response.WriteAsync(JsonSerializer.Serialize(badRequest, JsonOptions));
+                return;
+            }
             LogUnhandled(ex, context.Request.Method, context.Request.Path, correlationId);
 
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;

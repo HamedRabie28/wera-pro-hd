@@ -160,6 +160,24 @@ public static class PermissionPolicy
                 options.AddPolicy(code,
                     p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
             }
+
+            // ── صلاحيات G-ADMIN: المستخدمون والأدوار والإعدادات والنسخ والصيانة
+            //    (V009 + V020 — إصلاح 2026-11-11: كانت غير مسجلة فتُرمي كل نقاط الإدارة 500) ──
+            foreach (var code in new[]
+            {
+                PermissionCodes.SecurityUsersRead,
+                PermissionCodes.SecurityUsersManage,
+                PermissionCodes.SettingsManage,
+                PermissionCodes.BackupRead,
+                PermissionCodes.BackupRun,
+                PermissionCodes.BackupRestore,
+                PermissionCodes.SystemCleanup,
+                PermissionCodes.SystemWipe,
+            })
+            {
+                options.AddPolicy(code,
+                    p => p.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(code)));
+            }
         });
     }
 }
