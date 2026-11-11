@@ -16,6 +16,7 @@
         <Grid FlowDirection="RightToLeft" Background="{StaticResource WeraSurfaceBackgroundBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="56"/>   <!-- TopNav: WeraTopNavHeight -->
+                <RowDefinition Height="Auto"/><!-- تنقل ثانٍ لمجموعة المخزون -->
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -86,8 +87,37 @@
                 </StackPanel>
             </Grid>
 
+            <!-- ═══ تنقل ثانٍ لمجموعة المخزون (G6 · إصلاح 2026-11-11ب) ═══
+                 كانت صفحات المخزون الأربع تُعرض معاً في نفس الخلية فتتراكب فوق بعضها
+                 (الأرصدة تحت الجرد تحت التحويلات)، وصفحة المخازن (PAGE-28) بلا أي
+                 مدخل — الآن تبويب واحد ظاهر في كل لحظة. -->
+            <Grid Grid.Row="1" x:Name="InventorySubNav" Visibility="Collapsed"
+                  Background="{StaticResource WeraSurfaceSubtleBrush}"
+                  BorderBrush="{StaticResource WeraShellBorderBrush}" BorderThickness="0,1,0,1" Padding="18,5">
+                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                    <TextBlock Text="المخزون ▸" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Foreground="{StaticResource WeraTextMutedBrush}"/>
+                    <Button x:Name="SubBalances" Tag="inventory" Click="SubNav_Click"
+                            Background="#00000000" BorderThickness="0" Padding="10,5">
+                        <TextBlock Text="الأرصدة (PAGE-18)" FontSize="12"/>
+                    </Button>
+                    <Button x:Name="SubStocktake" Tag="stocktake" Click="SubNav_Click"
+                            Background="#00000000" BorderThickness="0" Padding="10,5">
+                        <TextBlock Text="الجرد والتسويات (PAGE-20)" FontSize="12"/>
+                    </Button>
+                    <Button x:Name="SubTransfers" Tag="transfers" Click="SubNav_Click"
+                            Background="#00000000" BorderThickness="0" Padding="10,5">
+                        <TextBlock Text="التحويلات (PAGE-21)" FontSize="12"/>
+                    </Button>
+                    <Button x:Name="SubWarehouses" Tag="warehouses" Click="SubNav_Click"
+                            Background="#00000000" BorderThickness="0" Padding="10,5">
+                        <TextBlock Text="المخازن والفروع (PAGE-28)" FontSize="12"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
             <!-- ═══ المحتوى: الرئيسية التنفيذية أو صفحات الوحدات (G4..G-ADMIN) ═══ -->
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="2">
                 <!-- ═══ الرئيسية التنفيذية HOME-01 (G9) — كل مؤشر من الخادم عبر Analytics API ═══ -->
                 <views:HomePage x:Name="HomeContent"/>
 

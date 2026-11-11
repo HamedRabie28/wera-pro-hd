@@ -60,8 +60,7 @@ public sealed partial class ShellWindow : Window
 
     private void NavTop_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        // G4: «الكتالوج»؛ G5: «مكتبة الصور»؛ G6: «المخزون/المشتريات/الأطراف/المخازن» —
-        // صفحة واحدة ظاهرة في كل لحظة («المخزون» مركز لسباقات G6 فتفتح اللوحة والجرد والتحويلات معاً)
+        // قاعدة القشرة: صفحة واحدة ظاهرة في كل لحظة — لا تراكب ولا صفحات معلقة.
         if (args.SelectedItem is NavigationViewItem { Tag: string tag })
         {
             // G7: «نقطة البيع» تفتح نافذة POS المستقلة (§9.0) — لا تُبدّل محتوى الشِل
@@ -77,10 +76,20 @@ public sealed partial class ShellWindow : Window
             HomeContent.Visibility = tag is "catalog" or "media" || g6 || g8 || admin || sales ? Visibility.Collapsed : Visibility.Visible;
             CatalogContent.Visibility = tag == "catalog" ? Visibility.Visible : Visibility.Collapsed;
             MediaContent.Visibility = tag == "media" ? Visibility.Visible : Visibility.Collapsed;
-            InventoryContent.Visibility = tag == "inventory" ? Visibility.Visible : Visibility.Collapsed;
-            StocktakeContent.Visibility = tag == "inventory" ? Visibility.Visible : Visibility.Collapsed;
-            TransfersContent.Visibility = tag == "inventory" ? Visibility.Visible : Visibility.Collapsed;
-            WarehousesContent.Visibility = tag == "warehouses" ? Visibility.Visible : Visibility.Collapsed;
+
+            // مجموعة المخزون (إصلاح 2026-11-11ب): تبويب ثانٍ واحد ظاهر في كل لحظة —
+            // كانت الصفحات الأربع تتراكب في نفس الخلية وصفحة المخازن (PAGE-28) لا تُفتح أبداً.
+            if (tag == "inventory")
+            {
+                InventorySubNav.Visibility = Visibility.Visible;
+                ShowInventoryTab("inventory"); // الأرصدة هي الافتراضية عند دخول المجموعة
+            }
+            else
+            {
+                InventorySubNav.Visibility = Visibility.Collapsed;
+                ShowInventoryTab("");
+            }
+
             PurchasingContent.Visibility = tag == "purchasing" ? Visibility.Visible : Visibility.Collapsed;
             PartiesContent.Visibility = tag == "parties" ? Visibility.Visible : Visibility.Collapsed;
             FinanceContent.Visibility = tag == "finance" ? Visibility.Visible : Visibility.Collapsed;
@@ -92,6 +101,34 @@ public sealed partial class ShellWindow : Window
             SettingsContent.Visibility = tag == "settings" ? Visibility.Visible : Visibility.Collapsed;
             MaintenanceContent.Visibility = tag == "maintenance" ? Visibility.Visible : Visibility.Collapsed;
         }
+    }
+
+    // ── تبويبات مجموعة المخزون الثانوية: الأرصدة · الجرد · التحويلات · المخازن ──
+    private void SubNav_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is string tab) ShowInventoryTab(tab);
+    }
+
+    private void ShowInventoryTab(string tab)
+    {
+        InventoryContent.Visibility = tab == "inventory" ? Visibility.Visible : Visibility.Collapsed;
+        StocktakeContent.Visibility = tab == "stocktake" ? Visibility.Visible : Visibility.Collapsed;
+        TransfersContent.Visibility = tab == "transfers" ? Visibility.Visible : Visibility.Collapsed;
+        WarehousesContent.Visibility = tab == "warehouses" ? Visibility.Visible : Visibility.Collapsed;
+
+        StyleSubNav(SubBalances, tab == "inventory");
+        StyleSubNav(SubStocktake, tab == "stocktake");
+        StyleSubNav(SubTransfers, tab == "transfers");
+        StyleSubNav(SubWarehouses, tab == "warehouses");
+    }
+
+    private static void StyleSubNav(Button button, bool isActive)
+    {
+        button.FontWeight = isActive ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        button.Foreground = isActive
+            ? (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["WeraBrandNavyBrush"]
+            : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["WeraTextSecondaryBrush"];
+        button.Opacity = isActive ? 1.0 : 0.78;
     }
 
     private void OpenPos_Click(object sender, RoutedEventArgs e) => OpenPosWindow();

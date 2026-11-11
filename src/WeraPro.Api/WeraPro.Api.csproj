@@ -26,4 +26,10 @@
     <PackageReference Include="Serilog.Enrichers.Environment" />
   </ItemGroup>
 
+  <!-- مشغلات الإنتاج: تولّد مفتاح توقيع محلياً عند أول تشغيل (لا يوزَّع مفتاح مع الحزمة) -->
+  <ItemGroup>
+    <None Include="run-api.cmd" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="run-api.sh" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
